@@ -1,0 +1,237 @@
+"""Terminal effects: cool neon moods, animated text, and the channeling animation.
+Colors are 256-color indexes (blues, violets, cyans) on black. Ctrl-C skips animation."""
+import math, os, queue, random, re, shutil, sys, textwrap, threading, time
+
+FAST = os.environ.get("TAROT_FAST") == "1"
+SKIP = False
+RESET = "\x1b[0m"
+MOODS = {   # dark -> bright
+    "calm": [17, 18, 19, 25, 31, 38, 44, 80],
+    "mystic": [54, 55, 56, 57, 93, 99, 135, 141],
+    "dread": [17, 53, 54, 55, 60, 61, 97, 98],
+    "hope": [24, 30, 37, 44, 45, 51, 87, 123],
+    "storm": [19, 21, 27, 33, 39, 45, 51, 159],
+    "grief": [17, 18, 24, 60, 61, 67, 68, 110],
+    "ecstatic": [57, 93, 129, 135, 141, 171, 177, 183],
+    "channel": [57, 63, 69, 75, 81, 87, 123, 159],
+}
+FX = ("type", "shimmer", "glitch", "fade", "pulse")
+SPEED = {"calm": 1.2, "mystic": 1.0, "dread": 1.5, "hope": 1.0, "storm": 0.6,
+         "grief": 1.6, "ecstatic": 0.6, "channel": 1.0}
+GLYPHS = "░▒▓◇◆✦✧⌬⍟∴∵"
+
+
+def pause(s):
+    if not (FAST or SKIP):
+        time.sleep(s)
+
+
+def pal(mood):
+    return MOODS.get(mood, MOODS["mystic"])
+
+
+def idx_at(p, x):
+    x %= 2.0
+    if x > 1:
+        x = 2 - x
+    return p[min(len(p) - 1, int(x * len(p)))]
+
+
+def paint(s, p, phase=0.0, spread=0.04):
+    return "".join(f"\x1b[38;5;{idx_at(p, phase + i * spread)}m{c}" for i, c in enumerate(s)) + RESET
+
+
+def _out(s):
+    sys.stdout.write(s)
+    sys.stdout.flush()
+
+
+def _line(text, mood, fx):
+    p, sp = pal(mood), SPEED.get(mood, 1.0)
+    if fx == "type":
+        for i, ch in enumerate(text):
+            _out(f"\x1b[38;5;{idx_at(p, i * 0.03)}m{ch}")
+            pause(0.01 * sp)
+        _out(RESET + "\n")
+    elif fx == "glitch":
+        n = len(text)
+        for k in range(0, n + 1, max(1, n // 18)):
+            s = "".join(text[i] if (i < k or text[i] == " ") else random.choice(GLYPHS) for i in range(n))
+            _out("\r" + paint(s, p, k * 0.05))
+            pause(0.05 * sp)
+        _out("\r" + paint(text, p, 0.3) + "\n")
+    elif fx == "fade":
+        for c in p:
+            _out(f"\r\x1b[38;5;{c}m{text}{RESET}")
+            pause(0.07 * sp)
+        _out("\n")
+    elif fx == "pulse":
+        for k in range(16):
+            _out(f"\r\x1b[38;5;{idx_at(p, 0.5 + 0.5 * math.sin(k * 0.7))}m{text}{RESET}")
+            pause(0.05 * sp)
+        _out("\r" + paint(text, p, 0.3) + "\n")
+    else:  # shimmer
+        for k in range(18):
+            _out("\r" + paint(text, p, k * 0.06))
+            pause(0.05 * sp)
+        _out("\r" + paint(text, p, 0.3) + "\n")
+
+
+def say(text, mood="mystic", fx="type", indent=2):
+    global SKIP
+    mood = mood if mood in MOODS else "mystic"
+    fx = fx if fx in FX else "type"
+    width = max(30, min(78, shutil.get_terminal_size().columns - indent - 2))
+    for para in str(text).split("\n"):
+        if not para.strip():
+            print()
+            continue
+        for ln in textwrap.wrap(para, width):
+            try:
+                _line(" " * indent + ln, mood, fx)
+            except KeyboardInterrupt:
+                SKIP = True
+                _out("\r" + paint(" " * indent + ln, pal(mood), 0.3) + "\n")
+
+
+def show(text, mood="hope", indent=2):
+    print(" " * indent + paint(text, pal(mood), 0.3))
+
+
+def prompt(mood="storm"):
+    _out(f"\x1b[38;5;{pal(mood)[-1]}m  › {RESET}")
+    return input().strip()
+
+
+def banner(text, mood="mystic", frames=30):
+    cols = shutil.get_terminal_size().columns
+    line = text.center(cols - 1)
+    print()
+    for k in range(frames):
+        _out("\r" + paint(line, pal(mood), k * 0.05, 0.02))
+        pause(0.05)
+    print("\n")
+
+
+def run_with_animation(fn, min_frames=40, titles=("~ channeling the spirit realm ~", "words coming through now...")):
+    """Animate 'channeling...' while fn() runs in a thread; returns fn's result (or None)."""
+    res = {}
+
+    def work():
+        try:
+            res["v"] = fn()
+        except Exception:
+            res["v"] = None
+    t = threading.Thread(target=work, daemon=True)
+    t.start()
+    cols, k, order = shutil.get_terminal_size().columns, 0, ["mystic", "storm", "dread", "channel"]
+    while t.is_alive() or k < min_frames:
+        title = titles[0] if k < 20 else titles[-1]
+        _out("\r\x1b[2K" + paint(title.center(cols - 1), pal(order[(k // 8) % 4]), k * 0.07, 0.03))
+        time.sleep(0.002 if FAST else 0.06)
+        k += 1
+    _out("\r\x1b[2K")
+    return res.get("v")
+
+
+TAG = re.compile(r"^\s*\[\s*(?:mood\s*[=:]\s*(\w+))?[\s;,]*(?:fx\s*[=:]\s*(\w+))?\s*\]\s*", re.I)
+
+
+def parse_segments(text):
+    """Split a reading into ('text', body, mood, fx) and ('channel',...) segments."""
+    segs = []
+    for para in re.split(r"\n\s*\n", text.strip()):
+        p = para.strip()
+        if not p:
+            continue
+        if p.upper().startswith("[CHANNEL]"):
+            segs.append(("channel", "", None, None))
+            p = p[9:].strip()
+            if not p:
+                continue
+        m = TAG.match(p)
+        mood = fx = None
+        if m:
+            mood, fx = (m.group(1) or "").lower() or None, (m.group(2) or "").lower() or None
+            p = p[m.end():]
+        segs.append(("text", p, mood, fx))
+    return segs
+
+
+def strip_tags(text):
+    return re.sub(r"\[(?:\s*mood|\s*fx|CHANNEL)[^\]]*\]", "", text, flags=re.I)
+
+
+def print_cells(rows, indent=2):
+    """Print art cell rows (from art.py) as ANSI, centered if indent is None."""
+    import art
+    cols = shutil.get_terminal_size().columns
+    pad = max(0, (cols - len(rows[0])) // 2) if indent is None else indent
+    for ln in art.ansi(rows):
+        print(" " * pad + ln)
+
+
+def play_stream(gen, default_mood="mystic", on_channel=None,
+                titles=("~ the cards are speaking ~", "~ Veyra is listening ~")):
+    """Show a reading while it is still being written: each finished line is rendered with its
+    own mood and effect; a shimmering title waits in between. Returns the full text."""
+    q, END = queue.Queue(), object()
+
+    def work():
+        try:
+            for piece in gen:
+                q.put(piece)
+        except Exception as e:
+            q.put(f"\n(the connection to the other side wavered: {str(e)[:80]})")
+        q.put(END)
+    threading.Thread(target=work, daemon=True).start()
+    buf, full, finished, k, pending = "", [], False, 0, [None, None]
+    cols = shutil.get_terminal_size().columns
+
+    def render(line):
+        line = re.sub(r"^\s*#+\s*|\*\*|__", "", line).strip()
+        if not line:
+            return
+        if line.upper().startswith("[CHANNEL]"):
+            if on_channel:
+                on_channel()
+            line = line[9:].strip()
+            if not line:
+                return
+        m = TAG.match(line)
+        if m and m.group(0).strip():
+            mood, fxn = (m.group(1) or "").lower() or None, (m.group(2) or "").lower() or None
+            line = line[m.end():].strip()
+            if not line:                       # tag alone on its line: apply to the next one
+                pending[:] = [mood, fxn]
+                return
+        else:
+            mood, fxn = pending
+        pending[:] = [None, None]
+        say(strip_tags(line), mood or default_mood, fxn or "type")
+
+    while True:
+        try:
+            while True:
+                item = q.get_nowait()
+                if item is END:
+                    finished = True
+                    break
+                buf += item
+                full.append(item)
+        except queue.Empty:
+            pass
+        if "\n" in buf:
+            line, buf = buf.split("\n", 1)
+            _out("\r\x1b[2K")
+            render(line)
+            continue
+        if finished:
+            _out("\r\x1b[2K")
+            render(buf)
+            break
+        title = titles[(k // 40) % len(titles)]
+        _out("\r\x1b[2K" + paint(title.center(cols - 1), pal(["mystic", "channel", "storm"][(k // 12) % 3]), k * 0.07, 0.03))
+        time.sleep(0.06)
+        k += 1
+    return "".join(full)

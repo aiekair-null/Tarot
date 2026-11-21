@@ -1,0 +1,3 @@
+# Free built-in model: run `bash setup_local.sh` (installs llama-cpp-python + downloads a GGUF).
+huggingface_hub>=0.34   # only used to download the free model file (no paid inference)
+ddgs                    # optional: lets Veyra research cards on the web while studying
