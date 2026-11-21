@@ -47,6 +47,27 @@ SPREADS = {
             "environment)."
         ),
     },
+    "falling": {
+        "name": "Live Reading (six cards fall from the shuffle)",
+        "use": "Veyra asks the deck her own questions; cards fall out of the shuffle one at a time "
+               "(sometimes two together), each answering the question she asked just before it fell.",
+        "positions": [
+            ("First to Fall", "the heart of your concern"),
+            ("Second to Fall", "what stands in the way"),
+            ("Third to Fall", "what you cannot see yet"),
+            ("Fourth to Fall", "what helps you"),
+            ("Fifth to Fall", "what to do next"),
+            ("Last to Fall", "where it settles"),
+        ],
+        "guide": (
+            "These cards were not dealt: they fell out of the shuffle on their own, so each one insisted.\n"
+            "- Read them in the order they fell; each answers the question Veyra asked the deck just before it.\n"
+            "- A card that fell reversed fell upside down: name that, and read it as blocked, inward or resisted.\n"
+            "- Cards that fell TOGETHER are one answer: read them as a pair, how they interact, what they say jointly.\n"
+            "- First to fall vs last to fall: does the concern resolve, or transform into something else?\n"
+            "- Close by tying every question that was asked to the card that answered it."
+        ),
+    },
 }
 
 
@@ -55,10 +76,10 @@ def diagnostics(key, spread):
     pos = SPREADS[key]["positions"]
     suits, majors, courts = {}, [], []
     for i, (c, rev) in enumerate(spread, 1):
-        if " of " not in c:
+        rank, _, suit = c.rpartition(" of ")
+        if suit not in ("Wands", "Cups", "Swords", "Pentacles"):
             majors.append(i)
         else:
-            rank, suit = c.split(" of ")
             suits[suit] = suits.get(suit, 0) + 1
             if rank in COURTS:
                 courts.append(i)

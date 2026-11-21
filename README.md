@@ -65,14 +65,55 @@ is left; `python3 models.py download small` roughly halves the time.
    a model, her last question is improvised from your answers.
 2. **The ritual (8-bit).** Veyra with her glowing orb, a starfield, washing, cutting into three piles,
    reassembling, and turning big pixel cards. Reversed cards are drawn upside down.
-3. **Channeling.** At random moments the veil thins; your exact keypress time becomes entropy that
-   pulls a fragment from Wikipedia (or a local omen) for her to shape.
-4. **The reading.** Every card read in its position, card interactions, answers to the spirit
-   questions, one question back to you.
+3. **Channeling.** At random moments the veil thins. Your exact keypress time becomes entropy that
+   picks an omen plus threads from everything she keeps: the lore of the cards on the table, cards
+   that keep returning in your readings, notes in her grimoire, card pairings she has recorded,
+   lessons from your feedback, her focus threads and insights, and echoes of past messages. She
+   weaves them into one message (through the model when it is free, otherwise in her own voice).
+4. **The reading.** Card interactions, answers to the spirit questions, one question back to you,
+   and then every card read in its position, so none are ever skipped.
 5. **Memory.** She reflects after each reading and stores lessons, card lore and pairings in
    `memory.json`, and studies on her own (`python3 study.py 20`).
 
 If you mention being in crisis, she sets the cards down and points you to real help (988 in the US).
+
+## Styles: she asks this first
+
+Every reading starts with **What style of reading?** — Three cards, Celtic Cross, or **Live Reading**.
+For the classic styles she then asks your question and a few details (age, work, gender, and your
+astrological sign or its element — fire, water, air or earth — which shapes how she weighs the suits).
+
+### Live Reading (menu 6, or `python3 tarot.py live`)
+She asks *you* nothing. The deck riffles 10–15 cards per pass; each pass has a chance of a card
+falling out until six have fallen. Now and then two fall together and are read as one answer.
+Reversed falls are noted. Before each fall she asks the deck her own question, picked from
+`live_questions.json` and bent to the mood of the cards already on the table, and she reads each
+card through her grimoire and memory.
+
+**Your own questions:** open `live_questions.json` and add lines under any theme (energy, heart,
+block, shadow, hidden, spirit, support, strength, action, growth, outcome, healing). Slots like
+`{you}`, `{your}`, `{feeling}` and `{prev}` are filled in for you. Delete the file to restore the defaults.
+
+## Videos (Facebook reel format)
+
+After any reading she offers: **Would you like this reading as a video?** (or menu 5 /
+`python3 tarot.py video` for the last reading). The video is a 1080x1920 vertical reel:
+
+- a pixel tapestry with a pinned headline at the top (icon + title + hook line), chosen from the
+  cards that came up — WARNING, LOVE MESSAGE, MONEY & WORK, SPIRIT MESSAGE, 3RD PARTY and so on
+- the reading replayed exactly as it happened on screen, on a navy cloth
+- each card held up to the camera while she reads it
+- her voice with a light digital edge, captions, and a prepared-piano music bed
+
+Before rendering it checks for what it needs and asks before installing anything: numpy, Pillow,
+ffmpeg, and optionally the free Piper voice (Amy). Say no and it falls back to a simpler voice, or captions only.
+
+Then choose:
+1. **Save to your device**: it gives you a Codespaces download link (port 8790, forwarded automatically).
+2. **Share to Facebook**: posts to a Facebook **Page** you manage. Facebook does not let apps post to
+   personal profiles, so for your profile, download the video and share it from the Facebook app.
+   For a Page, add Codespaces secrets `FB_PAGE_ID` and `FB_PAGE_TOKEN` (GitHub → Settings → Codespaces → Secrets);
+   it asks you to confirm before anything is posted.
 
 ## The grimoire
 
@@ -101,3 +142,11 @@ Keys: ← → card · ↑ ↓ scroll · r reverse · w c s p jump to a suit · 0
 `TAROT_BACKEND` (auto, llama, ollama, openai, hf, none) · `TAROT_GGUF` (path to any .gguf) ·
 `TAROT_THREADS` · `TAROT_CTX` (default 8192) · `TAROT_WAIT_LIMIT` (default 20 s) · `TAROT_OLLAMA_MODEL` · `TAROT_ADAPTIVE=0`
 (scripted questions only) · `TAROT_FAST=1` (skip animation delays) · `TAROT_LIVE_RESEARCH=0`.
+
+## Future: one-tap sharing to Facebook Reels (saved for later)
+
+Facebook's iOS "Sharing to Reels" (developers.facebook.com/documentation/ios/sharing-to-reels-facebook)
+lets a native iPhone/iPad app hand a video to the Facebook app's Reels composer, which can post to a
+personal profile's Reels. It needs a native iOS app (Xcode, a Facebook App ID, the app published live)
+and only takes 3–60 second videos (up to 1080p, H.264/H.265, under ~50 MB). Today Veyra always renders
+and uploads the full-length reading video instead, so this is parked until there is an App Store version.

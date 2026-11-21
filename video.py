@@ -1,0 +1,864 @@
+"""Turn a reading into a vertical Facebook reel (1080x1920), drawn from Veyra's own pixel art.
+
+Reel format: a pixel tapestry backdrop with a pinned hook headline at the top (icon + title +
+one-line hook, white boxes), the reading table on a navy cloth below it, and each card held up
+to the camera as she reads it.
+
+The scenes are the real ritual screens rendered on a virtual terminal: her intro, what you told
+her, the questions held for the spirits, the washing and cutting, then each card turning while
+she reads it, captions for muted autoplay, a prepared-piano music bed and an end title.
+Everything optional (ffmpeg, numpy, Pillow, a voice engine) is checked and requested first."""
+import json, math, os, random, re, subprocess, tempfile, time, wave
+from pathlib import Path
+
+VIDEOS = Path(os.environ.get("TAROT_VIDEOS", "videos"))
+SESSIONS = Path(os.environ.get("TAROT_SESSIONS", "sessions"))
+OW, OH = 1080, 1920                               # 9:16 reel
+BAND = 640                                        # tapestry backdrop + pinned hook
+BOX_TOP, BOX = 650, 930                           # the terminal table on the cloth
+CAP_TOP, CAP_H = 1590, 190                        # spoken captions (kept above Facebook's bottom overlay)
+CLOTH = (10, 14, 40)
+FPS = 15
+SR = 44100
+SMALL = (30, 72, 15, 30)                          # rows, cols, cell w, cell h  (fills 1080 px wide)
+WIDE = (30, 80, 13, 26)                           # the Celtic Cross table and the intro need 80 columns
+LARGE = (23, 54, 20, 40)                          # big, phone-readable text for the interview
+
+
+# ================================================================ sessions
+def save_session(sess):
+    SESSIONS.mkdir(parents=True, exist_ok=True)
+    p = SESSIONS / f"reading_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    p.write_text(json.dumps(sess, indent=1))
+    return p
+
+
+def latest_session():
+    files = sorted(SESSIONS.glob("reading_*.json")) if SESSIONS.exists() else []
+    return files[-1] if files else None
+
+
+def load_session(path):
+    s = json.loads(Path(path).read_text())
+    s["spread"] = [(c, bool(r)) for c, r in s["spread"]]
+    s["qa"] = [tuple(x) for x in s.get("qa", [])]
+    if s.get("falls"):
+        s["falls"]["pairs"] = [tuple(p) for p in s["falls"].get("pairs", [])]
+    return s
+
+
+# ================================================================ what she says
+def _sentences(text):
+    out = []
+    for s in re.split(r"(?<=[.!?])\s+", re.sub(r"\s+", " ", text).strip()):
+        s = s.strip()
+        if len(s) > 12:
+            out.append(s if len(s) < 230 else s[:227].rsplit(" ", 1)[0] + "...")
+    return out
+
+
+def reading_sentences(text):
+    """The model's (or scripted) reading as clean sentences, without tags, Q/A echoes or the card list."""
+    main = text.split("Before the cards return to the deck")[0]
+    main = re.sub(r"\[[^\]]*\]", " ", main)
+    keep = []
+    for ln in main.splitlines():
+        ln = re.sub(r"^[#*\-•\s\d.]+(?=[A-Za-z])", "", ln.strip()).replace("**", "").replace("__", "")
+        if ln and not re.match(r"^(Q|A)\s*:", ln) and not ln.lower().startswith(("end of reading", "you asked:")):
+            keep.append(ln)
+    return _sentences(" ".join(keep))
+
+
+def tts_text(s):
+    s = s.replace("8b/3b(L)", "eight B, three B, L").replace("Qwen 2.5", "Kwen two point five")
+    s = s.replace("Veyra", "Vayra").replace("Celtic", "Keltic").replace("&", "and")
+    s = re.sub(r"(\d+)\s*-\s*(\d+)", r"\1 to \2", s)
+    return re.sub(r"[\[\]*_#]", "", s)
+
+
+def live_script(sess):
+    """A Live Reading replayed exactly as it happened: question, shuffle, fall, reading; six times."""
+    import questions as Q
+    log = sess["falls"]["log"]
+    scenes = [{"name": "intro", "lines": ["I am Veyra. This is a Live Reading.",
+                                          "I ask the deck my own questions, and it answers by letting cards fall."]}]
+    for n, e in enumerate(log):
+        scenes.append({"name": f"ask{n}", "event": n, "passes": e.get("passes", 1),
+                       "lines": [f"{e['opener']} {e['question']}"]})
+        scenes.append({"name": f"drop{n}", "event": n, "lines": []})
+        scenes.append({"name": f"read{n}", "event": n, "lines": _sentences(e["text"])})
+    sents = reading_sentences(sess.get("reading", ""))
+    close = [s for s in sents if re.search(r"thank|grateful|gratitude", s, re.I)][:1] or \
+            [random.SystemRandom().choice(Q.CLOSINGS)]
+    scenes.append({"name": "table", "lines": ["Six cards have fallen. This is what the deck chose."]})
+    scenes.append({"name": "end", "lines": close})
+    return scenes
+
+
+def build_script(sess):
+    """Scenes with their lines: [{'name', 'lines': [caption, ...], 'card': index or None}]"""
+    if sess.get("key") == "falling" and (sess.get("falls") or {}).get("log"):
+        return live_script(sess)
+    from knowledge import position_meaning
+    from spreads import SPREADS
+    from spirit import named
+    import questions as Q
+    key, spread, dom = sess["key"], sess["spread"], sess.get("domain", "inner")
+    pos = SPREADS[key]["positions"]
+    sents = reading_sentences(sess.get("reading", ""))
+    used = set()
+    scenes = [{"name": "intro", "lines": ["I am Veyra. I turn chance into meaning."]}]
+    told = [f"Tonight's question: {sess['question'].strip().rstrip('.')}" + ("" if sess["question"].strip().endswith("?") else ".")]
+    prof = dict(p.split(": ", 1) for p in sess.get("profile", "").split(", ") if ": " in p)
+    if prof.get("age"):
+        told.append(f"Age: {prof['age']}.")
+    if prof.get("sign"):
+        from knowledge import parse_sign
+        sign, el = parse_sign(prof["sign"])
+        art_ = "an" if el in ("air", "earth") else "a"
+        told.append(f"Sign: {sign}, {art_} {el} sign." if sign else f"Element: {el or prof['sign']}.")
+    for q, a in sess.get("qa", []):
+        a = (a or "").strip().rstrip(".")
+        if a:
+            told.append(f"{q} {a[:1].upper() + a[1:]}.")
+    scenes.append({"name": "interview", "lines": told})
+    falls = sess.get("falls") or {}
+    if sess.get("spirit_qs"):
+        scenes.append({"name": "spirits", "lines": ["So I asked the spirits: " + " ".join(sess["spirit_qs"])]})
+    if key == "falling":
+        n_pairs = len(falls.get("pairs", []))
+        scenes.append({"name": "ritual", "lines": [
+            "I shuffled, and let the deck choose. Six cards fell out on their own"
+            + (f", {'two of them' if n_pairs == 1 else f'{n_pairs} pairs'} together." if n_pairs else ".")]})
+    else:
+        what = "the Celtic Cross" if key == "celtic" else "past, present and future"
+        scenes.append({"name": "ritual", "lines": [f"The cards are washed, cut into three, and gathered. {len(spread)} cards: {what}."]})
+    scenes.append({"name": "table", "lines": []})
+    for i, ((label, _), (card, rev)) in enumerate(zip(pos, spread)):
+        if key == "falling":
+            head = f"{label}: {named(card)}{', upside down' if rev else ''}."
+        else:
+            head = f"{label}: {named(card)}{', reversed' if rev else ''}."
+        names = {card.lower(), card.lower().replace("the ", "")}
+        mine = [s for s in sents if s not in used and any(n in s.lower() for n in names)][:2]
+        used.update(mine)
+        if not mine:
+            mine = _sentences(position_meaning(card, rev, label, dom))[:2]
+        lines = [head[:1].upper() + head[1:]]
+        q = (falls.get("questions") or [None] * 6)[i] if key == "falling" else None
+        if q:
+            lines.append(f"I asked the deck: {q.strip().rstrip('?')}?")
+        lines += mine
+        for a, b in falls.get("pairs", []) if key == "falling" else []:
+            if i == b:
+                from knowledge import pair_reading
+                pr = _sentences(pair_reading(spread[a][0], spread[a][1], card, rev, dom))
+                lines += [pr[0], pr[3] if len(pr) > 3 else pr[-1]]
+        scenes.append({"name": f"card{i}", "card": i, "lines": lines})
+    close = [s for s in sents if s not in used and s.endswith("?")][-1:]
+    close += [s for s in sents if s not in used and re.search(r"thank|grateful|gratitude", s, re.I)][:1]
+    if not close:
+        close = [random.SystemRandom().choice(Q.CLOSINGS)]
+    scenes.append({"name": "end", "lines": close})
+    return scenes
+
+
+# ================================================================ voice
+def _read_wav(path):
+    import numpy as np
+    with wave.open(str(path)) as w:
+        sr, n, ch, sw = w.getframerate(), w.getnframes(), w.getnchannels(), w.getsampwidth()
+        raw = w.readframes(n)
+    a = np.frombuffer(raw, dtype={1: np.uint8, 2: np.int16, 4: np.int32}[sw]).astype(np.float32)
+    a = (a - 128) / 128 if sw == 1 else a / float(2 ** (8 * sw - 1))
+    if ch > 1:
+        a = a.reshape(-1, ch).mean(axis=1)
+    return resample(a, sr, SR)
+
+
+def resample(a, sr, to):
+    import numpy as np
+    if sr == to or len(a) == 0:
+        return a.astype(np.float32)
+    n = int(len(a) * to / sr)
+    return np.interp(np.linspace(0, len(a) - 1, n), np.arange(len(a)), a).astype(np.float32)
+
+
+class Voice:
+    """Speaks a line with the best engine available: piper (natural), flite, espeak, or none."""
+
+    def __init__(self, kind):
+        self.kind, self._piper = kind, None
+
+    def say(self, text):
+        if not self.kind:
+            return None
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                out = Path(d) / "line.wav"
+                getattr(self, "_" + self.kind)(tts_text(text), out, Path(d))
+                a = _read_wav(out)
+            return digitize(a, natural=self.kind == "piper") if len(a) else None
+        except Exception:
+            return None
+
+    def _piper(self, text, out, d):
+        import deps
+        model = deps.voice_model()
+        try:
+            from piper import PiperVoice
+            if self._piper is None:
+                self._piper = PiperVoice.load(str(model))
+            with wave.open(str(out), "wb") as wf:
+                if hasattr(self._piper, "synthesize_wav"):
+                    self._piper.synthesize_wav(text, wf)
+                else:
+                    self._piper.synthesize(text, wf)
+        except Exception:
+            import sys
+            subprocess.run([sys.executable, "-m", "piper", "-m", str(model), "-f", str(out)], input=text,
+                           text=True, capture_output=True, timeout=120)
+
+    @staticmethod
+    def _flite(text, out, d):
+        (d / "t.txt").write_text(text)
+        subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
+                        f"flite=textfile={d / 't.txt'}:voice=slt", str(out)], capture_output=True, timeout=120)
+
+    @staticmethod
+    def _espeak(text, out, d):
+        import shutil
+        exe = shutil.which("espeak-ng") or shutil.which("espeak")
+        subprocess.run([exe, "-v", "en-us+f3", "-s", "150", "-w", str(out), text], capture_output=True, timeout=120)
+
+
+def digitize(x, natural=True):
+    """Her slightly digital timbre: a touch of bit-crush, a shimmering chorus and a short echo.
+    Kept light so it is pleasant over a few minutes."""
+    import numpy as np
+    if not natural:                                        # robotic engines: a little slower and deeper
+        x = resample(x, SR, int(SR / 0.93))
+    n = len(x)
+    bits = 2 ** 8
+    x = 0.86 * x + 0.14 * (np.round(x * bits) / bits)
+    t = np.arange(n) / SR
+    delay = (0.021 + 0.004 * np.sin(2 * np.pi * 0.8 * t)) * SR
+    x = x + (0.22 if natural else 0.3) * np.interp(np.arange(n) - delay, np.arange(n), x, left=0.0)
+    out = np.zeros(n + int(0.2 * SR), np.float32)
+    out[:n] += x
+    for sec, g in ((0.065, 0.14), (0.15, 0.06)):
+        k = int(sec * SR)
+        out[k:k + n] += g * x
+    return (out / max(1e-6, np.abs(out).max()) * 0.9).astype(np.float32)
+
+
+# ================================================================ music
+def _lowpass(x, a):
+    import numpy as np
+    try:
+        from scipy.signal import lfilter
+        return lfilter([a], [1, a - 1], x).astype(np.float32)
+    except Exception:
+        k = max(1, int(1 / a))
+        return np.convolve(x, np.ones(k, np.float32) / k, mode="same").astype(np.float32)
+
+
+def _convolve(x, ir, block=1 << 17):
+    """Overlap-add FFT convolution (numpy only)."""
+    import numpy as np
+    n = len(x) + len(ir) - 1
+    size = 1 << int(math.ceil(math.log2(block + len(ir))))
+    IR = np.fft.rfft(ir, size)
+    out = np.zeros(n + size, np.float32)
+    for s in range(0, len(x), block):
+        seg = np.fft.irfft(np.fft.rfft(x[s:s + block], size) * IR, size)
+        out[s:s + size] += seg.astype(np.float32)
+    return out[:len(x)]
+
+
+def music_bed(total, seed=7):
+    """An original prepared-piano piece in the spirit of Aphex Twin's 'Jynweythek': sparse, detuned,
+    metallic plucks in a modal scale with a long airy room (original notes, not the song's)."""
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    N = int((total + 1) * SR)
+    music = np.zeros(N, np.float32)
+
+    def pluck(freq, length, vel):
+        n = int(SR * length)
+        tt = np.arange(n) / SR
+        out = np.zeros(n, np.float32)
+        for k in range(1, 9):
+            fk = freq * k * math.sqrt(1 + 0.0006 * k * k)
+            if fk > SR / 2.2:
+                break
+            for det in (-0.9, 0.9):
+                out += (1.0 / k ** 1.1) * np.sin(2 * np.pi * (fk + det) * tt + rng.uniform(0, 6.28)) * np.exp(-(1.6 + 0.9 * k) * tt)
+        for ratio, a, d in ((2.76, 0.35, 4.5), (5.40, 0.18, 7.0), (8.93, 0.08, 10.0)):
+            out += a * np.sin(2 * np.pi * freq * ratio * tt) * np.exp(-d * tt)
+        out = out * np.minimum(1, tt / 0.004) + rng.normal(0, 1, n) * np.exp(-tt * 90) * 0.15
+        return (out * vel).astype(np.float32)
+
+    scale, base, beat = [0, 1, 3, 5, 7, 8, 10], 146.83, 0.5
+    note = lambda deg, octv=1: base * 2 ** ((scale[deg % 7] + 12 * (deg // 7) + 12 * (octv - 1)) / 12)
+    motifs = [[7, 9, 11, 9, 8, None, 7, None], [7, 11, 12, 11, 9, None, None, 8],
+              [4, 7, 8, 7, None, 6, 7, None], [9, 8, 7, None, 4, None, 5, None]]
+    pos, bar = 0.0, 0
+
+    def place(sig, at):
+        s0 = int(max(0, at) * SR)
+        music[s0:s0 + len(sig)] += sig[:max(0, N - s0)]
+    while pos < total + 1:
+        m = motifs[(bar // 2) % len(motifs)][:]
+        if bar % 2:
+            i = int(rng.integers(0, len(m)))
+            if m[i] is not None:
+                m[i] += int(rng.choice([-1, 1]))
+        for j, deg in enumerate(m):
+            at = pos + j * beat + rng.normal(0, 0.012)
+            if deg is not None and at < total + 1:
+                v = 0.55 + 0.35 * rng.random()
+                place(pluck(note(deg), 3.0, v), at)
+                if rng.random() < 0.18:
+                    place(pluck(note(deg - 4), 3.4, v * 0.5), at)
+        if bar % 4 == 0:
+            place(pluck(note(0, 0), 4.5, 0.6), pos)
+        pos += len(m) * beat
+        bar += 1
+    ir_n = int(SR * 2.8)
+    ir = (rng.normal(0, 1, ir_n) * np.exp(-np.linspace(0, 7, ir_n))).astype(np.float32)
+    ir[0] = 6.0
+    music = _lowpass(_convolve(music, ir), 0.35)
+    return music / max(1e-6, np.abs(music).max())
+
+
+def blip(n_sec=0.12):
+    import numpy as np
+    n = int(SR * n_sec)
+    f = np.linspace(880, 1760, n)
+    return (np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * np.exp(-np.linspace(0, 6, n)) * 0.12).astype(np.float32)
+
+
+# ================================================================ timeline
+def plan(scenes, voice, say=print):
+    """Synthesize every line, then lay the scenes out in time. Returns (scenes, events, total)."""
+    t, events = 0.0, []
+    lines = sum(len(s["lines"]) for s in scenes)
+    done = 0
+    for sc in scenes:
+        sc["audio"] = []
+        for cap in sc["lines"]:
+            a = voice.say(cap)
+            dur = len(a) / SR if a is not None else max(1.6, len(cap.split()) / 2.7)
+            sc["audio"].append((cap, a, dur))
+            done += 1
+            if say and done % 4 == 0:
+                say(f"  voice {done}/{lines}")
+        speech = sum(d + 0.35 for _, _, d in sc["audio"])
+        if sc["name"] == "intro":
+            dur, lead = max(5.0, speech + 1.6), 0.8
+        elif sc["name"] == "table":
+            dur, lead = (1.4, 0) if not sc["audio"] else (speech + 2.0, 0.6)
+        elif sc["name"].startswith("ask"):
+            dur, lead = max(speech + 1.0, 1.7 * min(3, sc.get("passes", 1))), 0.3
+        elif sc["name"].startswith("drop"):
+            dur, lead = 1.1, 0
+        elif sc["name"].startswith("read"):
+            dur, lead = speech + 0.8, 0.3
+        elif sc["name"].startswith("card"):
+            dur, lead = 0.6 + speech + 0.6, 0.45
+        elif sc["name"] == "ritual":
+            dur, lead = max(6.5, speech + 1.5), 0.6
+        elif sc["name"] == "end":
+            dur, lead = speech + 2.8, 0.5
+        else:
+            dur, lead = speech + 0.9, 0.4
+        sc["start"], sc["dur"] = t, dur
+        x = t + lead
+        for cap, a, d in sc["audio"]:
+            events.append((x, cap, a, d))
+            x += d + 0.35
+        t += dur
+    return scenes, events, t
+
+
+def mix_audio(events, flips, total, path):
+    import numpy as np
+    N = int((total + 1) * SR)
+    v = np.zeros(N, np.float32)
+    for at, _, a, _ in events:
+        if a is not None:
+            s0 = int(at * SR)
+            v[s0:s0 + len(a)] += a[:max(0, N - s0)]
+    if np.abs(v).max() > 0:
+        v = v / np.abs(v).max() * 0.9
+    m = music_bed(total)[:N]
+    m = np.pad(m, (0, N - len(m)))
+    win = int(SR * 0.3)
+    env = np.convolve(np.abs(v), np.ones(win, np.float32) / win, mode="same")
+    m *= 0.22 * np.clip(1.0 - env * 9, 0.35, 1.0)
+    for at in flips:
+        b = blip()
+        s0 = int(at * SR)
+        m[s0:s0 + len(b)] += b[:max(0, N - s0)]
+    fade = int(SR * 2.5)
+    m[-fade:] *= np.linspace(1, 0, fade)
+    m[:SR] *= np.linspace(0, 1, SR)
+    out = np.clip(v + m, -1, 1)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes((out * 32767).astype(np.int16).tobytes())
+
+
+# ================================================================ pictures
+ICONS = {
+    "warn": ["....y....", "...yyy...", "...yky...", "..yykyy..", "..yykyy..", ".yyyyyyy.", ".yyykyyy.", "yyyyyyyyy"],
+    "heart": [".rr...rr.", "rrrr.rrrr", "rrwrrrrrr", "rrrrrrrrr", ".rrrrrrr.", "..rrrrr..", "...rrr...", "....r...."],
+    "ball": ["...ppp...", "..pwppp..", ".pwppppp.", ".ppppppp.", ".ppppppp.", "..ppppp..", "...ggg...", "..ggggg.."],
+    "moon": ["..yyyy...", ".yyy.....", "yyy......", "yyy......", "yyy......", "yyy......", ".yyy.....", "..yyyy..."],
+    "star": ["....y....", "....y....", "...yyy...", "yyyyyyyyy", ".yyyyyyy.", "..yyyyy..", ".yy...yy.", "yy.....yy"],
+    "coin": ["..ggggg..", ".gyyyyyg.", "gyyykyyyg", "gyykkkyyg", "gyyykyyyg", "gyykkkyyg", ".gyykyyg.", "..ggggg.."],
+}
+ICON_RGB = {"y": (255, 204, 0), "k": (25, 25, 25), "r": (235, 40, 70), "w": (255, 255, 255),
+            "p": (150, 80, 230), "g": (200, 150, 40)}
+HARD = {"The Tower", "The Devil", "The Moon", "Ten of Swords", "Three of Swords", "Five of Swords",
+        "Seven of Swords", "Nine of Swords", "Five of Pentacles"}
+HOOKS = {
+    "warn": ("warn", ["WARNING", "HIDDEN TRUTH", "WAKE-UP CALL"],
+             ["This is your warning - someone isn't telling you everything",
+              "Don't scroll past this - what you buried is coming back up",
+              "The deck stopped me - you need to hear this one",
+              "This is your sign to stop ignoring your gut"]),
+    "third": ("warn", ["3RD PARTY"],
+              ["This is your warning - someone is standing between you two",
+               "Somebody's energy is sitting in the middle of this connection"]),
+    "love": ("heart", ["LOVE MESSAGE", "THEY MISS YOU", "SOULMATE ENERGY"],
+             ["Someone hasn't stopped thinking about you",
+              "This is your sign - this connection isn't finished",
+              "They feel it too - they just haven't said it yet"]),
+    "money": ("coin", ["MONEY & WORK", "ABUNDANCE INCOMING", "CAREER SHIFT"],
+              ["Your hard work is about to be seen",
+               "This is your sign - a door with your name on it is opening",
+               "Something you planted is finally ready"]),
+    "spirit": ("ball", ["SPIRIT MESSAGE", "FATE IS MOVING", "DIVINE TIMING"],
+               ["Your guides have been trying to reach you",
+                "This is not a coincidence - you were meant to see this",
+                "If this found you, it was meant for you"]),
+    "calm": ("moon", ["LIVE READING", "PICK-ME-UP"],
+             ["Whoever needs this - the deck chose these cards for you",
+              "Take a breath - this one is gentle"]),
+}
+
+
+def make_hook(sess):
+    """(icon, title, line) for the pinned headline, chosen from what actually came up."""
+    if sess.get("hook"):
+        return tuple(sess["hook"])
+    cards = [(c[0], bool(c[1])) for c in sess.get("spread", [])]
+    names = [c for c, _ in cards]
+    suit = lambda s: sum(1 for c in names if c.endswith(" of " + s))
+    majors = sum(1 for c in names if " of " not in c.replace("Wheel of Fortune", "Wheel"))
+    score = {"warn": sum(c in HARD for c in names) * 1.5 + 0.5 * sum(r for _, r in cards),
+             "love": suit("Cups") + 2 * sum(c in ("The Lovers", "Two of Cups", "Ten of Cups") for c in names),
+             "money": suit("Pentacles") + 2 * sum(c in ("Wheel of Fortune", "Ten of Pentacles", "Ace of Pentacles") for c in names),
+             "spirit": 0.7 * majors + 2 * sum(c in ("The Star", "The High Priestess", "Judgement", "The Hermit") for c in names),
+             "calm": 1.0}
+    pick = max(score, key=score.get)
+    if score["love"] >= 2 and score["warn"] >= 2:
+        pick = "third"
+    rng = random.Random("|".join(names) + str(sess.get("date", "")))
+    icon, titles, lines = HOOKS[pick]
+    return icon, rng.choice(titles), rng.choice(lines)
+
+
+class Painter:
+    def __init__(self, sess):
+        import numpy as np
+        from PIL import Image, ImageDraw, ImageFilter
+        import canvas
+        self.np, self.Image, self.ImageDraw, self.ImageFilter, self.canvas = np, Image, ImageDraw, ImageFilter, canvas
+        self.sess = sess
+        self.cap_font = canvas.font(40, "DejaVuSans-Bold.ttf")
+        self.caps, self.screens, self.cards, self.rot = {}, {}, {}, {}
+        self.hook = make_hook(sess)
+        self.base = np.asarray(self._backdrop()).copy()
+
+    # ---------- static layers
+    def _icon(self, name, px=6):
+        rows = ICONS[name]
+        img = self.Image.new("RGBA", (len(rows[0]) * px, len(rows) * px), (0, 0, 0, 0))
+        d = self.ImageDraw.Draw(img)
+        for j, row in enumerate(rows):
+            for i, ch in enumerate(row):
+                if ch != ".":
+                    d.rectangle([i * px, j * px, i * px + px - 1, j * px + px - 1], fill=ICON_RGB[ch] + (255,))
+        return img
+
+    def _backdrop(self):
+        np, Image = self.np, self.Image
+        import art
+        W, H, S = OW // 8, BAND // 8, 8
+        yy, xx = np.mgrid[0:H, 0:W]
+        r = np.sqrt(((xx - W * 0.5) / W) ** 2 + ((yy - H * 0.45) / H) ** 2 * 0.8)
+        hot, edge = np.array([238, 132, 42]), np.array([150, 12, 40])
+        bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
+        k = np.clip(r * 1.6 + (bayer[yy % 4, xx % 4] - 0.5) * 0.18, 0, 1)
+        k = np.round(k * 5) / 5
+        low = (hot[None, None] * (1 - k[..., None]) + edge[None, None] * k[..., None]).astype(np.uint8)
+        ink = (70, 8, 26)
+        v = art.veyra_pixels()
+        for j, row in enumerate(v):                       # her silhouette printed on the tapestry
+            for i, c in enumerate(row):
+                if c is not None:
+                    low[6 + j * 2:8 + j * 2, 84 + i * 2:86 + i * 2] = ink
+        cy, cx, R = 50, 22, 10                            # crescent moon
+        m = ((yy - cy) ** 2 + (xx - cx) ** 2 <= R * R) & ~(((yy - cy + 2) ** 2 + (xx - cx - 5) ** 2) <= (R - 1) ** 2)
+        low[m] = (255, 214, 110)
+        rng = random.Random(11)
+        for _ in range(40):
+            low[rng.randrange(H - 2), rng.randrange(W)] = (255, 236, 170)
+        t = art.text_pixels("VEYRA")
+        for j, row in enumerate(t):
+            for i, c in enumerate(row):
+                if c is not None:
+                    low[4 + j, 4 + i] = ink
+        low[H - 1] = (205, 160, 60)                       # gold edge where the tapestry meets the table
+        img = Image.fromarray(low).resize((OW, BAND), Image.NEAREST)
+        full = Image.new("RGB", (OW, OH), CLOTH)
+        full.paste(img, (0, 0))
+        d = self.ImageDraw.Draw(full)
+        d.rounded_rectangle([22, BOX_TOP - 2, OW - 22, BOX_TOP + BOX + 2], 18, outline=(120, 124, 150), width=3)
+        d.text((OW / 2, 1840), "VEYRA  ✦  8-bit AI tarot", fill=(150, 130, 200), font=self.canvas.font(28), anchor="mm")
+        self._pinned(full)
+        return full
+
+    def _boxes(self, img, lines, y, f, size, icon=None):
+        d = self.ImageDraw.Draw(img)
+        for n, ln in enumerate(lines):
+            w = d.textlength(ln, font=f)
+            ic = self._icon(icon, max(4, size // 9)) if (icon and n == 0) else None
+            iw = ic.width + 12 if ic else 0
+            total = w + 2 * iw
+            x0 = (OW - total) / 2
+            d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
+            if ic:
+                iy = int(y + (size + 8 - ic.height) / 2)
+                img.paste(ic, (int(x0), iy), ic)
+                img.paste(ic, (int(x0 + iw + w + 12), iy), ic)
+            d.text((x0 + iw, y), ln, fill=(0, 0, 0), font=f)
+            y += size + 20
+        return y
+
+    def _wrap(self, text, f, width):
+        d = self.ImageDraw.Draw(self.Image.new("RGB", (8, 8)))
+        words, lines, cur = text.split(), [], ""
+        for w in words:
+            trial = (cur + " " + w).strip()
+            if d.textlength(trial, font=f) <= width:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = w
+        return lines + [cur]
+
+    def _pinned(self, img):
+        icon, title, line = self.hook
+        f = self.canvas.font(54, "DejaVuSans-Bold.ttf")
+        y = self._boxes(img, [title], 270, f, 54, icon)
+        self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, 54)
+
+    # ---------- per-frame layers
+    def ui(self, size):
+        if size not in self.screens:
+            import tarot
+            rows, cols, cw, ch = size
+            scr = self.canvas.VirtualScreen(rows, cols)
+            self.screens[size] = (scr, tarot.UI(scr, self.sess.get("plan")), self.canvas.Raster(cw, ch))
+        return self.screens[size]
+
+    def caption(self, text):
+        if text not in self.caps:
+            img = self.Image.new("RGB", (OW, CAP_H), CLOTH)
+            for size in (40, 36, 32, 28):
+                f = self.canvas.font(size, "DejaVuSans-Bold.ttf")
+                lines = self._wrap(text, f, OW - 150)
+                if len(lines) * (size + 20) <= CAP_H - 8:
+                    break
+            self._boxes(img, lines, (CAP_H - len(lines) * (size + 20)) / 2 + 6, f, size)
+            self.caps[text] = self.np.asarray(img)
+        return self.caps[text]
+
+    def card_image(self, card, rev):
+        key = (card, bool(rev))
+        if key not in self.cards:
+            import tarot, art
+            scr = self.canvas.VirtualScreen(15, 22)
+            ui = tarot.UI(scr, self.sess.get("plan"))
+            ui.cells(0, 0, art.card_cells(card, bool(rev), 22, 15))
+            px = self.canvas.Raster(18, 36).render(scr)
+            face = self.Image.fromarray(px)
+            pad = 14
+            img = self.Image.new("RGBA", (face.width + 2 * pad, face.height + 2 * pad), (0, 0, 0, 0))
+            self.ImageDraw.Draw(img).rounded_rectangle([0, 0, img.width - 1, img.height - 1], 20, fill=(245, 242, 235, 255))
+            img.paste(face, (pad, pad))
+            self.cards[key] = img
+        return self.cards[key]
+
+    def rotated(self, card, rev, angle):
+        a = round(angle * 2) / 2
+        key = (card, bool(rev), a)
+        if key not in self.rot:
+            im = self.card_image(card, rev).rotate(a, resample=self.Image.BICUBIC, expand=True)
+            sh = self.Image.new("RGBA", im.size, (0, 0, 0, 0))
+            sh.putalpha(im.getchannel("A").point(lambda v: v * 0.55))
+            sh = sh.filter(self.ImageFilter.GaussianBlur(12))
+            self.rot[key] = (im, sh)
+            if len(self.rot) > 400:
+                self.rot.clear()
+        return self.rot[key]
+
+    def frame(self, content, cap=None, fade=1.0, held=None):
+        np = self.np
+        out = self.base.copy()
+        h, w = content.shape[:2]
+        if h > BOX:
+            content, h = content[:BOX], BOX
+        y, x = BOX_TOP + (BOX - h) // 2, (OW - w) // 2
+        region = out[y:y + h, x:x + w]
+        mask = content.max(axis=2) > 0                    # black terminal background becomes the cloth
+        region[mask] = content[mask]
+        if cap:
+            out[CAP_TOP:CAP_TOP + CAP_H] = self.caption(cap)
+        if held:
+            out = self.hold_up(out, *held)
+        if fade < 1.0:
+            out = (out.astype(np.float32) * max(0.0, fade)).astype(np.uint8)
+        return out
+
+    def hold_up(self, out, cards, local, dur):
+        """Cards lifted toward the camera while she reads them, then set back down."""
+        rise, hold_end = 0.5, max(2.2, min(4.2, dur * 0.55, dur - 0.5))
+        if local > hold_end + 0.45:
+            return out
+        if local < rise:
+            k = 1 - (1 - local / rise) ** 3
+        elif local > hold_end:
+            k = 1 - ((local - hold_end) / 0.45) ** 2
+        else:
+            k = 1.0
+        img = self.Image.fromarray(out)
+        n = len(cards)
+        for i, (c, r) in enumerate(cards):
+            base_a = (-6 if n == 1 else (-9 if i == 0 else 7)) + 2.2 * math.sin(local * 1.4 + i)
+            im, sh = self.rotated(c, r, base_a)
+            cx = OW * (0.58 if n == 1 else (0.36 + 0.34 * i))
+            cy = 900 + 10 * math.sin(local * 1.1 + i) + (1 - k) * 1300
+            px, py = int(cx - im.width / 2), int(cy - im.height / 2)
+            img.paste(sh, (px + 18, py + 26), sh)
+            img.paste(im, (px, py), im)
+        return self.np.asarray(img)
+
+
+def scene_content(p, sc, t, sess):
+    """Draw one moment of a scene on the virtual terminal and return its pixels."""
+    import tarot
+    key, spread = sess["key"], sess["spread"]
+    name, local = sc["name"], t - sc["start"]
+    if name in ("intro", "end") or (key in ("celtic", "falling") and (name == "table" or name.startswith("card"))) \
+            or name.startswith(("ask", "drop", "read")):
+        size = WIDE
+    elif name == "interview":
+        size = LARGE
+    else:
+        size = SMALL
+    scr, ui, ras = p.ui(size)
+    scr.clock = t
+    if name == "intro":
+        ui.mood = ui.plan["intro"]
+        ui.intro_frame("", footer="")
+    elif name == "interview":
+        lines = sess["_transcript"]
+        n = min(len(lines), 3 + int(len(lines) * min(1.0, local / max(1.0, sc["dur"] * 0.85))))
+        scr.erase()
+        ui.stars(18)
+        ui.gcenter(0, "~ what you brought to the table ~")
+        for i, (txt, col) in enumerate(lines[:n][-(ui.h - 3):]):
+            ui.text(2 + i, 2, txt[: ui.w - 3], col)
+    elif name == "spirits":
+        ui.hold_frame(sess.get("spirit_qs", []), footer="")
+    elif name.startswith(("ask", "drop", "read")):
+        import textwrap
+        log = sess["falls"]["log"]
+        e = log[sc["event"]]
+        before = sum(len(x["idx"]) for x in log[:sc["event"]])
+        cards = [tuple(c) for c in sess["spread"]]
+        upto = before if name.startswith("ask") else before + len(e["idx"])
+        pairs = [p for p in sess["falls"].get("pairs", []) if max(p) < upto]
+        st = {"fallen": cards[:upto], "pairs": pairs, "pass_n": 13, "page": [],
+              "pass_t0": sc["start"] + (local // 1.7) * 1.7}
+        ui.mood = ui.plan["wash"]
+        if name.startswith("ask"):
+            st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
+            ui.falling_frame(st, footer="the deck shuffles...")
+        elif name.startswith("drop"):
+            st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
+            if local < 0.5:
+                st["drop"] = {"t0": sc["start"], "idx": e["idx"]}
+            else:
+                st["flip"] = (tuple(e["idx"]), min(8, int((local - 0.5) / 0.6 * 9)))
+            ui.falling_frame(st, footer="a card falls!" if len(e["idx"]) == 1 else "two cards fall together!")
+        else:
+            room = max(3, ui.h - 19)
+            lines = textwrap.wrap(e["text"], ui.w - 4)
+            pages = [lines[i:i + room] for i in range(0, len(lines), room)] or [[]]
+            st["page"] = pages[min(len(pages) - 1, int(local / max(0.1, sc["dur"]) * len(pages)))]
+            ui.falling_frame(st, footer="")
+    elif name == "ritual" and key == "falling":
+        ui.mood = ui.plan["wash"]
+        cycle = 1.7
+        st = {"fallen": [], "pairs": [], "pass_t0": sc["start"] + (local // cycle) * cycle, "pass_n": 13, "page": []}
+        ui.falling_frame(st, footer="")
+    elif name == "ritual":
+        wash_d = sc["dur"] * 0.55
+        if local < wash_d:
+            ui.mood = ui.plan["wash"]
+            if "_wash" not in sess:
+                sess["_wash"] = ui.wash_cards(78, random.Random(3))
+            ui.wash_frame(sess["_wash"], int(local * 28))
+        else:
+            ui.mood = ui.plan["cut"]
+            ph = min(0.999, (local - wash_d) / max(0.1, sc["dur"] - wash_d))
+            k, f = min(2, int(ph * 3)), ph * 3 - min(2, int(ph * 3))
+            sizes = [31, 22, 25]
+            piles = [list(range(sizes[i])) if i < k else None for i in range(3)]
+            hand = list(range(78 - sum(sizes[:k])))
+            ui.draw_cut(hand, piles, None, None, "the cards fall...", refresh=False)
+            x1, y1 = ui.w // 2 - tarot.PW // 2, 16
+            x2, y2 = ui.w // 2 + (k - 1) * (tarot.PW + 10) - tarot.PW // 2, 5
+            ui.stack(int(y1 + (y2 - y1) * min(1, f * 1.4)), int(x1 + (x2 - x1) * min(1, f * 1.4)), sizes[k], label=False)
+    elif name == "table":
+        ui.mood = ui.plan["reveal"]
+        if key == "falling":
+            ui.fall_pairs = (sess.get("falls") or {}).get("pairs", [])
+            ui.fall_questions = (sess.get("falls") or {}).get("questions", [None] * 6)
+        live_done = key == "falling" and (sess.get("falls") or {}).get("log")
+        ui.reveal_scene(key, spread, len(spread) if live_done else 0, None, "", sess.get("domain", "inner"))
+    elif name.startswith("card"):
+        i = sc["card"]
+        ui.mood = ui.plan["reveal"]
+        if key == "falling":
+            ui.fall_pairs = (sess.get("falls") or {}).get("pairs", [])
+            ui.fall_questions = (sess.get("falls") or {}).get("questions", [None] * 6)
+        if local < 0.6:
+            ui.reveal_scene(key, spread, i, (i, min(8, int(local / 0.6 * 9))), "", sess.get("domain", "inner"))
+        else:
+            ui.reveal_scene(key, spread, i + 1, None, "", sess.get("domain", "inner"))
+    else:   # end card
+        ui.mood = "hope"
+        ui.intro_frame("", lines=["Thank you for sitting with me.", "", "The cards are gathered", "", "with gratitude."], footer="")
+        ui.center(ui.h - 3, "local AI  •  real randomness", 123, True)
+    return ras.render(scr)
+
+
+def held_cards(sc, t, sess):
+    """Which cards she holds up in this moment: (cards, seconds into scene, scene length) or None."""
+    name, local = sc["name"], t - sc["start"]
+    if name.startswith("read") and (sess.get("falls") or {}).get("log"):
+        cards = [tuple(c) for c in sess["falls"]["log"][sc["event"]]["cards"]]
+    elif name.startswith("card") and "card" in sc:
+        if local < 0.6:                                   # let the flip on the table play first
+            return None
+        cards, local = [tuple(sess["spread"][sc["card"]])], local - 0.6
+    else:
+        return None
+    return cards, local, sc["dur"] - (0.6 if name.startswith("card") else 0)
+
+
+def transcript(sess):
+    """The interview as it appeared in the terminal."""
+    import textwrap
+    from spreads import SPREADS
+    rows = [("› " + sess["question"], 231), ("A few things to help me feel you out.", 51)]
+    prof = dict(p.split(": ", 1) for p in sess.get("profile", "").split(", ") if ": " in p)
+    for label, k in (("Your age?", "age"), ("Your career, or what you do?", "career"), ("Your sex or gender?", "sex/gender"),
+                     ("Your astrological sign, or its element?", "sign")):
+        if prof.get(k):
+            rows += [(label, 103), ("› " + prof[k], 231)]
+    for i, (q, a) in enumerate(sess.get("qa", [])):
+        rows += [(q, 141 if i % 2 else 51), ("› " + (a or "(no answer)"), 231)]
+    rows.append(("To the spirits, I ask:", 51))
+    rows += [("• " + q, 189) for q in sess.get("spirit_qs", [])]
+    if sess["key"] == "falling":
+        for i, q in enumerate((sess.get("falls") or {}).get("questions", [])[1:], 2):
+            if q:
+                rows.append((f"Before card {i} fell, you asked: {q}", 220))
+    else:
+        rows += [("How shall the cards be laid?", 51), ("› " + SPREADS[sess["key"]]["name"], 231)]
+    out = []
+    for txt, col in rows:
+        for j, ln in enumerate(textwrap.wrap(txt, 48) or [""]):
+            out.append(("  " + ln if j else ln, col))
+    return out
+
+
+# ================================================================ the whole thing
+def render(sess, out_path, voice_kind, say=print, progress=None):
+    import deps
+    sess = dict(sess)
+    sess["_transcript"] = transcript(sess)
+    voice = Voice(voice_kind)
+    say(f"Writing her lines and voicing them ({voice_kind or 'captions only'})...")
+    scenes, events, total = plan(build_script(sess), voice, say)
+    flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as d:
+        wav = Path(d) / "audio.wav"
+        say("Composing the music...")
+        mix_audio(events, flips, total, wav)
+        p = Painter(sess)
+        cmd = [deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+               "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast",
+               "-crf", "21", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "160k", "-shortest",
+               "-movflags", "+faststart", str(out_path)]
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        frames = int(total * FPS)
+        ev = sorted(events, key=lambda e: e[0])
+        say("Drawing the frames...")
+        for n in range(frames):
+            t = n / FPS
+            sc = next(s for s in reversed(scenes) if s["start"] <= t) if t >= 0 else scenes[0]
+            cap = next((c for at, c, _, d in ev if at <= t < at + d + 0.25), None)
+            fade = 1.0 if sc["name"] != "end" else min(1.0, (total - t) / 1.2)
+            try:
+                proc.stdin.write(p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess)).tobytes())
+            except BrokenPipeError:
+                break
+            if progress and n % FPS == 0:
+                progress(n / frames)
+        proc.stdin.close()
+        err = proc.stderr.read().decode(errors="ignore")
+        if proc.wait() != 0:
+            raise RuntimeError("ffmpeg could not encode the video: " + err[-300:])
+    if progress:
+        progress(1.0)
+    return out_path
+
+
+def make(sess, ask=None, say=None, progress=None):
+    """Check what is needed (asking before installing anything), then render. Returns a path or None."""
+    import deps
+    ask, say = ask or deps.default_ask, say or deps.default_say
+    if not deps.ensure_python({"numpy": "numpy", "PIL": "pillow"}, ask, say, "Making a video"):
+        return None
+    if not deps.ensure_ffmpeg(ask, say):
+        return None
+    voice = deps.ensure_voice(ask, say)
+    out = VIDEOS / f"veyra_{time.strftime('%Y%m%d_%H%M%S')}.mp4"
+    try:
+        return render(sess, out, voice, say, progress)
+    except Exception as e:
+        say(f"The video could not be finished: {str(e)[:200]}")
+        return None

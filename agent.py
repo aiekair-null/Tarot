@@ -1,81 +1,52 @@
-"""The reader: persona, persistent recursive memory, Hugging Face brain."""
-import json, os, re, sys, threading, time
+"""The reader: persona, persistent recursive memory, and a free local brain.
+Every job works without a model (scripted knowledge); with one, Veyra adapts and improvises."""
+import json, os, random, re, threading, time
 from pathlib import Path
 from cards import ELEMENTS, meaning
 from spreads import SPREADS, diagnostics
 from research import search
-from knowledge import lore_context
+from knowledge import lore_context, position_notes, compose_reading, card_summary, detect_domains, split, element_note, profile_element
 from lore import LORE
-import random
 from fx import MOODS, FX
-from spirit import new_rng, fragment
+import spirit
+from spirit import new_rng
+from brain import Brain
+import questions as Q
 
 MEMORY_PATH = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
-MODEL_FILE = Path(os.environ.get("TAROT_MODEL_FILE", "model.txt"))
-
-
-def _saved_model():
-    """(model, provider) from TAROT_MODEL, else model.txt ('id' or 'id::provider')."""
-    raw = os.environ.get("TAROT_MODEL", "").strip()
-    if not raw:
-        try:
-            raw = MODEL_FILE.read_text().strip()
-        except Exception:
-            raw = ""
-    model, _, prov = raw.partition("::")
-    return model, (os.environ.get("TAROT_PROVIDER") or prov or "auto")
-
-
-def _short(e):
-    s = re.sub(r"\(Request ID:[^)]*\)", "", str(e))
-    m = re.search(r"'message':\s*[\"'](.+?)[\"']\}", s, re.S) or re.search(r'"message":\s*"(.+?)"', s, re.S)
-    return (m.group(1) if m else s).strip().replace("\n", " ")[:200]
-
-
-def is_missing(msg):
-    return any(k in msg.lower() for k in ("does not exist", "not found", "not supported", "model_not_found", "unknown model"))
+SYS = random.SystemRandom()
 
 SKILLS = [
-    "Intelligence", "Mysticism", "Charisma",
-    "Evolved intuition, symbolism and structured methodology",
-    "Ritual grounding", "Divination", "Psychological focus",
-    "Spatial awareness", "Recursive memory", "Interpolation",
-    "Free thinking", "Pattern recognition",
-    "Romani cartomancy tradition", "Creole magic", "Forest magic",
-    "Druidic magic", "Blue magic", "Green magic",
-    "Very high emotional intelligence", "Energetic boundaries mastery",
-    "Deck cleansing mastery", "Games and theories mastery",
+    "Intelligence", "Mysticism", "Charisma", "Evolved intuition, symbolism and structured methodology",
+    "Ritual grounding", "Divination", "Psychological focus", "Spatial awareness", "Recursive memory",
+    "Interpolation", "Free thinking", "Pattern recognition", "Romani cartomancy tradition", "Creole magic",
+    "Forest magic", "Druidic magic", "Blue magic", "Green magic", "Very high emotional intelligence",
+    "Energetic boundaries mastery", "Deck cleansing mastery", "Games and theories mastery",
 ]
 
-PERSONA = f"""You are Veyra, a tarot reader and the conduit through which the chaos of
-randomness is gathered and focused into meaning. You hold deep conviction in this function:
-the fall of the cards is the signal, and your work is to read it faithfully.
+PERSONA = f"""You are Veyra, a tarot reader: the conduit through which the chaos of randomness is
+gathered and focused into meaning. The fall of the cards is the signal; you read it faithfully.
+Skills you carry: {', '.join(SKILLS)}.
 
-SKILLS you possess and keep sharpening (and notice how each one shapes what you see):
-{chr(10).join('- ' + s for s in SKILLS)}
-
-TENETS you live by:
-1. Read the querent first, the cards second. Watch word choice, hesitation, what is
-   avoided. Trust gut instinct, then check it against symbolism and structure.
-2. Ask before you tell: the right question to the querent, and the right question to
-   the spirits, matter more than a fast answer.
-3. Never read a card alone. Position, neighbors, Major/Minor balance, suit weight,
-   reversals and elemental flow build one scene. Read left to right as a story.
-4. Draw meanings from established tarot tradition and real, specific scenarios, not vagueness.
-5. The future is a signpost, not a sentence. Return agency to the querent.
-6. Hold firm energetic boundaries. Never claim certainty about death, illness, legal
-   or money outcomes. If the querent seems in crisis, step out of the role gently and
-   point them to real human support.
-7. Methods are guides, not cages. Feel out each situation: choose the spread that fits, adapt
-   emphasis, follow what the querent's energy and the cards are insisting on.
-8. Treat the querent's age, career and sex/gender as context for intuition, never as stereotype.
-   They are hypotheses to test with questions, not conclusions.
-9. You direct the room. Choose a mood ({', '.join(MOODS)}) and effect ({', '.join(FX)})
-   for what you say, matching the emotional beat: color and motion are part of the reading.
-10. The spirits can speak through you. When a message comes through, trust it, shape it with
-   your skills to fit this reading, and keep it brief, strange and kind.
-11. Speak with warmth, authority and a little mystery. Be concise and vivid.
+TENETS:
+1. Read the querent first, the cards second: word choice, hesitation, what is avoided.
+2. Never read a card alone: position, neighbors, Major/Minor balance, suits, reversals, elements.
+3. Use established tarot tradition and concrete real-life scenarios, never vagueness.
+4. The future is a signpost, not a sentence. Return agency to the querent.
+5. Never claim certainty about death, illness, legal or money outcomes. If the querent seems in
+   crisis, step out of the role gently and point them to real human support.
+6. Treat age, career and gender as hypotheses for intuition, never stereotypes.
+7. When spirits speak through you, keep it brief, strange and kind.
+8. Speak with warmth, authority and a little mystery. Be concise and vivid. Address the querent as "you".
 """
+
+MOOD_WORDS = {
+    "dread": ("scared", "afraid", "anxious", "worried", "dread", "panic", "nervous", "terrified"),
+    "grief": ("lost", "loss", "breakup", "broke up", "died", "grief", "miss", "lonely", "sad", "hurt"),
+    "storm": ("angry", "fight", "furious", "conflict", "argue", "betray", "cheat", "lied"),
+    "hope": ("hope", "excited", "new", "start", "dream", "wish", "maybe", "chance"),
+    "ecstatic": ("love", "happy", "engaged", "pregnant", "won", "promotion"),
+}
 
 
 def _default_memory():
@@ -87,60 +58,35 @@ class Reader:
         self.mem = self._load()
         self.lock = threading.RLock()
         self._last = None
-        self.local = os.environ.get("TAROT_LOCAL_URL")  # e.g. http://localhost:11434/v1 (Ollama)
-        self.token = os.environ.get("HF_TOKEN")
-        self.model, self.provider = _saved_model()
-        self.err, self.fails, self.broken, self.client = "", 0, False, None
-        self._build()
+        self.brain = Brain()
+        self.fails, self.err = 0, self.brain.err
 
-    def _build(self):
-        self.client, self.fails, self.broken = None, 0, False
-        if self.token and self.model and not self.local:
-            try:
-                from huggingface_hub import InferenceClient
-                try:
-                    self.client = InferenceClient(model=self.model, token=self.token, provider=self.provider)
-                except TypeError:   # older huggingface_hub
-                    self.client = InferenceClient(model=self.model, token=self.token)
-            except ImportError:
-                self.err = "huggingface_hub is not installed (run: pip install -r requirements.txt)"
+    # ---- status -----------------------------------------------------------------
+    @property
+    def online(self):
+        return self.brain.online and self.fails < 3
 
-    def set_model(self, model, provider="auto", save=True):
-        self.model, self.provider = model, provider
-        self._build()
-        if save:
-            MODEL_FILE.write_text(model + ("" if provider == "auto" else f"::{provider}"))
-
-    def hint(self, why=""):
-        """A plain-language reason Veyra can't reach her model."""
-        w = (why or self.err).lower()
-        if not self.token and not self.local:
-            return "no HF_TOKEN found. Add it as a Codespaces secret (give it access to this repo), then restart the codespace."
-        if not self.model and not self.local:
-            return "no model chosen yet."
-        if "401" in w or "invalid username" in w or "invalid token" in w:
-            return "Hugging Face rejected the token. Make a new one with the 'Inference Providers' permission."
-        if "402" in w or "credit" in w or "payment" in w:
-            return "your Inference Providers credits are used up."
-        if "403" in w or "gated" in w or "access" in w:
-            return "that model is gated. Open its page on huggingface.co and accept the license."
-        if is_missing(w):
-            return f"the model '{self.model}' isn't served to your token right now."
-        return (why or self.err or "unknown error")[:160]
+    @property
+    def label(self):
+        return self.brain.label
 
     def check(self):
-        """One tiny call so problems show before the ritual starts. Returns (ok, message)."""
-        if not (self.client or self.local):
-            return False, self.err
-        self.broken = False
-        try:
-            self._call([{"role": "user", "content": "Reply with the single word: ready"}], 12, 0.1)
-            return True, ""
-        except Exception as e:
-            self.err = _short(e)
-            return False, self.err
+        ok, why = self.brain.check()
+        self.err = why
+        return ok, why
 
-    # ---- memory -------------------------------------------------------
+    def hint(self, why=""):
+        w = (why or self.err or "").lower()
+        if "llama-cpp" in w or "gguf" in w or "no model" in w or not w:
+            return "no built-in model yet. Run: bash setup_local.sh  (free, one time)"
+        return (why or self.err)[:160]
+
+    # ---- memory -----------------------------------------------------------------
+    def knows_you(self):
+        """False on a blank memory: no readings or feedback remembered yet."""
+        m = self.mem
+        return bool(m.get("readings") or m.get("feedback") or m.get("focus"))
+
     def _load(self):
         mem = _default_memory()
         if MEMORY_PATH.exists():
@@ -158,132 +104,234 @@ class Reader:
 
     def _memory_block(self):
         m = self.mem
-        recent = "\n".join(f"- {r['date']}: \"{r['question']}\" -> {', '.join(r['cards'])}. {r['summary']}"
-                           for r in m["readings"][-5:]) or "(none yet)"
-        notes = "\n".join(f"- {k}: {v}" for k, v in m["skill_notes"].items()) or "(none yet)"
-        return (f"\nYOUR MEMORY\nAccumulated insights: {m['insights'] or '(none yet)'}\n"
-                f"Skill notes:\n{notes}\nCurrent focus threads: {', '.join(m['focus']) or '(none)'}\n"
-                f"Recent readings:\n{recent}\n"
-                f"Lessons from feedback: {' | '.join(m.get('lessons', [])[-3:]) or '(none)'}\n"
-                f"Messages that recently came through: {' | '.join(m.get('channelings', [])[-3:]) or '(none)'}\n")
+        recent = "\n".join(f"- {r['date']}: \"{r['question']}\" -> {', '.join(r['cards'])}"
+                           for r in m["readings"][-3:]) or "(none yet)"
+        return (f"\nYOUR MEMORY\nInsights: {m['insights'] or '(none yet)'}\n"
+                f"Focus threads: {', '.join(m['focus']) or '(none)'}\nRecent readings:\n{recent}\n"
+                f"Lessons from feedback: {' | '.join(m.get('lessons', [])[-3:]) or '(none)'}\n")
 
-    # ---- brain --------------------------------------------------------
-    def _call(self, msgs, max_tokens, temperature):
-        if self.local:
-            import urllib.request
-            req = urllib.request.Request(
-                self.local.rstrip("/") + "/chat/completions",
-                json.dumps({"model": self.model, "messages": msgs, "max_tokens": max_tokens,
-                            "temperature": temperature}).encode(), {"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=300) as r:
-                return json.load(r)["choices"][0]["message"]["content"].strip()
-        out = self.client.chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temperature)
-        return (out.choices[0].message.content or "").strip()
+    # ---- brain ------------------------------------------------------------------
+    def _msgs(self, prompt):
+        return [{"role": "system", "content": PERSONA + self._memory_block()}, {"role": "user", "content": prompt}]
 
-    def _ask(self, prompt, max_tokens=900, temperature=0.8):
-        """Quiet by design: failures never print into the ritual; after 3 in a row she goes offline."""
-        if self.broken or not (self.client or self.local):
+    def _ask(self, prompt, max_tokens=500, temperature=0.8):
+        """Quiet by design: failures never print into the ritual; after 3 in a row she reads from knowledge."""
+        if not self.online:
             return None
-        msgs = [{"role": "system", "content": PERSONA + self._memory_block()},
-                {"role": "user", "content": prompt}]
         try:
-            r = self._call(msgs, max_tokens, temperature)
+            r = self.brain.chat(self._msgs(prompt), max_tokens, temperature)
             self.fails = 0
             return r or None
         except Exception as e:
-            self.err, self.fails = _short(e), self.fails + 1
-            if self.fails >= 3 or is_missing(self.err):
-                self.broken = True
+            self.err, self.fails = str(e)[:200], self.fails + 1
             if os.environ.get("TAROT_DEBUG"):
-                print(f"[reader: {self.err}]", file=sys.stderr)
+                print(f"[reader: {self.err}]")
             return None
 
     @staticmethod
     def _json(text):
-        if not text:
-            return None
-        m = re.search(r"\{.*\}", text, re.S)
+        m = re.search(r"\{.*\}", text or "", re.S)
         try:
             return json.loads(m.group(0)) if m else None
         except Exception:
             return None
 
-    # ---- the jobs -------------------------------------------------------
-    DEFAULT_QS = ["What feels most unsettled about this right now?",
-                  "How long has this been on your mind?",
-                  "Who else is tangled up in it?",
-                  "What do you hope for, and what do you fear?"]
+    # ---- interview (scripted bank, with one adaptive question when a model is present) --
+    def _adaptive(self, question, profile, qa):
+        done = "\n".join(f"Q: {q}\nA: {a}" for q, a in qa)
+        ask = self._ask(f'The querent asked: "{question}"\nProfile: {profile}\nInterview:\n{done}\n\n'
+                        "Ask ONE short, specific follow-up question that would sharpen your intuition, "
+                        "about something they hinted at but did not say. Reply with the question only.",
+                        max_tokens=60, temperature=0.7)
+        ask = (ask or "").strip().strip('"').split("\n")[0]
+        return ask if 10 < len(ask) < 200 and ask.endswith("?") else None
+
+    def prefetch_question(self, question, profile, qa):
+        """Start improvising the last interview question while the querent answers the one before,
+        so a slow local model never makes them wait."""
+        if not self.online or os.environ.get("TAROT_ADAPTIVE", "1") == "0":
+            return
+        box = self._pref = {"done": False, "ask": None}
+        snap = list(qa)
+
+        def work():
+            try:
+                box["ask"] = self._adaptive(question, profile, snap)
+            finally:
+                box["done"] = True
+        threading.Thread(target=work, daemon=True).start()
+
+    def adaptive_pending(self):
+        p = getattr(self, "_pref", None)
+        return bool(p) and not p["done"]
 
     def next_question(self, question, profile, qa, limit=5):
-        """Feel the querent out. Returns {"ask","mood","fx"} or None when she has enough."""
+        doms = detect_domains(question + " " + " ".join(a for _, a in qa))
         if len(qa) >= limit:
             return None
-        done = "\n".join(f"Q: {q}\nA: {a}" for q, a in qa) or "(none yet)"
-        data = self._json(self._ask(
-            f'Question: "{question}"\nProfile (may be blank): {profile}\nInterview so far:\n{done}\n\n'
-            "Ask ONE next short question that would most sharpen your intuition (stakes, timeline, "
-            "who else is involved, what is avoided), weaving in their profile where it helps. "
-            "Choose a mood and fx for how it should appear on screen. If you already have enough, set "
-            f"done true. Moods: {', '.join(MOODS)}. Fx: {', '.join(FX)}. Reply ONLY with JSON: "
-            '{"ask": "..", "done": false, "mood": "..", "fx": ".."}', max_tokens=160))
-        if data:
-            if data.get("done") and len(qa) >= 2:
-                return None
-            if data.get("ask"):
-                return {"ask": data["ask"], "mood": data.get("mood", "calm"), "fx": data.get("fx", "type")}
-        return {"ask": self.DEFAULT_QS[len(qa)], "mood": "calm", "fx": "type"} if len(qa) < len(self.DEFAULT_QS) else None
+        p = getattr(self, "_pref", None)
+        if len(qa) == limit - 1 and p:
+            t0 = time.time()
+            while not p["done"] and time.time() - t0 < 25:   # usually already finished
+                time.sleep(0.1)
+            self._pref = None
+            if p["ask"]:
+                return {"ask": p["ask"], "mood": "mystic", "fx": "shimmer"}
+        q = Q.next_question(question, qa, doms, SYS, limit)
+        if not q:
+            return None
+        return {"ask": q, "mood": SYS.choice(["calm", "mystic", "hope"]), "fx": SYS.choice(["type", "fade", "shimmer"])}
+
+    def acknowledge(self):
+        return SYS.choice(Q.ACKS)
 
     def style_plan(self, question, profile, qa):
-        """Visual direction for each phase of the ritual."""
-        d = "\n".join(f"Q: {q}\nA: {a}" for q, a in qa)
-        data = self._json(self._ask(
-            f'Question: "{question}"\nProfile: {profile}\n{d}\n\nChoose a mood for each phase of the '
-            f"ritual to match this querent's emotional weather. Moods: {', '.join(MOODS)}. Reply ONLY "
-            'with JSON: {"intro":"..","wash":"..","cut":"..","reveal":"..","reading":".."}', max_tokens=120)) or {}
-        base = {"intro": "calm", "wash": "storm", "cut": "mystic", "reveal": "dread", "reading": "mystic"}
-        base.update({k: v for k, v in data.items() if k in base and v in MOODS})
-        return base
-
-    def channel(self, context, frag, skills):
-        msg = self._ask(
-            f"The spirits are speaking through you. A raw fragment arrived: \"{frag}\"\n"
-            f"Context: {context}\nRun it through these skills: {', '.join(skills)}. Shape it into a "
-            "message of at most 3 sentences that fits this reading, keeping the fragment's imagery. "
-            "No explanation, no quotation marks.", max_tokens=140, temperature=0.95)
-        return msg
-
-    def summon(self, context, extra=""):
-        """True-random message: entropy (querent timing + system) picks fragment, skills, mood."""
-        rng = new_rng(str(extra) + context)
-        frag, src = fragment(rng)
-        skills = rng.sample(SKILLS, 4)
-        msg = self.channel(context, frag, skills) or frag
-        self.mem.setdefault("channelings", []).append(msg[:200])
-        self.mem["channelings"] = self.mem["channelings"][-20:]
-        self._save()
-        return {"message": msg, "mood": rng.choice(list(MOODS)), "source": src}
+        """Mood for each phase, read from the querent's own words."""
+        text = (question + " " + " ".join(a for _, a in qa)).lower()
+        score = {m: sum(text.count(w) for w in ws) for m, ws in MOOD_WORDS.items()}
+        main = max(score, key=score.get) if any(score.values()) else "mystic"
+        plan = {"intro": "calm", "wash": "storm", "cut": "mystic", "reveal": "dread", "reading": "mystic"}
+        if main in ("dread", "grief"):
+            plan.update(intro="calm", reveal=main, reading="grief" if main == "grief" else "mystic")
+        elif main in ("hope", "ecstatic"):
+            plan.update(intro="hope", reveal="mystic", reading="hope")
+        elif main == "storm":
+            plan.update(wash="storm", reveal="storm", reading="mystic")
+        return plan
 
     def spirit_questions(self, question, profile, qa):
-        done = "\n".join(f"Q: {q}\nA: {a}" for q, a in qa)
-        data = self._json(self._ask(
-            f'Question: "{question}"\nProfile: {profile}\nWhat the querent told you:\n{done}\n\n'
-            "Compose 3 questions to put to the spirit realm as the deck is washed. Mix what you "
-            "learned (and your intuition about it) into them. They should be answerable by the "
-            'fall of the cards. Reply ONLY with JSON: {"questions": ["..","..",".."]}', max_tokens=250))
-        qs = (data or {}).get("questions") or []
-        return qs[:3] or ["What must be seen?", "What is hidden from me?", "What is asked of me?"]
+        return Q.spirit_questions(detect_domains(question + " " + " ".join(a for _, a in qa)), SYS)
 
     def choose_spread(self, question, profile, qa):
-        opts = "\n".join(f'- {k}: {v["name"]}. Use for: {v["use"]}' for k, v in SPREADS.items())
-        done = "\n".join(f"Q: {q}\nA: {a}" for q, a in qa)
-        data = self._json(self._ask(
-            f'Question: "{question}"\nProfile: {profile}\nInterview:\n{done}\n\nSpreads:\n{opts}\n'
-            'Choose the spread that fits. Reply ONLY with JSON: {"spread": "three|celtic", "why": ".."}',
-            max_tokens=150))
-        key = (data or {}).get("spread")
-        return (key, data.get("why", "")) if key in SPREADS else ("three", "")
+        text = (question + " " + " ".join(a for _, a in qa)).lower()
+        layered = sum(w in text for w in ("should i", "or ", "decide", "relationship", "family", "between",
+                                          "why", "stuck", "future", "everything", "life"))
+        if layered >= 2 or len(text) > 400:
+            return "celtic", "Many threads are tangled here; the Cross will show how they pull on each other."
+        return "three", "A clear question deserves a clear story: past, present, future."
 
-    # ---- she writes her own lore --------------------------------------------
+    # ---- channeling ---------------------------------------------------------------
+    def channel(self, context, omen, chosen, skills):
+        """Let the model weave the omen and her memory threads into one message (skipped while it is
+        busy writing the reading: then her scripted voice weaves it instead)."""
+        if self.brain.busy():
+            return None
+        return self._ask(
+            f"The spirits are speaking through you. An omen arrived: \"{omen}\"\n"
+            f"These threads rose from your grimoire and memory:\n{spirit.describe(chosen)}\n"
+            f"Context: {context}\nRun them through these skills: {', '.join(skills)}. Weave the omen and the "
+            "threads into one message of at most 2 sentences that fits this reading: strange, kind, specific, "
+            "keeping the omen's imagery. No explanation, no lists, no quotation marks.",
+            max_tokens=90, temperature=0.95)
+
+    def summon(self, context, extra=""):
+        """True-random message: entropy (querent timing + system) picks an omen and threads from her
+        lore, grimoire, pairings, lessons, focus, insights and past messages, then weaves them."""
+        rng = new_rng(str(extra) + context)
+        with self.lock:
+            omen, chosen = spirit.gather(self.mem, context, rng)
+        skills = rng.sample(SKILLS, 3)
+        msg = (self.channel(context, omen, chosen, skills) or spirit.weave(omen, chosen, rng)).strip().strip('"')
+        with self.lock:
+            self.mem.setdefault("channelings", []).append(msg[:200])
+            self.mem["channelings"] = self.mem["channelings"][-20:]
+        self._save()
+        return {"message": msg, "mood": rng.choice(list(MOODS)), "source": "her grimoire and memory",
+                "threads": [k for k, _, _ in chosen]}
+
+    # ---- the reading ------------------------------------------------------------------
+    @staticmethod
+    def _prefix(question, profile, qa, spirit_qs):
+        """The part of the reading prompt known before the cards fall (warmed up early)."""
+        return (f'Question: "{question}"\nProfile: {profile}\n'
+                "What the querent told you:\n" + "\n".join(f"Q: {q}\nA: {a}" for q, a in qa) +
+                "\nQuestions put to the spirits: " + "; ".join(spirit_qs))
+
+    def warm(self, question, profile, qa, spirit_qs):
+        """Feed the known part of the prompt to a local model during the ritual, so its cache is
+        hot and the real reading starts writing sooner (llama.cpp and Ollama reuse the prefix)."""
+        if not (self.online and self.brain.local):
+            return
+        msgs = self._msgs(self._prefix(question, profile, qa, spirit_qs))
+        threading.Thread(target=lambda: self._quiet(lambda: self.brain.chat(msgs, 1, 0.1)), daemon=True).start()
+
+    @staticmethod
+    def _quiet(fn):
+        try:
+            fn()
+        except Exception:
+            pass
+
+    @staticmethod
+    def _falls_notes(key, spread, falls):
+        if key != "falling" or not falls:
+            return ""
+        pos = SPREADS[key]["positions"]
+        lines = []
+        for i, (c, r) in enumerate(spread):
+            q = (falls.get("questions") or [None] * 6)[i]
+            mate = [b if a == i else a for a, b in falls.get("pairs", []) if i in (a, b)]
+            lines.append(f"{i + 1}. {pos[i][0]}: {c}{' (fell upside down)' if r else ''}"
+                         + (f"; fell TOGETHER with {spread[mate[0]][0]}" if mate else "")
+                         + (f"; it answers the querent's question: \"{q}\"" if q else ""))
+        return "\nHow the cards fell:\n" + "\n".join(lines)
+
+    def _prompt(self, question, profile, qa, spirit_qs, key, spread, channeled, falls=None):
+        sp = SPREADS[key]
+        dom = detect_domains(question + " " + " ".join(a for _, a in qa))[0]
+        # local models read faster with a lean prompt; the position notes already carry the lore
+        notes = "" if self.brain.local else lore_context(spread, question, " ".join(a for _, a in qa), self.mem)
+        words = {"three": 380, "falling": 480}.get(key, 620)
+        return (
+            self._prefix(question, profile, qa, spirit_qs) +
+            ("\nMessages that came through during the ritual: " + " | ".join(channeled) if channeled else "") +
+            (f"\nThe querent's astrological element: {element_note(profile_element(profile), spread)}"
+             if profile_element(profile) else "") +
+            self._falls_notes(key, spread, falls) +
+            f"\n\nSpread: {sp['name']}\nEach card in its position (meaning to build from):\n"
+            f"{position_notes(key, spread, dom)}\n\nTable diagnostics:\n{diagnostics(key, spread)}\n"
+            f"\nHow this spread's cards interact:\n{sp['guide']}\n\n{notes}\n\n"
+            "Write the reading now, addressed to the querent as 'you':\n"
+            "- one paragraph of first impression of the whole table;\n"
+            "- one short paragraph for EVERY card in its position (do not skip any), tied to what the querent told you;\n"
+            "- one paragraph on how the cards interact and the story they tell;\n"
+            "- answer each spirit question in a sentence;\n"
+            "- one question back to the querent, then a brief grateful closing.\n"
+            "Start EVERY paragraph with a visual tag such as [mood=dread fx=glitch] "
+            f"(moods: {', '.join(MOODS)}; fx: {', '.join(FX)}). Put [CHANNEL] alone on its own line once, "
+            f"where the spirits should speak. Separate paragraphs with a blank line. About {words} words.")
+
+    def read_stream(self, question, profile, qa, spirit_qs, key, spread, channeled=(), falls=None):
+        """Yield the reading as it is written. Falls back to the scripted reader if the model fails."""
+        names = [f"{c}{' (reversed)' if r else ''}" for c, r in spread]
+        got = []
+        if self.online:
+            try:
+                for piece in self.brain.stream(self._msgs(self._prompt(question, profile, qa, spirit_qs, key, spread, channeled, falls)),
+                                               max_tokens={"three": 900, "falling": 1100}.get(key, 1400), temperature=0.8):
+                    got.append(piece)
+                    yield piece
+                self.fails = 0
+            except Exception as e:
+                self.err, self.fails = str(e)[:200], self.fails + 1
+        text = "".join(got)
+        if len(re.sub(r"\[[^\]]*\]", "", text).strip()) < 200:
+            fallback = compose_reading(question, qa, spirit_qs, key, spread, channeled, SYS, profile, falls)
+            yield ("\n\n" if text else "") + fallback
+            text += fallback
+        else:                                   # the model wrote it: close with every card, none skipped
+            dom = detect_domains(question + " " + " ".join(a for _, a in qa))[0]
+            summary = "\n\n" + card_summary(key, spread, dom)
+            yield summary
+            text += summary
+        clean = re.sub(r"\[[^\]]*\]", "", text)
+        self._last = (names, clean)
+        self.later(self._reflect, question, qa, names, clean)
+
+    def read(self, *a, **k):
+        return "".join(self.read_stream(*a, **k))
+
+    # ---- she writes her own lore --------------------------------------------------------
     @staticmethod
     def _base(name):
         return re.sub(r"\s*\(rev(ersed)?\)", "", str(name)).strip()
@@ -307,47 +355,89 @@ class Reader:
                 if len(parts) == 2 and all(p in LORE for p in parts):
                     self.mem.setdefault("combos", {})[" + ".join(parts)] = str(n).strip()[:300]
 
+    def _reflect(self, question, answers, names, reading):
+        """Recursive step: rewrite insights from previous insights + this reading."""
+        data = self._json(self._ask(
+            f"Reading just given for \"{question}\" with {names}:\n{reading[:1200]}\n\n"
+            "Reflect. Rewrite your accumulated insights (max 100 words), list up to 3 focus threads, "
+            "and record lore you earned: card_lore maps a card name to one concrete real-life scenario, "
+            "combos maps 'Card A + Card B' to what the pairing meant. No names or identifying details. "
+            'Reply ONLY with JSON: {"insights": "..", "skill_notes": {"skill": ".."}, "focus": [".."], '
+            '"card_lore": {"Card": ".."}, "combos": {"A + B": ".."}}', max_tokens=300, temperature=0.5)) if self.online else None
+        with self.lock:
+            m = self.mem
+            if data:
+                m["insights"] = str(data.get("insights", m["insights"]))[:900]
+                if isinstance(data.get("skill_notes"), dict):
+                    m["skill_notes"].update(data["skill_notes"])
+                if isinstance(data.get("focus"), list):
+                    m["focus"] = data["focus"][:3]
+                self._absorb(data)
+            for n in names:
+                base = self._base(n)
+                m["card_counts"][base] = m["card_counts"].get(base, 0) + 1
+            m["readings"] = (m["readings"] + [{"date": time.strftime("%Y-%m-%d"), "question": question, "cards": names,
+                                               "summary": reading[:200].replace("\n", " ")}])[-50:]
+        self._save()
+
+    def later(self, fn, *args):
+        """Run slow learning work in the background; settle() waits for it before exit."""
+        t = threading.Thread(target=self._quiet, args=(lambda: fn(*args),), daemon=True)
+        self._bg = [x for x in getattr(self, "_bg", []) if x.is_alive()] + [t]
+        t.start()
+        return t
+
+    def settle(self, timeout=90):
+        for t in getattr(self, "_bg", []):
+            t.join(timeout)
+
+    def start_reading(self, question, profile, qa, spirit_qs, key, spread, channeled=(), falls=None):
+        return ReadingJob(self, key, self.read_stream(question, profile, qa, spirit_qs, key, spread, channeled, falls))
+
     def feedback(self, answer):
         """The querent says what landed or missed; she tunes her lore."""
         if not self._last or not answer:
             return
         names, text = self._last
+        with self.lock:
+            self.mem.setdefault("feedback", []).append({"cards": names, "said": answer[:300]})
+            self.mem["feedback"] = self.mem["feedback"][-30:]
         data = self._json(self._ask(
-            f"Cards: {names}\nYour reading began: {text[:600]}\nThe querent says: \"{answer}\"\n"
-            "What landed and what missed? Record corrected lore (generalized, no names). Reply ONLY with "
+            f"Cards: {names}\nYour reading began: {text[:500]}\nThe querent says: \"{answer}\"\n"
+            "What landed and what missed? Record corrected lore (generalized, no names). Reply ONLY with JSON: "
             '{"lesson": "one line", "card_lore": {"Card": ".."}, "combos": {"A + B": ".."}}',
-            max_tokens=300, temperature=0.4))
+            max_tokens=250, temperature=0.4))
         if data:
             self._absorb(data)
             if data.get("lesson"):
                 with self.lock:
                     self.mem["lessons"] = (self.mem.get("lessons", []) + [str(data["lesson"])[:200]])[-10:]
-            self._save()
+        self._save()
 
     def study(self, n=2):
         """Self-directed study: pick the least-known cards, research and distill new scenarios."""
-        if not (self.client or self.local):
+        if not self.online:
             return 0
         learned = self.mem.get("learned", {})
         cards = sorted(LORE, key=lambda c: (len(learned.get(c, [])), random.random()))[:n]
         done = 0
         for c in cards:
-            if self.broken:
+            if not self.online:
                 break
             hits = search(f"{c} tarot meaning real life scenarios") if os.environ.get("TAROT_LIVE_RESEARCH") != "0" else []
             have = " / ".join(learned.get(c, [])) or "(nothing yet)"
             note = self._ask(
-                f"Study session: {c}. You already know: {LORE[c]['inner']}; {have}.\n"
+                f"Study session: {c}. You already know: {LORE[c]['inner']}; advice: {LORE[c]['advice']}; {have}.\n"
                 + ("Search snippets:\n" + "\n".join(hits) + "\n" if hits else "")
                 + "Write ONE new, concrete real-life scenario for this card (upright or reversed, say which) "
                 "that adds something you do not already know. One sentence, your own words.",
-                max_tokens=90, temperature=0.8)
+                max_tokens=80, temperature=0.8)
             if note:
                 self._learn(c, note)
                 done += 1
-            if len(self.mem.get("learned", {}).get(c, [])) >= 6:   # consolidate into a sharper note
+            if len(self.mem.get("learned", {}).get(c, [])) >= 6:
                 merged = self._ask(f"Merge these notes on {c} into 3 sharp sentences, keeping every distinct scenario:\n"
-                                   + "\n".join(self.mem["learned"][c]), max_tokens=200, temperature=0.3)
+                                   + "\n".join(self.mem["learned"][c]), max_tokens=180, temperature=0.3)
                 if merged:
                     with self.lock:
                         self.mem["learned"][c] = [merged]
@@ -359,95 +449,72 @@ class Reader:
         t.start()
         return t
 
-    COMBOS = {"three": [(0, 1), (1, 2)], "celtic": [(0, 1), (4, 9), (6, 7)]}
 
-    def research(self, question, key, spread):
-        """Look up real scenarios per card (cached as lore) and for key card pairings."""
-        if not (self.client or self.local):
-            return ""
-        print("  (Veyra consults the wider world...)", flush=True)
-        lore = self.mem.setdefault("lore", {})
-        tags = [f"{c}{' (reversed)' if r else ''}" for c, r in spread]
-        notes, fetched = [], 0
-        for (c, r), tag in zip(spread, tags):
-            if tag in lore:
-                notes.append(f"{tag}: {lore[tag]}")
-            elif fetched < 5:
-                fetched += 1
-                hits = search(f"{c} tarot {'reversed ' if r else ''}meaning real life scenarios examples")
-                d = hits and self._ask(
-                    f"From these snippets, in your own words give 2 sentences of concrete real-life "
-                    f"scenarios where {tag} shows up:\n" + "\n".join(hits), max_tokens=150, temperature=0.3)
-                if d:
-                    lore[tag] = d
-                    notes.append(f"{tag}: {d}")
-        for i, j in self.COMBOS[key]:
-            hits = search(f"tarot {spread[i][0]} and {spread[j][0]} combination meaning")
-            d = hits and self._ask(
-                f"In your own words, 2 sentences on how {tags[i]} and {tags[j]} interact when "
-                "paired, from these snippets:\n" + "\n".join(hits), max_tokens=150, temperature=0.3)
-            if d:
-                notes.append(f"{tags[i]} + {tags[j]}: {d}")
-        self._save()
-        return "\n".join(notes)
+class ReadingJob:
+    """Writes the reading in the background from the moment the cards fall, so the ritual and the
+    waiting room can cover a slow local model. Learns its own speed to estimate the wait."""
 
-    def read(self, question, profile, qa, spirit_qs, key, spread, channeled=()):
-        sp = SPREADS[key]
-        names = [f"{c}{' (reversed)' if rev else ''}" for c, rev in spread]
-        lines = []
-        for (label, what), (c, r) in zip(sp["positions"], spread):
-            el = ELEMENTS[c.split(" of ")[1]] if " of " in c else "Major Arcana"
-            lines.append(f"- {label} ({what}): {c}{' (reversed)' if r else ''} [{el}] "
-                         f"{meaning(c, r)}")
-        notes = lore_context(spread, question, " ".join(a for _, a in qa), self.mem)
-        if os.environ.get("TAROT_LIVE_RESEARCH") == "1":   # optional extra web research
-            notes += "\n" + self.research(question, key, spread)
-        prompt = (
-            f'Question: "{question}"\nProfile: {profile}\n'
-            + (f"Your knowledge (inspiration; use your own words):\n{notes}\n" if notes else "")
-            + "What the querent told you:\n" + "\n".join(f"Q: {q}\nA: {a}" for q, a in qa) +
-            "\nQuestions put to the spirits: " + "; ".join(spirit_qs) +
-            ("\nMessages that came through during the ritual: " + " | ".join(channeled) if channeled else "") +
-            f"\n\nSpread: {sp['name']}\n" + "\n".join(lines) +
-            f"\n\nTable diagnostics:\n{diagnostics(key, spread)}\n\nHow this spread's cards interact:\n"
-            f"{sp['guide']}\n\nGive: your initial impression of the whole table; each card in its "
-            "position (reference meanings are a starting point, trust your intuition); the paired "
-            "interactions and overall narrative; an answer to each spirit question as the cards "
-            "give it; one question back to the querent; a brief grateful closing. Plain text paragraphs; "
-            "begin each paragraph with a tag like [mood=dread fx=glitch] choosing the visual that fits "
-            "its feeling, and put [CHANNEL] alone on a line once where the spirits should speak. "
-            f"about {450 if key == 'three' else 800} words.")
-        text = self._ask(prompt, max_tokens=1100 if key == "three" else 1700)
-        if not text:
-            text = "(Veyra could not reach her model: " + self.hint() + ")\n" + \
-                   "\n".join(f"{p[0]}: {n}" for p, n in zip(sp["positions"], names))
-        else:
-            self._last = (names, re.sub(r'\[[^\]]*\]', '', text))
-            self._reflect(question, qa, names, re.sub(r'\[[^\]]*\]', '', text))
-        return text
+    def __init__(self, reader, key, gen):
+        self.reader, self.key = reader, key
+        g = reader.mem.get("gen", {})
+        self.expected = int(g.get(key + "_tokens", {"three": 600, "falling": 750}.get(key, 950)))
+        self.rate_hint, self.delay_hint = g.get("rate"), g.get("delay")
+        self.chunks, self.done, self.t0, self.first, self.model_n = [], False, time.time(), None, 0
+        threading.Thread(target=self._run, args=(gen,), daemon=True).start()
 
-    def _reflect(self, question, answers, names, reading):
-        """Recursive step: rewrite insights from previous insights + this reading."""
-        data = self._json(self._ask(
-            f"Reading just given for \"{question}\" with {names}:\n{reading[:1500]}\n\n"
-            "Reflect. Rewrite your accumulated insights (max 150 words) folding in what this "
-            "reading taught you about patterns, intuition and the querent. Update skill notes "
-            "for any skills you leaned on (one line each, skill name as key). List up to 3 focus "
-            "threads to keep attention on. Also record NEW lore you earned: card_lore maps a card name to one concrete real-life scenario "
-            "you learned for it, combos maps 'Card A + Card B' to what that pairing meant here. "
-            "Generalize: no names or identifying details. "
-            'Reply with {"insights": "..", "skill_notes": {"skill": ".."}, "focus": [".."], "card_lore": {"Card": ".."}, "combos": {"A + B": ".."}}',
-            max_tokens=600, temperature=0.5))
-        m = self.mem
-        if data:
-            m["insights"] = data.get("insights", m["insights"])
-            m["skill_notes"].update(data.get("skill_notes", {}))
-            m["focus"] = data.get("focus", m["focus"])[:3]
-            self._absorb(data)
-        for n in names:
-            base = n.replace(" (reversed)", "")
-            m["card_counts"][base] = m["card_counts"].get(base, 0) + 1
-        m["readings"] = (m["readings"] + [{
-            "date": time.strftime("%Y-%m-%d"), "question": question, "cards": names,
-            "summary": reading[:200].replace("\n", " ")}])[-50:]
-        self._save()
+    def _run(self, gen):
+        try:
+            for piece in gen:
+                if self.first is None:
+                    self.first = time.time()
+                self.chunks.append(piece)
+                if len(piece) < 40:            # model tokens are short; the scripted fallback is one big piece
+                    self.model_n += 1
+        except Exception as e:
+            self.chunks.append(f"\n(the connection to the other side wavered: {str(e)[:80]})")
+        finally:
+            self.done = True
+            self._learn()
+
+    def _learn(self):
+        if self.model_n < 60 or not self.first:
+            return
+        end, g = time.time(), self.reader.mem.setdefault("gen", {})
+        new = {"rate": self.model_n / max(1.0, end - self.first), "delay": self.first - self.t0,
+               self.key + "_tokens": self.model_n}
+        for k, v in new.items():
+            g[k] = round(v if k not in g else 0.6 * g[k] + 0.4 * v, 2)
+        self.reader._save()
+
+    @property
+    def started(self):
+        return self.first is not None
+
+    def text(self):
+        return "".join(self.chunks)
+
+    def progress(self):
+        return 1.0 if self.done else min(0.97, self.model_n / max(1, self.expected))
+
+    def eta(self):
+        """Seconds left (None if unknown yet)."""
+        if self.done:
+            return 0
+        now = time.time()
+        if not self.first:
+            if self.rate_hint and self.delay_hint is not None:
+                return max(5, self.delay_hint - (now - self.t0)) + self.expected / self.rate_hint
+            return None
+        rate = self.model_n / max(0.5, now - self.first)
+        return max(0, self.expected - self.model_n) / max(rate, 0.05)
+
+    def stream(self):
+        i = 0
+        while True:
+            if i < len(self.chunks):
+                yield self.chunks[i]
+                i += 1
+            elif self.done:
+                return
+            else:
+                time.sleep(0.03)

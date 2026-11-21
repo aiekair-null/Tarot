@@ -1,0 +1,10 @@
+# personal and large files stay out of the repo
+memory.json
+memory.tmp
+sessions/
+videos/
+models/
+voices/
+model.txt
+__pycache__/
+*.part

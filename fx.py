@@ -1,6 +1,6 @@
 """Terminal effects: cool neon moods, animated text, and the channeling animation.
 Colors are 256-color indexes (blues, violets, cyans) on black. Ctrl-C skips animation."""
-import math, os, random, re, shutil, sys, textwrap, threading, time
+import math, os, queue, random, re, shutil, sys, textwrap, threading, time
 
 FAST = os.environ.get("TAROT_FAST") == "1"
 SKIP = False
@@ -134,7 +134,7 @@ def run_with_animation(fn, min_frames=40, titles=("~ channeling the spirit realm
     return res.get("v")
 
 
-TAG = re.compile(r"^\s*\[(?:mood=(\w+))?[\s;,]*(?:fx=(\w+))?\]\s*", re.I)
+TAG = re.compile(r"^\s*\[\s*(?:mood\s*[=:]\s*(\w+))?[\s;,]*(?:fx\s*[=:]\s*(\w+))?\s*\]\s*", re.I)
 
 
 def parse_segments(text):
@@ -159,4 +159,79 @@ def parse_segments(text):
 
 
 def strip_tags(text):
-    return re.sub(r"\[(?:mood=|fx=|CHANNEL)[^\]]*\]", "", text, flags=re.I)
+    return re.sub(r"\[(?:\s*mood|\s*fx|CHANNEL)[^\]]*\]", "", text, flags=re.I)
+
+
+def print_cells(rows, indent=2):
+    """Print art cell rows (from art.py) as ANSI, centered if indent is None."""
+    import art
+    cols = shutil.get_terminal_size().columns
+    pad = max(0, (cols - len(rows[0])) // 2) if indent is None else indent
+    for ln in art.ansi(rows):
+        print(" " * pad + ln)
+
+
+def play_stream(gen, default_mood="mystic", on_channel=None,
+                titles=("~ the cards are speaking ~", "~ Veyra is listening ~")):
+    """Show a reading while it is still being written: each finished line is rendered with its
+    own mood and effect; a shimmering title waits in between. Returns the full text."""
+    q, END = queue.Queue(), object()
+
+    def work():
+        try:
+            for piece in gen:
+                q.put(piece)
+        except Exception as e:
+            q.put(f"\n(the connection to the other side wavered: {str(e)[:80]})")
+        q.put(END)
+    threading.Thread(target=work, daemon=True).start()
+    buf, full, finished, k, pending = "", [], False, 0, [None, None]
+    cols = shutil.get_terminal_size().columns
+
+    def render(line):
+        line = re.sub(r"^\s*#+\s*|\*\*|__", "", line).strip()
+        if not line:
+            return
+        if line.upper().startswith("[CHANNEL]"):
+            if on_channel:
+                on_channel()
+            line = line[9:].strip()
+            if not line:
+                return
+        m = TAG.match(line)
+        if m and m.group(0).strip():
+            mood, fxn = (m.group(1) or "").lower() or None, (m.group(2) or "").lower() or None
+            line = line[m.end():].strip()
+            if not line:                       # tag alone on its line: apply to the next one
+                pending[:] = [mood, fxn]
+                return
+        else:
+            mood, fxn = pending
+        pending[:] = [None, None]
+        say(strip_tags(line), mood or default_mood, fxn or "type")
+
+    while True:
+        try:
+            while True:
+                item = q.get_nowait()
+                if item is END:
+                    finished = True
+                    break
+                buf += item
+                full.append(item)
+        except queue.Empty:
+            pass
+        if "\n" in buf:
+            line, buf = buf.split("\n", 1)
+            _out("\r\x1b[2K")
+            render(line)
+            continue
+        if finished:
+            _out("\r\x1b[2K")
+            render(buf)
+            break
+        title = titles[(k // 40) % len(titles)]
+        _out("\r\x1b[2K" + paint(title.center(cols - 1), pal(["mystic", "channel", "storm"][(k // 12) % 3]), k * 0.07, 0.03))
+        time.sleep(0.06)
+        k += 1
+    return "".join(full)

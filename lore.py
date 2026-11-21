@@ -108,3 +108,101 @@ def _parse():
 
 
 LORE = _parse()
+
+
+# ---- guidance: what each card advises, where it tends to lead, and its yes/no lean ----------
+# Line format: name | advice | outcome | yes/no (Yes, No or Maybe)
+_GUIDE = """
+The Fool | take the first small step before you feel ready | a fresh start that rewards curiosity | Yes
+The Magician | use what is already in your hands and say clearly what you want | you make it happen through focused action | Yes
+The High Priestess | wait, watch, and trust what you sense before you act | the truth surfaces quietly and your instinct proves right | Maybe
+The Empress | nurture it and let it grow at its own pace | growth, comfort, something that blooms | Yes
+The Emperor | set the rules, build the structure, take charge | stability you build and keep | Yes
+The Hierophant | seek good counsel and the proven path | a recognized, traditional resolution or commitment | Yes
+The Lovers | choose with your values, not only your wants | alignment and a union that asks for honesty | Yes
+The Chariot | commit to one direction and drive through | victory through willpower | Yes
+Strength | meet it with patience and gentle courage | you master it quietly, without force | Yes
+The Hermit | step back and find your own answer in the quiet | clarity found alone; wisdom over speed | Maybe
+Wheel of Fortune | ride the change instead of fighting it | a turning point; your luck shifts | Yes
+Justice | be honest, weigh it fairly, accept the consequences | a fair result that matches what was put in | Maybe
+The Hanged Man | pause, let go of control, look from a new angle | a delay that brings a breakthrough in perspective | Maybe
+Death | let the ending happen so the new can begin | a clean transformation; one chapter closes for good | No
+Temperance | find the middle path and go slowly | balance restored; a blend that finally works | Yes
+The Devil | name what binds you and loosen its grip | you face the pattern that has hold of you | No
+The Tower | let the false structure fall instead of propping it up | sudden change that clears the ground | No
+The Star | keep faith and let yourself heal | hope renewed and a steady recovery | Yes
+The Moon | do not act on fear; get more facts first | uncertainty lingers until the fog lifts | Maybe
+The Sun | be open, be seen, enjoy it | success and joy in plain daylight | Yes
+Judgement | answer the call and forgive what needs forgiving | a reckoning that frees you; a second chance | Yes
+The World | finish what you started and celebrate it | completion and wholeness | Yes
+Ace of Wands | act on the spark now while it is hot | a new venture or passion takes off | Yes
+Two of Wands | make the plan and choose your direction | a bold decision opens a wider world | Yes
+Three of Wands | look further ahead and prepare for growth | expansion; what you sent out comes back | Yes
+Four of Wands | celebrate and honor what has been built | a happy milestone and a sense of home | Yes
+Five of Wands | treat the conflict as healthy competition, not war | struggle that sharpens you | Maybe
+Six of Wands | step forward and accept the recognition | public success and victory | Yes
+Seven of Wands | hold your ground and defend what matters | you keep your position under challenge | Yes
+Eight of Wands | move fast and answer quickly | rapid progress and news arriving | Yes
+Nine of Wands | keep going; you are nearly there | you endure and finish strong | Maybe
+Ten of Wands | put something down and ask for help | a heavy load that has to be lightened | No
+Page of Wands | explore it playfully, like a beginner | exciting news or a new spark | Yes
+Knight of Wands | act boldly but do not burn out | fast, adventurous change | Yes
+Queen of Wands | own your confidence and your warmth | you lead with charisma and win hearts | Yes
+King of Wands | lead with vision and take the first step | you become the one others follow | Yes
+Ace of Cups | open your heart and let the feeling in | new love or a new emotional beginning | Yes
+Two of Cups | meet the other person halfway | a mutual, balanced connection | Yes
+Three of Cups | lean on friends and celebrate together | joy shared with your people | Yes
+Four of Cups | look up and notice what is being offered | an offer you can still choose to see | No
+Five of Cups | grieve, then turn toward what remains | loss acknowledged, and what is left still stands | No
+Six of Cups | draw on the sweetness of the past without living there | a reunion or a return to innocence | Yes
+Seven of Cups | pick one dream and test it against reality | choices clarify once fantasy is set aside | Maybe
+Eight of Cups | walk away from what no longer feeds you | leaving for something deeper | No
+Nine of Cups | let yourself enjoy what you wished for | a wish fulfilled; contentment | Yes
+Ten of Cups | invest in the people who feel like home | lasting happiness and harmony | Yes
+Page of Cups | listen to the soft message or the creative nudge | a sweet surprise or tender news | Yes
+Knight of Cups | follow your heart, but check that it is real | an offer or a romance arrives | Yes
+Queen of Cups | lead with compassion and keep your boundaries | emotional security and deep understanding | Yes
+King of Cups | stay calm and steady when feelings run high | balance and wise emotional control | Yes
+Ace of Swords | say the true thing plainly | a breakthrough of clarity | Yes
+Two of Swords | take off the blindfold and decide | a stalemate that lasts until you choose | Maybe
+Three of Swords | let yourself feel the hurt so it can heal | a painful truth, then release | No
+Four of Swords | rest before you act again | recovery and a needed pause | Maybe
+Five of Swords | ask whether winning is worth the cost | a hollow victory, or a fight best walked away from | No
+Six of Swords | move toward calmer waters | a transition that brings relief | Yes
+Seven of Swords | be strategic, but stay honest | something hidden comes into play | No
+Eight of Swords | notice the exit; the bindings are looser than they feel | freedom once you see your own power | No
+Nine of Swords | say the worry out loud to someone you trust | the fear proves worse than the reality | No
+Ten of Swords | accept the ending; the only way now is up | a painful end that clears the way for recovery | No
+Page of Swords | ask questions and stay alert | news or information that sharpens your view | Maybe
+Knight of Swords | act decisively, but think before you charge | swift change driven by ambition | Yes
+Queen of Swords | set clear boundaries and speak directly | clarity and independence | Yes
+King of Swords | decide with logic and fairness | a rational, principled resolution | Yes
+Ace of Pentacles | plant the seed; take the practical opportunity | a solid new opportunity in the real world | Yes
+Two of Pentacles | prioritize and keep the balls in the air | you manage the juggle and adapt | Maybe
+Three of Pentacles | collaborate and value good craft | recognition for skilled teamwork | Yes
+Four of Pentacles | protect what matters, but do not grip too tight | security kept, at the cost of flow | Maybe
+Five of Pentacles | ask for help; it is closer than you think | hardship that eases once you reach out | No
+Six of Pentacles | give and receive fairly | a fair exchange; support arriving | Yes
+Seven of Pentacles | be patient and assess your investment | slow, steady growth that pays off | Maybe
+Eight of Pentacles | keep practicing and put in the work | mastery through dedication | Yes
+Nine of Pentacles | enjoy the independence you have earned | comfort and self-sufficiency | Yes
+Ten of Pentacles | think long-term and build what lasts | lasting security and legacy | Yes
+Page of Pentacles | take the first practical step and study | a new practical opportunity or offer | Yes
+Knight of Pentacles | stay steady and keep doing the work | slow but reliable progress | Yes
+Queen of Pentacles | care for yourself as well as others | comfort, security, a nurturing home | Yes
+King of Pentacles | lead with practical wisdom and generosity | material success and stability | Yes
+"""
+
+# Tone of each card for mood direction: light lifts the room, heavy darkens it.
+LIGHT = {"The Sun", "The Star", "The World", "The Empress", "Strength", "Temperance", "Judgement",
+         "Ace of Cups", "Two of Cups", "Three of Cups", "Nine of Cups", "Ten of Cups", "Ace of Wands",
+         "Four of Wands", "Six of Wands", "Ace of Pentacles", "Nine of Pentacles", "Ten of Pentacles",
+         "Six of Pentacles", "Ace of Swords", "Six of Swords", "The Lovers", "The Magician"}
+HEAVY = {"The Tower", "Death", "The Devil", "The Moon", "Three of Swords", "Nine of Swords",
+         "Ten of Swords", "Eight of Swords", "Five of Swords", "Five of Cups", "Five of Pentacles",
+         "Ten of Wands", "Seven of Swords", "Four of Cups", "Eight of Cups", "The Hanged Man"}
+
+for _ln in _GUIDE.strip().splitlines():
+    _p = [x.strip() for x in _ln.split("|")]
+    if len(_p) == 4 and _p[0] in LORE:
+        LORE[_p[0]].update(advice=_p[1], outcome=_p[2], yn=_p[3])

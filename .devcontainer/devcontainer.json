@@ -1,0 +1,29 @@
+{
+  "name": "Veyra Tarot",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "bash setup_local.sh medium",
+  "forwardPorts": [8790],
+  "portsAttributes": {
+    "8790": { "label": "Veyra video download", "onAutoForward": "notify" }
+  },
+  "secrets": {
+    "FB_PAGE_ID": {
+      "description": "Optional. Numeric id of a Facebook Page Veyra may post reading videos to (Facebook does not allow apps to post to personal profiles).",
+      "documentationUrl": "https://developers.facebook.com/docs/pages-api/getting-started"
+    },
+    "FB_PAGE_TOKEN": {
+      "description": "Optional. A long-lived Page access token with pages_manage_posts and publish_video, so Veyra can post videos to your Page after you confirm.",
+      "documentationUrl": "https://developers.facebook.com/docs/facebook-login/guides/access-tokens/get-long-lived"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.minimumContrastRatio": 1,
+        "terminal.integrated.lineHeight": 1,
+        "terminal.integrated.letterSpacing": 0
+      }
+    }
+  }
+}
