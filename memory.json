@@ -1,9 +1,49 @@
 {
-  "insights": "",
-  "skill_notes": {},
-  "focus": [],
-  "card_counts": {},
-  "readings": [],
+  "insights": "The Four of Wands (reversed) suggests a need for new beginnings, while Strength calls for inner strength and resilience. King of Swords (reversed) indicates obstacles or conflicts with words or communication. The path is clear but laden with shadows.",
+  "skill_notes": {
+    "skill": ".."
+  },
+  "focus": [
+    "inner strength",
+    "new beginnings",
+    "communication"
+  ],
+  "card_counts": {
+    "The Fool": 1,
+    "Queen of Wands": 1,
+    "Ace of Wands": 1,
+    "Justice": 1,
+    "Ten of Cups": 1,
+    "Five of Swords": 1,
+    "Four of Wands": 1,
+    "Strength": 1,
+    "King of Swords": 1
+  },
+  "readings": [
+    {
+      "date": "2026-11-21",
+      "question": "A Live Reading: Veyra asked the deck her own questions.",
+      "cards": [
+        "The Fool",
+        "Queen of Wands",
+        "Ace of Wands (reversed)",
+        "Justice",
+        "Ten of Cups",
+        "Five of Swords (reversed)"
+      ],
+      "summary": " You're holding the cards of my own wisdom, and as they fall, they unveil a complex narrative.   First to Fall: The Fool -> Your heart already knows what needs a leap of faith. It is an itch to start "
+    },
+    {
+      "date": "2026-11-21",
+      "question": "questions",
+      "cards": [
+        "Four of Wands (reversed)",
+        "Strength",
+        "King of Swords (reversed)"
+      ],
+      "summary": " You are standing on a quiet, misty path leading through dense forest. The trees loom overhead, casting deep shadows, and the wind whispers secrets from distant corners of this silent world. As you wa"
+    }
+  ],
   "channelings": [
     "Col de Braus (1002\u00a0m) is a high mountain pass in the Alps in the department of Alpes-Maritimes in France.",
     "Wayne Pride is an Australian country music and memory lane musician, who started his career in 1959 as a vocalist and guitarist in Sydney, Australia.",
@@ -12,6 +52,46 @@
     "Rhizocarpon petraeum is a species of saxicolous (rock-dwelling) crustose lichen in the family Rhizocarpaceae",
     "From 2014 to 2025, she was a city councillor of Leipzig.",
     "The population was 1,148 at the 2020 census",
-    "The IAR K14 was a Romanian 14-cylinder radial aircraft engine"
+    "The IAR K14 was a Romanian 14-cylinder radial aircraft engine",
+    "Fairness guides the querent to a hidden strength, as fireflies shape their dance into unseen patterns. Reflect on what must be given and kept in harmony with this celestial rehearsal.",
+    "Three crows on a wire, facing the same wrong way. Strength whispers: meet it with patience and gentle courage."
+  ],
+  "gen": {
+    "rate": 4.9,
+    "delay": 86.76,
+    "falling_tokens": 724,
+    "three_tokens": 824
+  },
+  "learned": {
+    "The Fool": [
+      "A woman stepping off a cliff into the unknown on her wedding day."
+    ],
+    "Four of Wands": [
+      "A garden once tended but now neglected, symbolizing a past relationship forgotten and unattended.",
+      ".."
+    ],
+    "Strength": [
+      ".."
+    ],
+    "King of Swords": [
+      ".."
+    ]
+  },
+  "combos": {
+    "Five of Swords + Queen of Wands": "An individual learning to let go and forgive after a conflict with a close friend.",
+    "King of Swords + Strength": "Encouraging resilience in the face of verbal or emotional conflicts."
+  },
+  "feedback": [
+    {
+      "cards": [
+        "Four of Wands (reversed)",
+        "Strength",
+        "King of Swords (reversed)"
+      ],
+      "said": "yes thank you"
+    }
+  ],
+  "lessons": [
+    "Short term relationship issues are causing inner turmoil and need to be addressed with clarity and strength."
   ]
 }
