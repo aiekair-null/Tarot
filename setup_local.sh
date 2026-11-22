@@ -25,9 +25,13 @@ elif command -v apt-get >/dev/null; then
     || echo "(ffmpeg did not install; Veyra will offer again when you make a video)"
 else echo "(install ffmpeg from https://ffmpeg.org to make videos)"; fi
 
-step "Natural video voice (Piper, free)"
-python3 -m pip install -q -U piper-tts && python3 -c "import deps; deps.download_voice()" \
-  || echo "(Piper voice not set up; Veyra will offer again when you make a video)"
+step "Her video voice (flite, free)"
+if command -v flite >/dev/null; then echo "already installed"
+elif command -v apt-get >/dev/null; then
+  SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null && SUDO="sudo"
+  $SUDO env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq flite \
+    || echo "(flite did not install; Veyra will offer again when you make a video)"
+else echo "(no apt-get; Veyra will look for a voice when you make a video)"; fi
 
 echo
 python3 models.py

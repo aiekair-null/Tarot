@@ -160,7 +160,7 @@ LENSES = {
 LENSES.update({
     "First to Fall": ("The first card out of the deck names your concern: {kw}. In your life it looks like {scene}.",
                       "The first card fell upside down: your concern is tangled in {rev}."),
-    "Second to Fall": ("What stands in the way: too much of {k1}. {Scene} is what pushes back.",
+    "Second to Fall": ("What stands in the way: {k1}, pushed too far. {Scene} is what pushes back.",
                        "What stands in the way: {rev}."),
     "Third to Fall": ("What you cannot see yet: {inner}.",
                       "Hidden from you, and turned inward: {rev}."),
@@ -384,23 +384,35 @@ def card_summary(key, spread, domain="inner"):
 
 
 # ================================================================ falling cards
+def card_name(card):
+    """'The Star', 'the Ace of Cups', 'the Wheel of Fortune', but plain 'Justice', 'Death', 'Strength'."""
+    if card.startswith("The "):
+        return card
+    if " of " in card:
+        return "the " + card
+    return card
+
+
 def fall_reading(card, rev, i, question=None, domain="inner", mem=None, rng=None):
     """What Veyra says the moment a card falls out of the shuffle."""
     rng = rng or random.SystemRandom()
     label = SPREADS["falling"]["positions"][i][0]
     f = facts(card)
-    the = card if card.startswith("The ") else f"the {card}"
+    the = card_name(card)
     parts = [f"{the[:1].upper() + the[1:]} falls{' upside down' if rev else ''}."]
     notes = (mem or {}).get("learned", {}).get(card, [])
     if notes:                                          # what she has written herself comes first
         n = notes[-1].strip()
         parts.append(f"My grimoire says: {n}" + ("" if n.endswith((".", "!", "?")) else "."))
-    parts.append(position_meaning(card, rev, label, domain))
+    pm = position_meaning(card, rev, label, domain)
+    parts.append(pm)
     if question:
         ans = (f"{f['rev']}; face that, then {f['advice']}" if rev and card not in RELIEF else f["advice"])
         parts.append(f"To \"{question.strip()}\" it answers: {ans[:1].upper() + ans[1:]}.")
     sc = scene(f, domain)
-    if rev and card in RELIEF:
+    if sc.lower() in pm.lower():                       # the position already painted this scene; don't repeat it
+        pass
+    elif rev and card in RELIEF:
         parts.append(f"Picture the weight lifting from {sc}.")
     elif rev:
         parts.append(f"Picture {sc}, but stalled or turned inward.")
@@ -416,8 +428,8 @@ def pair_reading(a, ra, b, rb, domain="inner", mem=None, rng=None):
     fa, fb = facts(a), facts(b)
     sa = fa["rev"] if ra else scene(fa, domain)
     sb = fb["rev"] if rb else scene(fb, domain)
-    na = (a if a.startswith("The ") else f"the {a}") + (" (upside down)" if ra else "")
-    nb = (b if b.startswith("The ") else f"the {b}") + (" (upside down)" if rb else "")
+    na = card_name(a) + (" (upside down)" if ra else "")
+    nb = card_name(b) + (" (upside down)" if rb else "")
     text = (f"Two cards fell together: {na} and {nb}. They are one answer. {relation(a, b)[:1].upper()}"
             f"{relation(a, b)[1:]}. Together: {fa['kr1' if ra else 'k1']} meets {fb['kr1' if rb else 'k1']}. "
             f"Picture it: {sa}, while {sb}. Their shared counsel: {fa['advice']}, and {fb['advice']}.")

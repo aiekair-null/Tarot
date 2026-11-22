@@ -994,12 +994,12 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
         show(" ".join(texts), "Enter" if len(st["fallen"]) < 6 else "Enter: see all six")
     spread = st["fallen"]
     ui.fall_pairs, ui.fall_questions = st["pairs"], st["questions"]
-    job = start(spread, st["pairs"], st["questions"])
-    ui.job = job
+    j = start(spread, st["pairs"], st["questions"]) if start else None   # Live Readings end on the six cards
+    ui.job = j
     ui.mood = plan["reveal"]
-    ui.wait_enter(lambda: ui.reveal_scene("falling", spread, 6, None, "Enter: hear the full reading", domain))
-    j = ui.job
-    if not j.done and (j.eta() is None or j.eta() > WAIT_LIMIT):
+    ui.wait_enter(lambda: ui.reveal_scene("falling", spread, 6, None,
+                                          "Enter: hear the full reading" if j else "Enter: close the reading", domain))
+    if j and not j.done and (j.eta() is None or j.eta() > WAIT_LIMIT):
         ui.waiting_room(spread)
     return spread, st["pairs"], st["questions"], j, log
 
@@ -1172,30 +1172,36 @@ def live_reading(reader):
     fx.say("Press Enter when you are ready, and simply hold how you feel in mind.", "mystic", "pulse")
     fx.prompt()
     plan = {"intro": "calm", "wash": "storm", "cut": "mystic", "reveal": "dread", "reading": "mystic"}
-    box = {}
-
-    def start(sp, pairs, qs):
-        box["q"] = qs[0]
-        return reader.start_reading("A Live Reading: Veyra asked the deck her own questions.", "(not shared)", [],
-                                    [], "falling", sp, (), falls={"pairs": pairs, "questions": qs})
-    spread, pairs, questions, job, log = curses.wrapper(falling_ritual, reader, plan, None, "", start)
+    # each card is read as it falls, so there is no final reading: no model job is started
+    spread, pairs, questions, job, log = curses.wrapper(falling_ritual, reader, plan, None, "", None)
     finish_reading(reader, "A Live Reading", "(not shared)", [], [], "falling", spread, job, plan, "inner",
                    "A Live Reading.", {"pairs": pairs, "questions": questions, "log": log}, live=True)
 
 
 def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls=None, live=False):
     cards = ", ".join(c + (" (reversed)" if r else "") for c, r in spread)
-    fx.banner("~ Veyra reads ~", plan["reading"], 20)
-    show_table(key, spread)
     done = [0]
+    if job is None:                                 # Live Reading: the cards were read as they fell
+        import questions as Q
+        show_table(key, spread)
+        text = SYS.choice(Q.CLOSINGS)
+        fx.say(text, "hope", "fade")
+        done[0] = 1                                 # no channeled message either
+        names = [f"{c}{' (reversed)' if r else ''}" for c, r in spread]
+        heard = " ".join(e["text"] for e in (falls or {}).get("log", []))
+        reader.later(reader._reflect, "A Live Reading", [], names, heard)   # she still learns from it
+    else:
+        fx.banner("~ Veyra reads ~", plan["reading"], 20)
+        show_table(key, spread)
 
-    def on_channel():
-        if done[0] < 1:
-            ansi_channel(reader, ctx + " Cards: " + cards)
-            done[0] += 1
-    text = fx.play_stream(job.stream(), plan["reading"], on_channel)
+        def on_channel():
+            if done[0] < 1:
+                ansi_channel(reader, ctx + " Cards: " + cards)
+                done[0] += 1
+        text = fx.play_stream(job.stream(), plan["reading"], on_channel)
+        text = job.text() or text
     sess = {"date": time.strftime("%Y-%m-%d %H:%M"), "question": question, "profile": profile, "qa": qa,
-            "spirit_qs": spirit_qs, "key": key, "spread": spread, "domain": domain, "reading": job.text() or text,
+            "spirit_qs": spirit_qs, "key": key, "spread": spread, "domain": domain, "reading": text,
             "plan": plan, "mind": reader.label, "falls": falls}
     try:
         import video

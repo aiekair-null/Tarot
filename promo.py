@@ -142,9 +142,9 @@ def held(sc, t):
 def render(out_path, voice_kind, say=print, progress=None):
     import deps
     sess = {"key": "falling", "spread": DEMO, "hook": HOOK, "plan": None}
-    voice = video.Voice(voice_kind)
+    voice = video.working_voice(voice_kind, say)
     scenes = [{"name": n, "lines": lines} for n, lines in SCRIPT]
-    say(f"Voicing her introduction ({voice_kind or 'captions only'})...")
+    say(f"Voicing her introduction ({voice.kind or 'captions only'})...")
     scenes, events, total = video.plan(scenes, voice, say)
     flips = [sc["start"] for sc in scenes if sc["name"] in ("brand", "method", "end")]
     out_path = Path(out_path)

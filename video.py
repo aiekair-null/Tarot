@@ -188,7 +188,7 @@ class Voice:
     """Speaks a line with the best engine available: piper (natural), flite, espeak, or none."""
 
     def __init__(self, kind):
-        self.kind, self._piper = kind, None
+        self.kind, self._pv = kind, None        # (_pv caches the loaded Piper model)
 
     def say(self, text):
         if not self.kind:
@@ -207,13 +207,13 @@ class Voice:
         model = deps.voice_model()
         try:
             from piper import PiperVoice
-            if self._piper is None:
-                self._piper = PiperVoice.load(str(model))
+            if self._pv is None:
+                self._pv = PiperVoice.load(str(model))
             with wave.open(str(out), "wb") as wf:
-                if hasattr(self._piper, "synthesize_wav"):
-                    self._piper.synthesize_wav(text, wf)
+                if hasattr(self._pv, "synthesize_wav"):
+                    self._pv.synthesize_wav(text, wf)
                 else:
-                    self._piper.synthesize(text, wf)
+                    self._pv.synthesize(text, wf)
         except Exception:
             import sys
             subprocess.run([sys.executable, "-m", "piper", "-m", str(model), "-f", str(out)], input=text,
@@ -221,15 +221,45 @@ class Voice:
 
     @staticmethod
     def _flite(text, out, d):
+        """The voice from the first videos: flite's 'slt' voice (through ffmpeg, or the flite program)."""
+        import deps, shutil
         (d / "t.txt").write_text(text)
-        subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
-                        f"flite=textfile={d / 't.txt'}:voice=slt", str(out)], capture_output=True, timeout=120)
+        if deps.ffmpeg_has_flite():
+            subprocess.run([deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
+                            f"flite=textfile={d / 't.txt'}:voice=slt", str(out)], capture_output=True, timeout=120)
+        if (not out.exists() or out.stat().st_size < 1000) and shutil.which("flite"):
+            subprocess.run(["flite", "-voice", "slt", "-f", str(d / "t.txt"), "-o", str(out)],
+                           capture_output=True, timeout=120)
 
     @staticmethod
     def _espeak(text, out, d):
         import shutil
         exe = shutil.which("espeak-ng") or shutil.which("espeak")
         subprocess.run([exe, "-v", "en-us+f3", "-s", "150", "-w", str(out), text], capture_output=True, timeout=120)
+
+
+def working_voice(kind, say=print):
+    """Test the chosen voice on one line before rendering; fall back to any engine that actually speaks."""
+    import deps, shutil
+    tried = []
+    for k in [kind, "flite", "espeak", "piper"]:
+        if not k or k in tried:
+            continue
+        tried.append(k)
+        if k == "flite" and not deps.flite_ready():
+            continue
+        if k == "espeak" and not (shutil.which("espeak-ng") or shutil.which("espeak")):
+            continue
+        if k == "piper" and not deps.piper_ready():
+            continue
+        v = Voice(k)
+        if v.say("Hello.") is not None:
+            if k != kind and kind:
+                say(f"The {kind} voice did not work here, so she will speak with {k}.")
+            return v
+    say("No voice engine could speak, so this video will have captions and music only. "
+        "To fix it: sudo apt-get install -y flite")
+    return Voice(None)
 
 
 def digitize(x, natural=True):
@@ -423,54 +453,53 @@ ICONS = {
 }
 ICON_RGB = {"y": (255, 204, 0), "k": (25, 25, 25), "r": (235, 40, 70), "w": (255, 255, 255),
             "p": (150, 80, 230), "g": (200, 150, 40)}
-HARD = {"The Tower", "The Devil", "The Moon", "Ten of Swords", "Three of Swords", "Five of Swords",
-        "Seven of Swords", "Nine of Swords", "Five of Pentacles"}
+HEAVY = {"The Tower", "The Devil", "The Moon", "Ten of Swords", "Three of Swords", "Five of Swords",
+         "Seven of Swords", "Nine of Swords", "Five of Pentacles"}
+# Headlines stay gentle and true to a reading: no accusations, no promises, no fear-bait.
 HOOKS = {
-    "warn": ("warn", ["WARNING", "HIDDEN TRUTH", "WAKE-UP CALL"],
-             ["This is your warning - someone isn't telling you everything",
-              "Don't scroll past this - what you buried is coming back up",
-              "The deck stopped me - you need to hear this one",
-              "This is your sign to stop ignoring your gut"]),
-    "third": ("warn", ["3RD PARTY"],
-              ["This is your warning - someone is standing between you two",
-               "Somebody's energy is sitting in the middle of this connection"]),
-    "love": ("heart", ["LOVE MESSAGE", "THEY MISS YOU", "SOULMATE ENERGY"],
-             ["Someone hasn't stopped thinking about you",
-              "This is your sign - this connection isn't finished",
-              "They feel it too - they just haven't said it yet"]),
-    "money": ("coin", ["MONEY & WORK", "ABUNDANCE INCOMING", "CAREER SHIFT"],
-              ["Your hard work is about to be seen",
-               "This is your sign - a door with your name on it is opening",
-               "Something you planted is finally ready"]),
-    "spirit": ("ball", ["SPIRIT MESSAGE", "FATE IS MOVING", "DIVINE TIMING"],
-               ["Your guides have been trying to reach you",
-                "This is not a coincidence - you were meant to see this",
-                "If this found you, it was meant for you"]),
-    "calm": ("moon", ["LIVE READING", "PICK-ME-UP"],
-             ["Whoever needs this - the deck chose these cards for you",
-              "Take a breath - this one is gentle"]),
+    "shadow": (["SHADOW WORK", "TURNING POINT", "A HARD CARD, GENTLY"],
+               ["Some cards are heavy - and heavy cards still show the way through",
+                "Six cards fell on their own - a few of them asked for honesty",
+                "A reading about what you've been carrying, and how to set it down"]),
+    "love": (["HEART MESSAGE", "LOVE & CONNECTION", "MATTERS OF THE HEART"],
+             ["The cards had a lot to say about the heart",
+              "A reading about the people who feel like home",
+              "Six cards fell - most of them pointed to the heart"]),
+    "money": (["WORK & ABUNDANCE", "PURPOSE & PATH", "BUILDING SOMETHING"],
+              ["A reading about effort, timing and what you're building",
+               "The cards spoke about work, worth and patience",
+               "Six cards fell - here's what they said about your path"]),
+    "spirit": (["SPIRIT MESSAGE", "DIVINE TIMING", "WRITTEN IN THE STARS"],
+               ["If this found you, sit with it a moment",
+                "Six cards fell on their own - here's what they said",
+                "The deck chose these cards, not me"]),
+    "calm": (["LIVE READING", "A GENTLE READING", "TONIGHT'S CARDS"],
+             ["Whoever needs this - the deck chose these cards",
+              "Take a breath - this one is gentle",
+              "Six cards fell from the shuffle - here's what they said"]),
 }
+ZODIAC = "♈♉♊♋♌♍♎♏♐♑♒♓"
+CELESTIAL = ["moon", "star", "★", "✦", "✧", "☀"]
 
 
 def make_hook(sess):
-    """(icon, title, line) for the pinned headline, chosen from what actually came up."""
+    """(left icon, right icon, title, line) for the pinned headline. The title follows what came up;
+    the icons are a zodiac sign and a moon or star, different every video."""
     if sess.get("hook"):
-        return tuple(sess["hook"])
+        h = tuple(sess["hook"])
+        return h if len(h) == 4 else (random.SystemRandom().choice(ZODIAC), "star", h[1], h[2])
     cards = [(c[0], bool(c[1])) for c in sess.get("spread", [])]
     names = [c for c, _ in cards]
     suit = lambda s: sum(1 for c in names if c.endswith(" of " + s))
     majors = sum(1 for c in names if " of " not in c.replace("Wheel of Fortune", "Wheel"))
-    score = {"warn": sum(c in HARD for c in names) * 1.5 + 0.5 * sum(r for _, r in cards),
+    score = {"shadow": sum(c in HEAVY for c in names) * 1.5 + 0.5 * sum(r for _, r in cards),
              "love": suit("Cups") + 2 * sum(c in ("The Lovers", "Two of Cups", "Ten of Cups") for c in names),
              "money": suit("Pentacles") + 2 * sum(c in ("Wheel of Fortune", "Ten of Pentacles", "Ace of Pentacles") for c in names),
              "spirit": 0.7 * majors + 2 * sum(c in ("The Star", "The High Priestess", "Judgement", "The Hermit") for c in names),
              "calm": 1.0}
-    pick = max(score, key=score.get)
-    if score["love"] >= 2 and score["warn"] >= 2:
-        pick = "third"
-    rng = random.Random("|".join(names) + str(sess.get("date", "")))
-    icon, titles, lines = HOOKS[pick]
-    return icon, rng.choice(titles), rng.choice(lines)
+    rng = random.SystemRandom()
+    titles, lines = HOOKS[max(score, key=score.get)]
+    return rng.choice(ZODIAC), rng.choice(CELESTIAL), rng.choice(titles), rng.choice(lines)
 
 
 class Painter:
@@ -487,6 +516,8 @@ class Painter:
 
     # ---------- static layers
     def _icon(self, name, px=6):
+        if name not in ICONS:                              # a zodiac or star glyph, pixelated to match
+            return self._glyph_icon(name, px)
         rows = ICONS[name]
         img = self.Image.new("RGBA", (len(rows[0]) * px, len(rows) * px), (0, 0, 0, 0))
         d = self.ImageDraw.Draw(img)
@@ -495,6 +526,26 @@ class Painter:
                 if ch != ".":
                     d.rectangle([i * px, j * px, i * px + px - 1, j * px + px - 1], fill=ICON_RGB[ch] + (255,))
         return img
+
+    def _glyph_icon(self, ch, px=6):
+        np = self.np
+        small = self.Image.new("L", (26, 26), 0)
+        f = self.canvas.font(19, "DejaVuSans-Bold.ttf")
+        self.ImageDraw.Draw(small).text((13, 13), ch, fill=255, font=f, anchor="mm", stroke_width=1, stroke_fill=255)
+        m = np.asarray(small) > 100
+        if not m.any():
+            return self._icon("star", px)
+        ys, xs = np.where(m.any(1))[0], np.where(m.any(0))[0]
+        m = m[ys[0]:ys[-1] + 1, xs[0]:xs[-1] + 1]
+        top, bot = np.array([255, 224, 120]), np.array([200, 120, 255])
+        g = np.linspace(0, 1, m.shape[0])[:, None, None]
+        rgb = (top * (1 - g) + bot * g).astype(np.uint8)
+        rgba = np.zeros(m.shape + (4,), np.uint8)
+        rgba[..., :3] = np.broadcast_to(rgb, m.shape + (3,))
+        rgba[..., 3] = m * 255
+        img = self.Image.fromarray(rgba, "RGBA")
+        k = max(2, round(px * 9 / max(m.shape)))          # same size as the pixel sprites
+        return img.resize((m.shape[1] * k, m.shape[0] * k), self.Image.NEAREST)
 
     def _backdrop(self):
         np, Image = self.np, self.Image
@@ -538,15 +589,18 @@ class Painter:
         d = self.ImageDraw.Draw(img)
         for n, ln in enumerate(lines):
             w = d.textlength(ln, font=f)
-            ic = self._icon(icon, max(4, size // 9)) if (icon and n == 0) else None
-            iw = ic.width + 12 if ic else 0
-            total = w + 2 * iw
+            pair = icon if isinstance(icon, (tuple, list)) else (icon, icon)
+            icl = self._icon(pair[0], max(4, size // 9)) if (icon and n == 0) else None
+            icr = self._icon(pair[1], max(4, size // 9)) if (icon and n == 0) else None
+            wl = icl.width + 12 if icl else 0
+            wr = icr.width + 12 if icr else 0
+            total = w + wl + wr
             x0 = (OW - total) / 2
             d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
-            if ic:
-                iy = int(y + (size + 8 - ic.height) / 2)
-                img.paste(ic, (int(x0), iy), ic)
-                img.paste(ic, (int(x0 + iw + w + 12), iy), ic)
+            for ic, ix in ((icl, x0), (icr, x0 + wl + w + 12)):
+                if ic:
+                    img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
+            iw = wl
             d.text((x0 + iw, y), ln, fill=(0, 0, 0), font=f)
             y += size + 20
         return y
@@ -564,9 +618,9 @@ class Painter:
         return lines + [cur]
 
     def _pinned(self, img):
-        icon, title, line = self.hook
+        left, right, title, line = self.hook
         f = self.canvas.font(54, "DejaVuSans-Bold.ttf")
-        y = self._boxes(img, [title], 270, f, 54, icon)
+        y = self._boxes(img, [title], 270, f, 54, (left, right))
         self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, 54)
 
     # ---------- per-frame layers
@@ -808,8 +862,8 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
     import deps
     sess = dict(sess)
     sess["_transcript"] = transcript(sess)
-    voice = Voice(voice_kind)
-    say(f"Writing her lines and voicing them ({voice_kind or 'captions only'})...")
+    voice = working_voice(voice_kind, say)
+    say(f"Writing her lines and voicing them ({voice.kind or 'captions only'})...")
     scenes, events, total = plan(build_script(sess), voice, say)
     flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
     out_path = Path(out_path)

@@ -99,14 +99,17 @@ block, shadow, hidden, spirit, support, strength, action, growth, outcome, heali
 After any reading she offers: **Would you like this reading as a video?** (or menu 5 /
 `python3 tarot.py video` for the last reading). The video is a 1080x1920 vertical reel:
 
-- a pixel tapestry with a pinned headline at the top (icon + title + hook line), chosen from the
-  cards that came up — WARNING, LOVE MESSAGE, MONEY & WORK, SPIRIT MESSAGE, 3RD PARTY and so on
+- a pixel tapestry with a pinned headline at the top: a zodiac sign and a star or moon (different
+  every video) around a gentle title chosen from the cards — SPIRIT MESSAGE, HEART MESSAGE,
+  WORK & ABUNDANCE, SHADOW WORK and so on. Headlines never accuse or promise anything.
 - the reading replayed exactly as it happened on screen, on a navy cloth
 - each card held up to the camera while she reads it
 - her voice with a light digital edge, captions, and a prepared-piano music bed
 
 Before rendering it checks for what it needs and asks before installing anything: numpy, Pillow,
-ffmpeg, and optionally the free Piper voice (Amy). Say no and it falls back to a simpler voice, or captions only.
+ffmpeg, and her voice (flite, the slightly digital voice from the first videos). It test-speaks a line
+first; if a voice engine fails it switches to one that works and tells you, so a video is never silently mute.
+For the softer Piper voice instead: `export TAROT_VOICE_ENGINE=piper`.
 
 Then choose:
 1. **Save to your device**: it gives you a Codespaces download link (port 8790, forwarded automatically).
