@@ -7,4 +7,9 @@ models/
 voices/
 model.txt
 __pycache__/
+*.py[cod]
+*.zip
 *.part
+.pytest_cache/
+venv/
+.venv/
