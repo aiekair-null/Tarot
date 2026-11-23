@@ -1570,6 +1570,19 @@ def _model_mode():
 
 
 def _git_sync(*args, quiet=False):
+    git_dir = Path(".git")
+    operation_markers = (
+        git_dir / "rebase-merge",
+        git_dir / "rebase-apply",
+        git_dir / "MERGE_HEAD",
+        git_dir / "CHERRY_PICK_HEAD",
+        git_dir / "REVERT_HEAD",
+    )
+    if args and args[0] in ("pull", "rebase", "push") and any(marker.exists() for marker in operation_markers):
+        if not quiet:
+            print("Git sync paused while a rebase or merge is in progress.", file=sys.stderr)
+        return 128
+
     command = ["git", *args]
     env = os.environ.copy()
     env["PATH"] = os.pathsep.join((str(Path.home() / ".local/bin"), env.get("PATH", "")))
