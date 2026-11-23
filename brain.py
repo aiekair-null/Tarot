@@ -34,10 +34,14 @@ OLLAMA_PREFER = ("qwen2.5", "llama3", "gemma", "mistral", "phi")
 
 
 def find_gguf():
-    """The GGUF to load: TAROT_GGUF, then models/active.txt, then any .gguf in models/."""
+    """The GGUF to load: TAROT_GGUF, then the explicit 8B default, then active.txt."""
     p = os.environ.get("TAROT_GGUF")
     if p and Path(p).exists():
         return Path(p)
+    qwen3 = MODELS_DIR / CATALOG["qwen3-8b"][1]
+    if qwen3.exists():
+        ACTIVE.write_text(qwen3.name)
+        return qwen3
     try:
         a = MODELS_DIR / ACTIVE.read_text().strip()
         if a.exists():
