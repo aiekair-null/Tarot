@@ -11,6 +11,10 @@ bash setup_local.sh        # one time: installs the engine + downloads the free 
 python3 tarot.py           # menu: reading, grimoire, study
 ```
 
+Veyra pulls from the current branch's upstream on launch. After exit, it commits changes only in
+`memory.json` and `sessions/`, pulls/rebases, pushes, then pulls once more. Git credentials and a
+commit identity must be configured. Video files and code are not staged by the automatic commit.
+
 In Codespaces with this repo's `.devcontainer`, the setup runs automatically on a fresh codespace.
 For an existing codespace, just run `bash setup_local.sh` once.
 

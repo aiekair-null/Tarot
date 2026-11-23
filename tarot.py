@@ -7,6 +7,7 @@ who thinks with a free model running on your own machine. Needs a 256-color term
   python tarot.py grimoire   browse every card and every position meaning"""
 import shutil
 import curses, locale, math, os, random, sys, textwrap, time
+import subprocess
 from pathlib import Path
 import art, fx, brain
 from agent import Reader
@@ -1315,6 +1316,48 @@ def _try(fn, *a):
         return e
 
 
+def _git_sync(*args, quiet=False):
+    command = ["git", *args]
+    env = os.environ.copy()
+    env["PATH"] = os.pathsep.join((str(Path.home() / ".local/bin"), env.get("PATH", "")))
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    try:
+        result = subprocess.run(
+            command,
+            cwd=Path(__file__).resolve().parent,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        print(f"Git sync unavailable: {exc}", file=sys.stderr)
+        return 127
+    if result.stdout and (not quiet or result.returncode):
+        print(result.stdout.rstrip())
+    if result.returncode and not (quiet and result.returncode == 1):
+        print(f"Git sync failed: {' '.join(command)}; local data is retained.", file=sys.stderr)
+    return result.returncode
+
+
+def _sync_after_session():
+    if _git_sync("add", "-A", "--", "memory.json", "sessions/"):
+        return
+    changed = _git_sync("diff", "--cached", "--quiet", "--", "memory.json", "sessions/", quiet=True)
+    if changed == 1:
+        if _git_sync("commit", "--only", "-m", "Save tarot session", "--", "memory.json", "sessions/"):
+            return
+    elif changed:
+        print("Git sync could not check staged session data; local data is retained.", file=sys.stderr)
+        return
+    if _git_sync("pull", "--rebase", "--autostash"):
+        return
+    if _git_sync("push"):
+        return
+    _git_sync("pull", "--rebase", "--autostash")
+
+
 def main():
     locale.setlocale(locale.LC_ALL, "")
     arg = (sys.argv[1:] or [""])[0]
@@ -1384,7 +1427,10 @@ def main():
 
 
 if __name__ == "__main__":
+    _git_sync("pull", "--rebase", "--autostash")
     try:
         main()
     except KeyboardInterrupt:
         print("\x1b[0m\n  The candle is snuffed. Until next time.")
+    finally:
+        _sync_after_session()
