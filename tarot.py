@@ -628,6 +628,77 @@ class UI:
             elif 32 <= k < 127 and len(buf) < 160:
                 buf += chr(k)
 
+    def fall_card_browser(self, spread, pairs, questions, slots, reader, domain="inner"):
+        """Let the querent inspect each fallen card and ask Veyra a focused follow-up."""
+        pos = SPREADS["falling"]["positions"]
+        selected = max(0, len(slots) - 1)
+        response = ""
+
+        def render(buf="", prompt=""):
+            self.scr.erase()
+            self.stars(18)
+            self.gcenter(0, "~ choose a card to read ~")
+            self.fall_table(spread, pairs, y=1, upto=len(slots), slots=slots)
+            for i in range(len(slots)):
+                _, sx = self.fall_slot(i)
+                sy = 1
+                color = 220 if i == selected else (51 if i < len(slots) else 60)
+                self.text(sy + MH, sx + MW // 2 - 1, f"›{i + 1}‹" if i == selected else str(i + 1), color, i == selected)
+
+            card_ids = slots[selected]
+            cards = [spread[i] for i in card_ids]
+            x0, y0 = 2, 9
+            if len(cards) == 1:
+                self.cells(y0, x0, art.card_cells(*cards[0], BW, BH))
+            else:
+                self.cells(y0, x0, art.card_cells(cards[0][0], cards[0][1], BW - 6, BH))
+                self.cells(y0, x0 + BW - 4, art.card_cells(cards[1][0], cards[1][1], BW - 6, BH))
+
+            tx = BW + 6
+            names = " + ".join(c + (" (reversed)" if r else "") for c, r in cards)
+            self.text(y0, tx, f"{selected + 1}. {pos[selected][0]}", 51, True)
+            self.text(y0 + 1, tx, names[: self.w - tx - 1], 220, True)
+            fall_q = questions[selected] if selected < len(questions) else None
+            if fall_q:
+                self.wrap_lines(y0 + 3, tx, self.w - tx - 2,
+                                f"Veyra asked: \"{fall_q}\"", 189, 2)
+            meaning = " ".join(position_meaning(c, r, pos[selected][0], domain) for c, r in cards)
+            y = y0 + (6 if fall_q else 5)
+            self.wrap_lines(y, tx, self.w - tx - 2, meaning, 189, 4)
+            if response:
+                self.text(min(self.h - 6, y + 5), tx, "Veyra answers", 51, True)
+                lines = textwrap.wrap(response, self.w - tx - 2)
+                room = max(2, self.h - (min(self.h - 6, y + 5) + 2) - 2)
+                for j, ln in enumerate(lines[-room:]):
+                    self.text(min(self.h - 6, y + 6) + j, tx, ln, 189)
+            if prompt:
+                line = f"Ask Veyra › {buf}"
+                self.glow(self.h - 2, 2, line[: self.w - 4])
+            else:
+                self.footer("← → choose · 1-6 select · q ask Veyra · Enter close")
+
+        while True:
+            render()
+            self.scr.refresh()
+            k = self.scr.getch()
+            if k in ENTER:
+                return
+            if k in (curses.KEY_LEFT, curses.KEY_UP, ord("a"), ord("A")):
+                selected = (selected - 1) % len(slots)
+            elif k in (curses.KEY_RIGHT, curses.KEY_DOWN, ord("d"), ord("D")):
+                selected = (selected + 1) % len(slots)
+            elif k in (ord("q"), ord("Q"), ord("?")):
+                question = self.type_line(lambda buf: render(buf, "Ask Veyra"))
+                if question:
+                    response = ""
+                    render()
+                    self.scr.refresh()
+                    response = reader.follow_up(question, domain, spread, selected, slots, questions, pairs)
+            elif 49 <= k <= 54:
+                n = k - 48
+                if n <= len(slots):
+                    selected = n - 1
+
     # ---- channeling ------------------------------------------------------------------------
     def channel(self, summon):
         """The veil thins; the querent's timing becomes entropy; a message comes through."""
@@ -1123,7 +1194,8 @@ def falling_ritual(scr, reader, plan, domain, concern, start, zodiac_sign=None, 
     ui.job = j
     ui.mood = plan["reveal"]
     ui.wait_enter(lambda: ui.reveal_scene("falling", spread, 6, None,
-                                          "Enter: hear the full reading" if j else "Enter: close the reading", domain))
+                                          "Enter: inspect the six cards", domain))
+    ui.fall_card_browser(spread, st["pairs"], st["questions"], st["slots"], reader, domain)
     if j and not j.done and (j.eta() is None or j.eta() > WAIT_LIMIT):
         ui.waiting_room(spread)
     return spread, st["pairs"], st["questions"], j, log, st["slots"]

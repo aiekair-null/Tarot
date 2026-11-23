@@ -94,12 +94,13 @@ def ollama_models():
 
 
 class Brain:
-    def __init__(self):
+    def __init__(self, connect=True):
         self.lock = threading.RLock()
         self.kind, self.label, self.err = "none", "scripted knowledge (no model)", ""
         self.llm = self.client = None
         self.url = self.model = ""
-        self.connect()
+        if connect:
+            self.connect()
 
     @property
     def online(self):

@@ -5,7 +5,7 @@ from pathlib import Path
 from cards import ELEMENTS, meaning
 from spreads import SPREADS, diagnostics
 from research import search
-from knowledge import lore_context, position_notes, compose_reading, card_summary, detect_domains, split, element_note, profile_element
+from knowledge import lore_context, position_notes, compose_reading, card_summary, card_profile, detect_domains, split, element_note, profile_element
 from lore import LORE
 from fx import MOODS, FX
 import spirit
@@ -58,8 +58,9 @@ class Reader:
         self.mem = self._load()
         self.lock = threading.RLock()
         self._last = None
-        self.brain = Brain()
+        self.brain = Brain(connect=False)
         self.fails, self.err = 0, self.brain.err
+        threading.Thread(target=self.brain.connect, daemon=True).start()
 
     # ---- status -----------------------------------------------------------------
     @property
@@ -332,6 +333,46 @@ class Reader:
 
     def read(self, *a, **k):
         return "".join(self.read_stream(*a, **k))
+
+    def follow_up(self, question, domain, spread, slot, slots, fall_questions, pairs):
+        """Answer one querent question about a selected card in its six-card context."""
+        card_ids = slots[slot] if 0 <= slot < len(slots) else [slot]
+        pos = SPREADS["falling"]["positions"][slot][0]
+        cards = [spread[i] for i in card_ids]
+        names = " + ".join(c + (" (reversed)" if r else "") for c, r in cards)
+        fall_q = fall_questions[slot] if slot < len(fall_questions) else None
+        table = "\n".join(
+            f"{i + 1}. {SPREADS['falling']['positions'][i][0]}: " +
+            " + ".join(spread[j][0] + (" (reversed)" if spread[j][1] else "") for j in ids)
+            for i, ids in enumerate(slots)
+        )
+        prompt = (
+            f'The querent asks about the six-card fall: "{question}"\n'
+            f"Selected position: {pos}\nSelected card(s): {names}\n"
+            f"The fall question at this position was: {fall_q or 'not recorded'}\n"
+            f"Domain: {domain}\nWhole fall:\n{table}\n"
+            "Use the selected position, the card meaning, neighboring cards, and how the cards fell together. "
+            "Read it in second person, acknowledge uncertainty, and give one practical next step. "
+            "Keep the answer concise, under 180 words."
+        )
+        answer = self._ask(prompt, max_tokens=280, temperature=0.75)
+        if answer:
+            return answer.strip()
+        lines = []
+        for card, reversed_card in cards:
+            profile = card_profile(card)
+            notes = []
+            for _, items in profile:
+                notes.extend(items)
+                if len(notes) >= 3:
+                    break
+            lines.append(f"{card}{' reversed' if reversed_card else ''}: {' '.join(notes[:3])}")
+        fallback_question = fall_q or "this part of the reading"
+        return (
+            f"At {pos}, {names} falls as an answer to the question '{fallback_question}'. "
+            + " ".join(lines)
+            + " Consider how this changes what you do next, rather than treating the fall as a fixed prediction."
+        )
 
     # ---- she writes her own lore --------------------------------------------------------
     @staticmethod
