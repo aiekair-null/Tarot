@@ -393,7 +393,32 @@ def card_name(card):
     return card
 
 
-def fall_reading(card, rev, i, question=None, domain="inner", mem=None, rng=None):
+def _element_fall_note(sign, element, card, rev):
+    if element not in ELEMENT_SUIT:
+        return ""
+    owner = f"{sign}'" if sign and sign.lower().endswith("s") else f"{sign}'s" if sign else "Your"
+    lens = f"{owner} {element} element"
+    suit = split(card)[1]
+    if suit:
+        sign_suit = ELEMENT_SUIT[element]
+        if suit == sign_suit:
+            relation_word = "resonates with"
+        elif {suit, sign_suit} in FRIENDLY:
+            relation_word = "harmonizes with"
+        elif {suit, sign_suit} in HOSTILE:
+            relation_word = "challenges"
+        else:
+            relation_word = "meets"
+        note = f"{lens} {relation_word} the {ELEMENTS[suit]} current of {suit}"
+    else:
+        f = facts(card)
+        quality = f["kr1" if rev else "k1"]
+        note = f"{lens} grounds this Major Arcana lesson in {quality}"
+    note += "; reversed, this current turns inward or slows" if rev else "; upright, this current can move openly"
+    return note + "."
+
+
+def fall_reading(card, rev, i, question=None, domain="inner", mem=None, rng=None, sign=None, element=None):
     """What Veyra says the moment a card falls out of the shuffle."""
     rng = rng or random.SystemRandom()
     label = SPREADS["falling"]["positions"][i][0]
@@ -406,6 +431,9 @@ def fall_reading(card, rev, i, question=None, domain="inner", mem=None, rng=None
         parts.append(f"My grimoire says: {n}" + ("" if n.endswith((".", "!", "?")) else "."))
     pm = position_meaning(card, rev, label, domain)
     parts.append(pm)
+    element_note = _element_fall_note(sign, element, card, rev)
+    if element_note:
+        parts.append(f"Zodiac lens: {element_note}")
     if question:
         ans = (f"{f['rev']}; face that, then {f['advice']}" if rev and card not in RELIEF else f["advice"])
         parts.append(f"To \"{question.strip()}\" it answers: {ans[:1].upper() + ans[1:]}.")
@@ -422,7 +450,7 @@ def fall_reading(card, rev, i, question=None, domain="inner", mem=None, rng=None
     return " ".join(parts)
 
 
-def pair_reading(a, ra, b, rb, domain="inner", mem=None, rng=None):
+def pair_reading(a, ra, b, rb, domain="inner", mem=None, rng=None, sign=None, element=None):
     """Two cards that fell out together are one answer."""
     rng = rng or random.SystemRandom()
     fa, fb = facts(a), facts(b)
@@ -436,6 +464,11 @@ def pair_reading(a, ra, b, rb, domain="inner", mem=None, rng=None):
     hit = (mem or {}).get("combos", {}).get(" + ".join(sorted([a, b])))
     if hit:
         text += f" I have seen these two together before: {hit}"
+    if element:
+        lenses = [note for card, rev in ((a, ra), (b, rb))
+                  if (note := _element_fall_note(sign, element, card, rev))]
+        if lenses:
+            text += " Through the zodiac lens: " + " ".join(lenses)
     return text
 
 

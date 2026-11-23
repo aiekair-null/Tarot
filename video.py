@@ -77,7 +77,7 @@ def tts_text(s):
 
 
 def live_script(sess):
-    """A Live Reading replayed exactly as it happened: question, shuffle, fall, reading; six times."""
+    """Replay each of the six fall positions: question, shuffle, fall, reading."""
     import questions as Q
     log = sess["falls"]["log"]
     scenes = [{"name": "intro", "lines": ["I am Veyra. This is a Live Reading.",
@@ -90,7 +90,7 @@ def live_script(sess):
     sents = reading_sentences(sess.get("reading", ""))
     close = [s for s in sents if re.search(r"thank|grateful|gratitude", s, re.I)][:1] or \
             [random.SystemRandom().choice(Q.CLOSINGS)]
-    scenes.append({"name": "table", "lines": ["Six cards have fallen. This is what the deck chose."]})
+    scenes.append({"name": "table", "lines": ["All six positions are filled. Paired falls may mean more than six cards."]})
     scenes.append({"name": "end", "lines": close})
     return scenes
 
@@ -450,9 +450,16 @@ ICONS = {
     "moon": ["..yyyy...", ".yyy.....", "yyy......", "yyy......", "yyy......", "yyy......", ".yyy.....", "..yyyy..."],
     "star": ["....y....", "....y....", "...yyy...", "yyyyyyyyy", ".yyyyyyy.", "..yyyyy..", ".yy...yy.", "yy.....yy"],
     "coin": ["..ggggg..", ".gyyyyyg.", "gyyykyyyg", "gyykkkyyg", "gyyykyyyg", "gyykkkyyg", ".gyykyyg.", "..ggggg.."],
+    "wand": ["........y", ".......yy", "......yyy", ".....yy..", "....yy...", "...yy....", "..yy.....", ".yy......"],
+    "crystal": ["....p....", "...ppp...", "..ppwpp..", ".pppwp...", "..ppwpp..", "...ppp...", "....p....", "....p...."],
+    "fire": ["....o....", "...oro...", "...ryr...", "..ryoryr.", "..ryoryr.", "..ryoryr.", "...r.r...", "...rrr..."],
+    "earth": ["....g....", "...ggg...", "..ggcgg..", ".ggggggg.", "..ggcgg..", "...ggg...", "....g....", "....g...."],
+    "air": [".........", "ccc......", ".ccc.....", "..ccc....", "...ccc...", "....ccc..", ".....ccc.", "........."],
+    "water": ["....b....", "...bbb...", "..bbbbb..", ".bbbbbbb.", "bbbwwbbb.", "bbbbbbbbb", ".bbbbbbb.", "...bbb..."],
 }
 ICON_RGB = {"y": (255, 204, 0), "k": (25, 25, 25), "r": (235, 40, 70), "w": (255, 255, 255),
-            "p": (150, 80, 230), "g": (200, 150, 40)}
+            "p": (150, 80, 230), "g": (80, 190, 110), "b": (70, 170, 255),
+            "c": (90, 225, 220), "o": (255, 140, 45)}
 HEAVY = {"The Tower", "The Devil", "The Moon", "Ten of Swords", "Three of Swords", "Five of Swords",
          "Seven of Swords", "Nine of Swords", "Five of Pentacles"}
 # Headlines stay gentle and true to a reading: no accusations, no promises, no fear-bait.
@@ -480,14 +487,85 @@ HOOKS = {
 }
 ZODIAC = "♈♉♊♋♌♍♎♏♐♑♒♓"
 CELESTIAL = ["moon", "star", "★", "✦", "✧", "☀"]
+SIGN_SYMBOLS = dict(zip(("aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra",
+                         "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"), ZODIAC))
+TITLE_DESIGNS = {
+    "merlin": [
+        (("crystal", "wand", "✦"), ("☾", "wand", "crystal")),
+        (("✧", "crystal", "wand"), ("wand", "✦", "☽")),
+        (("wand", "☾", "crystal"), ("✦", "crystal", "wand")),
+    ],
+    "lunar": [
+        (("☾", "moon", "✦"), ("✧", "moon", "☽")),
+        (("moon", "✧", "☽"), ("☾", "star", "moon")),
+        (("✦", "☾", "moon"), ("moon", "☽", "✧")),
+    ],
+    "astrology": [
+        (("✦", "☾", "star"), ("star", "☽", "✧")),
+        (("☀", "✧", "moon"), ("moon", "✦", "☾")),
+        (("star", "☽", "✦"), ("✧", "moon", "☀")),
+    ],
+    "fire": [
+        (("fire", "✦", "wand"), ("✧", "fire", "☀")),
+        (("☀", "fire", "star"), ("wand", "✦", "fire")),
+        (("fire", "☾", "✧"), ("star", "fire", "✦")),
+    ],
+    "earth": [
+        (("earth", "coin", "✦"), ("✧", "earth", "moon")),
+        (("coin", "earth", "☾"), ("earth", "star", "✧")),
+        (("earth", "✧", "coin"), ("☽", "earth", "✦")),
+    ],
+    "air": [
+        (("air", "✦", "☾"), ("✧", "air", "star")),
+        (("☀", "air", "✧"), ("air", "☽", "✦")),
+        (("air", "star", "moon"), ("✦", "air", "☾")),
+    ],
+    "water": [
+        (("water", "moon", "✦"), ("✧", "water", "☽")),
+        (("☾", "water", "star"), ("water", "✦", "moon")),
+        (("water", "✧", "☽"), ("star", "water", "✦")),
+    ],
+}
+THEME_DESIGN = {"shadow": "merlin", "love": "lunar", "money": "earth", "spirit": "astrology", "calm": "merlin"}
+TITLE_FRAGMENTS = {
+    "shadow": ("a truth finding its way into the light", "the courage to set an old weight down", "a quiet turning point"),
+    "love": ("a heart learning where it feels at home", "the tenderness beneath the question", "a softer way to stay connected"),
+    "money": ("a new path beginning to take shape", "patience meeting possibility", "the work that is ready to grow"),
+    "spirit": ("a small sign arriving at the right moment", "the wisdom waiting in the quiet", "a message taking shape between the stars"),
+    "calm": ("a gentler way forward", "the feeling that is ready to be heard", "a little more room to breathe"),
+}
+_LAST_TITLE_DESIGN = None
+
+
+def _title_symbols(sess, theme, rng):
+    global _LAST_TITLE_DESIGN
+    profile = dict(part.split(": ", 1) for part in sess.get("profile", "").split(", ") if ": " in part)
+    from knowledge import parse_sign
+    sign, element = parse_sign(profile.get("sign", ""))
+    key = "astrology" if sign else (element if element in TITLE_DESIGNS else THEME_DESIGN[theme])
+    designs = TITLE_DESIGNS[key]
+    design = rng.choice(designs)
+    for _ in range(8):
+        if design != _LAST_TITLE_DESIGN:
+            break
+        design = rng.choice(designs)
+    _LAST_TITLE_DESIGN = design
+    left, right = map(list, design)
+    if sign:
+        left[0] = SIGN_SYMBOLS[sign.lower()]
+    if element:
+        right[-1] = element
+    return tuple(left), tuple(right)
 
 
 def make_hook(sess):
-    """(left icon, right icon, title, line) for the pinned headline. The title follows what came up;
-    the icons are a zodiac sign and a moon or star, different every video."""
+    """(left icons, right icons, title, line) for the pinned video headline."""
     if sess.get("hook"):
         h = tuple(sess["hook"])
-        return h if len(h) == 4 else (random.SystemRandom().choice(ZODIAC), "star", h[1], h[2])
+        if len(h) == 4:
+            left = h[0] if isinstance(h[0], (tuple, list)) else (h[0],)
+            right = h[1] if isinstance(h[1], (tuple, list)) else (h[1],)
+            return left, right, h[2], h[3]
     cards = [(c[0], bool(c[1])) for c in sess.get("spread", [])]
     names = [c for c, _ in cards]
     suit = lambda s: sum(1 for c in names if c.endswith(" of " + s))
@@ -498,8 +576,13 @@ def make_hook(sess):
              "spirit": 0.7 * majors + 2 * sum(c in ("The Star", "The High Priestess", "Judgement", "The Hermit") for c in names),
              "calm": 1.0}
     rng = random.SystemRandom()
-    titles, lines = HOOKS[max(score, key=score.get)]
-    return rng.choice(ZODIAC), rng.choice(CELESTIAL), rng.choice(titles), rng.choice(lines)
+    theme = max(score, key=score.get)
+    _, lines = HOOKS[theme]
+    title = re.sub(r"\s+", " ", sess.get("video_title", "")).strip()
+    if not title:
+        title = rng.choice(TITLE_FRAGMENTS[theme])
+    left, right = _title_symbols(sess, theme, rng)
+    return left, right, title, rng.choice(lines)
 
 
 class Painter:
@@ -590,18 +673,27 @@ class Painter:
         for n, ln in enumerate(lines):
             w = d.textlength(ln, font=f)
             pair = icon if isinstance(icon, (tuple, list)) else (icon, icon)
-            icl = self._icon(pair[0], max(4, size // 9)) if (icon and n == 0) else None
-            icr = self._icon(pair[1], max(4, size // 9)) if (icon and n == 0) else None
-            wl = icl.width + 12 if icl else 0
-            wr = icr.width + 12 if icr else 0
+            if icon and n == 0 and len(pair) == 2 and isinstance(pair[0], (tuple, list)):
+                left_names, right_names = pair
+            else:
+                left_names, right_names = ((pair[0],), (pair[1],)) if icon and n == 0 else ((), ())
+            icon_size = max(4, size // 9)
+            left_icons = [self._icon(name, icon_size) for name in left_names]
+            right_icons = [self._icon(name, icon_size) for name in right_names]
+            wl = sum(ic.width + 6 for ic in left_icons)
+            wr = sum(ic.width + 6 for ic in right_icons)
             total = w + wl + wr
             x0 = (OW - total) / 2
             d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
-            for ic, ix in ((icl, x0), (icr, x0 + wl + w + 12)):
-                if ic:
-                    img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
-            iw = wl
-            d.text((x0 + iw, y), ln, fill=(0, 0, 0), font=f)
+            ix = x0
+            for ic in left_icons:
+                img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
+                ix += ic.width + 6
+            d.text((x0 + wl, y), ln, fill=(0, 0, 0), font=f)
+            ix = x0 + wl + w + 6
+            for ic in right_icons:
+                img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
+                ix += ic.width + 6
             y += size + 20
         return y
 
@@ -620,7 +712,8 @@ class Painter:
     def _pinned(self, img):
         left, right, title, line = self.hook
         f = self.canvas.font(54, "DejaVuSans-Bold.ttf")
-        y = self._boxes(img, [title], 270, f, 54, (left, right))
+        title_lines = self._wrap(title, f, OW - 450)[:2]
+        y = self._boxes(img, title_lines, 270, f, 54, (left, right))
         self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, 54)
 
     # ---------- per-frame layers
@@ -750,8 +843,12 @@ def scene_content(p, sc, t, sess):
         cards = [tuple(c) for c in sess["spread"]]
         upto = before if name.startswith("ask") else before + len(e["idx"])
         pairs = [p for p in sess["falls"].get("pairs", []) if max(p) < upto]
-        st = {"fallen": cards[:upto], "pairs": pairs, "pass_n": 13, "page": [],
-              "pass_t0": sc["start"] + (local // 1.7) * 1.7}
+        saved_slots = sess["falls"].get("slots")
+        slot_upto = sc["event"] + (0 if name.startswith("ask") else 1)
+        st = {"fallen": cards[:upto], "pairs": pairs,
+            "slots": saved_slots[:slot_upto] if saved_slots else None,
+            "pass_n": 13, "page": [],
+            "pass_t0": sc["start"] + (local // 1.7) * 1.7}
         ui.mood = ui.plan["wash"]
         if name.startswith("ask"):
             st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
@@ -759,7 +856,10 @@ def scene_content(p, sc, t, sess):
         elif name.startswith("drop"):
             st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
             if local < 0.5:
-                st["drop"] = {"t0": sc["start"], "idx": e["idx"]}
+                if sess["falls"].get("slots"):
+                    st["drop"] = {"t0": sc["start"], "slot": e.get("slot", sc["event"]), "cards": e["idx"]}
+                else:
+                    st["drop"] = {"t0": sc["start"], "idx": e["idx"]}
             else:
                 st["flip"] = (tuple(e["idx"]), min(8, int((local - 0.5) / 0.6 * 9)))
             ui.falling_frame(st, footer="a card falls!" if len(e["idx"]) == 1 else "two cards fall together!")
@@ -795,10 +895,14 @@ def scene_content(p, sc, t, sess):
     elif name == "table":
         ui.mood = ui.plan["reveal"]
         if key == "falling":
-            ui.fall_pairs = (sess.get("falls") or {}).get("pairs", [])
-            ui.fall_questions = (sess.get("falls") or {}).get("questions", [None] * 6)
+            falls = sess.get("falls") or {}
+            ui.fall_pairs = falls.get("pairs", [])
+            ui.fall_slots = falls.get("slots")
+            ui.fall_questions = falls.get("questions", [None] * 6)
         live_done = key == "falling" and (sess.get("falls") or {}).get("log")
-        ui.reveal_scene(key, spread, len(spread) if live_done else 0, None, "", sess.get("domain", "inner"))
+        saved_slots = (sess.get("falls") or {}).get("slots")
+        visible = len(saved_slots) if saved_slots else len(spread)
+        ui.reveal_scene(key, spread, visible if live_done else 0, None, "", sess.get("domain", "inner"))
     elif name.startswith("card"):
         i = sc["card"]
         ui.mood = ui.plan["reveal"]

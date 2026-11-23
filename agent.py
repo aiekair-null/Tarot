@@ -268,11 +268,13 @@ class Reader:
             return ""
         pos = SPREADS[key]["positions"]
         lines = []
-        for i, (c, r) in enumerate(spread):
+        slots = falls.get("slots") or [[i] for i in range(len(spread))]
+        for i, card_ids in enumerate(slots[:len(pos)]):
+            cards = [spread[j] for j in card_ids]
+            names = " + ".join(c + (" (fell upside down)" if r else "") for c, r in cards)
             q = (falls.get("questions") or [None] * 6)[i]
-            mate = [b if a == i else a for a, b in falls.get("pairs", []) if i in (a, b)]
-            lines.append(f"{i + 1}. {pos[i][0]}: {c}{' (fell upside down)' if r else ''}"
-                         + (f"; fell TOGETHER with {spread[mate[0]][0]}" if mate else "")
+            lines.append(f"{i + 1}. {pos[i][0]}: {names}"
+                         + ("; these cards fell together as one answer" if len(cards) > 1 else "")
                          + (f"; it answers the querent's question: \"{q}\"" if q else ""))
         return "\nHow the cards fell:\n" + "\n".join(lines)
 

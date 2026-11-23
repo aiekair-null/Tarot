@@ -39,9 +39,12 @@ Hugging Face's paid router is **only** used if you set `TAROT_BACKEND=hf` yourse
 python3 models.py                 # what's installed, what she'll use
 python3 models.py download small  # faster 1.5B model (1.1 GB) if your machine is slow
 python3 models.py use medium      # switch back to the 3B default
+python3 tarot.py model            # choose a local model; downloads missing models
 ```
 
-Free models: `medium` = Qwen2.5 3B (**default**) · `small` = Qwen2.5 1.5B · `llama` = Llama 3.2 3B.
+Free models: `medium` = Qwen2.5 3B (**default**) · `qwen3-8b` = Qwen3 8B (~5 GB) ·
+`small` = Qwen2.5 1.5B · `llama` = Llama 3.2 3B. Choosing a model activates it for the next launch;
+the main menu also has **7) Switch local model**.
 
 ### Covering the wait
 
@@ -88,8 +91,9 @@ For the classic styles she then asks your question and a few details (age, work,
 astrological sign or its element — fire, water, air or earth — which shapes how she weighs the suits).
 
 ### Live Reading (menu 6, or `python3 tarot.py live`)
-She asks *you* nothing. The deck riffles 10–15 cards per pass; each pass has a chance of a card
-falling out until six have fallen. Now and then two fall together and are read as one answer.
+She asks *you* nothing. The deck riffles 10–15 cards per pass until six positions are filled. Two
+cards may fall together into one position; they are read as one answer, so the final card count can
+exceed six.
 Reversed falls are noted. Before each fall she asks the deck her own question, picked from
 `live_questions.json` and bent to the mood of the cards already on the table, and she reads each
 card through her grimoire and memory.
@@ -103,9 +107,11 @@ block, shadow, hidden, spirit, support, strength, action, growth, outcome, heali
 After any reading she offers: **Would you like this reading as a video?** (or menu 5 /
 `python3 tarot.py video` for the last reading). The video is a 1080x1920 vertical reel:
 
-- a pixel tapestry with a pinned headline at the top: a zodiac sign and a star or moon (different
-  every video) around a gentle title chosen from the cards — SPIRIT MESSAGE, HEART MESSAGE,
-  WORK & ABUNDANCE, SHADOW WORK and so on. Headlines never accuse or promise anything.
+- after you choose yes, enter the title for the top of the video; leave it blank for a short,
+  reading-inspired phrase. A rotating set of six pixel symbols frames it, with zodiac and element
+  symbols included when the reading has that profile. Themes include Merlin, moon phases, astrology,
+  and the four elements.
+- the pinned headline stays gentle and true to the reading: no accusations, promises, or fear-bait
 - the reading replayed exactly as it happened on screen, on a navy cloth
 - each card held up to the camera while she reads it
 - her voice with a light digital edge, captions, and a prepared-piano music bed

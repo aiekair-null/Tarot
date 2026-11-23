@@ -48,9 +48,9 @@ SPREADS = {
         ),
     },
     "falling": {
-        "name": "Live Reading (six cards fall from the shuffle)",
+         "name": "Live Reading (six positions fill from the shuffle)",
         "use": "Veyra asks the deck her own questions; cards fall out of the shuffle one at a time "
-               "(sometimes two together), each answering the question she asked just before it fell.",
+             "(sometimes two together into one position), each position answering the question she asked just before it fell.",
         "positions": [
             ("First to Fall", "the heart of your concern"),
             ("Second to Fall", "what stands in the way"),
@@ -61,7 +61,8 @@ SPREADS = {
         ],
         "guide": (
             "These cards were not dealt: they fell out of the shuffle on their own, so each one insisted.\n"
-            "- Read them in the order they fell; each answers the question Veyra asked the deck just before it.\n"
+            "- Fill six positions in order; a pair shares one position and answers one question together.\n"
+            "- Read each position as it falls; paired cards may make the final card count greater than six.\n"
             "- A card that fell reversed fell upside down: name that, and read it as blocked, inward or resisted.\n"
             "- Cards that fell TOGETHER are one answer: read them as a pair, how they interact, what they say jointly.\n"
             "- First to fall vs last to fall: does the concern resolve, or transform into something else?\n"

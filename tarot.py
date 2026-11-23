@@ -23,6 +23,23 @@ MW, MH = 11, 5           # mini card (Celtic table)
 PW, PH = 9, 5            # pile card (cutting)
 
 
+def _overlap_rows(rear, front):
+    rows = art.frame(MW, MH, 98)
+    for y in range(MH):
+        rows[y][3:MW] = rear[y]
+        rows[y][:MW - 3] = front[y]
+    return rows
+
+
+def _overlapped_mini(rear, front):
+    return _overlap_rows(art.mini_cells(*rear, w=MW - 3, h=MH),
+                         art.mini_cells(*front, w=MW - 3, h=MH))
+
+
+def _overlapped_back():
+    return _overlap_rows(art.back_cells(MW - 3, MH), art.back_cells(MW - 3, MH))
+
+
 def xterm_rgb(i):
     if i < 16:
         return [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128),
@@ -408,15 +425,24 @@ class UI:
             return
         if key == "falling":
             pairs = getattr(self, "fall_pairs", [])
+            slots = getattr(self, "fall_slots", None) or [[i] for i in range(len(spread))]
             self.scr.erase()
             self.stars(14)
-            self.fall_table(spread, pairs, ((flip[0],), flip[1]) if flip else None, y=1, upto=upto)
+            self.fall_table(spread, pairs, ((flip[0],), flip[1]) if flip else None,
+                            y=1, upto=upto, slots=slots)
             show = flip[0] if flip else upto - 1
-            if 0 <= show < n and (flip is None or flip[1] >= 4):
-                c, r = spread[show]
-                self.cells(8, 2, art.card_cells(c, r, BW, BH))
+            if 0 <= show < len(slots) and (flip is None or flip[1] >= 4):
+                card_ids = slots[show]
+                c, r = spread[card_ids[0]]
+                if len(card_ids) > 1:
+                    other = spread[card_ids[1]]
+                    self.cells(8, 8, art.card_cells(*other, BW - 6, BH))
+                    self.cells(8, 2, art.card_cells(c, r, BW - 6, BH))
+                else:
+                    self.cells(8, 2, art.card_cells(c, r, BW, BH))
                 tx = BW + 5
-                self.text(9, tx, f"{show + 1}. {pos[show][0]}: {pos[show][1]}"[: self.w - tx - 1], 51, True)
+                names = " + ".join(spread[j][0] for j in card_ids)
+                self.text(9, tx, f"{show + 1}. {pos[show][0]}: {names}"[: self.w - tx - 1], 51, True)
                 q = (getattr(self, "fall_questions", None) or [None] * 6)[show]
                 y = 11
                 if q:
@@ -426,8 +452,13 @@ class UI:
                     y += 1
                 self.wrap_lines(y, tx, self.w - tx - 2, position_meaning(c, r, pos[show][0], domain), 189, 8)
                 for a, b in pairs:
-                    if show in (a, b):
-                        other = spread[b if show == a else a][0]
+                    if a in card_ids:
+                        other = spread[b][0]
+                    elif b in card_ids:
+                        other = spread[a][0]
+                    else:
+                        continue
+                    if other:
                         other = other if other.startswith("The ") else "the " + other
                         self.text(min(self.h - 2, y + 7), tx, f"∞ fell together with {other}"[: self.w - tx - 1], 220)
             self.footer(msg)
@@ -490,25 +521,43 @@ class UI:
     def fall_slot(self, i):
         return 9, (self.w - 6 * (MW + 1)) // 2 + i * (MW + 1)
 
-    def fall_table(self, fallen, pairs, flip=None, y=None, upto=None):
-        """The six slots: empty frames, fallen cards face up, pairs linked with an infinity sign."""
-        upto = len(fallen) if upto is None else upto
+    def fall_table(self, fallen, pairs, flip=None, y=None, upto=None, slots=None):
+        """Draw six positions; paired cards overlap inside their shared position."""
+        has_slot_map = slots is not None
+        slots = slots if slots is not None else [[i] for i in range(len(fallen))]
+        upto = len(slots) if upto is None else upto
+        flipping = set(flip[0]) if flip is not None else set()
         for i in range(6):
             sy, sx = self.fall_slot(i)
             sy = sy if y is None else y
-            if flip is not None and i in flip[0]:
-                self.flipping(sy, sx, MW, MH, fallen[i], flip[1])
-            elif i < upto:
-                self.cells(sy, sx, art.mini_cells(*fallen[i]))
-            elif i < len(fallen):
-                self.cells(sy, sx, art.back_cells(MW, MH))
+            card_ids = slots[i] if i < len(slots) else []
+            visible = i < upto
+            if card_ids and visible and len(card_ids) > 1:
+                back, front = card_ids[1], card_ids[0]
+                if flipping.intersection(card_ids):
+                    self.flipping(sy, sx + 3, MW - 3, MH, fallen[back], flip[1])
+                    self.flipping(sy, sx, MW - 3, MH, fallen[front], flip[1])
+                else:
+                    self.cells(sy, sx, _overlapped_mini(fallen[back], fallen[front]))
+            elif card_ids and visible:
+                card_id = card_ids[0]
+                if card_id in flipping:
+                    self.flipping(sy, sx, MW, MH, fallen[card_id], flip[1])
+                else:
+                    self.cells(sy, sx, art.mini_cells(*fallen[card_id]))
+            elif card_ids:
+                if len(card_ids) > 1:
+                    self.cells(sy, sx + 3, _overlapped_back())
+                else:
+                    self.cells(sy, sx, art.back_cells(MW, MH))
             else:
                 self.cells(sy, sx, art.frame(MW, MH, 60))
                 self.text(sy + 2, sx + MW // 2, "?", 60)
-            self.text(sy + MH, sx + MW // 2, str(i + 1), 51 if i < len(fallen) else 60)
-        for a, b in pairs:
-            sy, sx = self.fall_slot(b)
-            self.text((sy if y is None else y) + 2, sx - 1, "∞", 220, True)
+            self.text(sy + MH, sx + MW // 2, str(i + 1), 51 if i < upto else 60)
+        if not has_slot_map:
+            for a, b in pairs:
+                sy, sx = self.fall_slot(b)
+                self.text((sy if y is None else y) + 2, sx - 1, "∞", 220, True)
 
     def riffle(self, t0, n, now):
         """Two half-decks and a stream of cards arcing between them."""
@@ -534,11 +583,27 @@ class UI:
         drop = st.get("drop")
         if drop:                                  # cards in the air, falling to their slots
             f = min(1.0, (now - drop["t0"]) / 0.5)
-            for i in drop["idx"]:
-                sy, sx = self.fall_slot(i)
+            if "slot" in drop:
+                sy, sx = self.fall_slot(drop["slot"])
                 cx = self.w // 2 - MW // 2
-                self.cells(int(4 + (sy - 4) * f), int(cx + (sx - cx) * f), art.back_cells(MW, MH))
-        self.fall_table(st["fallen"] if not drop else st["fallen"][:min(drop["idx"])], st["pairs"], st.get("flip"))
+                y, x = int(4 + (sy - 4) * f), int(cx + (sx - cx) * f)
+                cards = drop["cards"]
+                if len(cards) > 1:
+                    self.cells(y, x, _overlapped_back())
+                else:
+                    self.cells(y, x, art.back_cells(MW, MH))
+                fallen = st["fallen"][:cards[0]]
+                slots = st["slots"][:drop["slot"]]
+            else:
+                for i in drop["idx"]:
+                    sy, sx = self.fall_slot(i)
+                    cx = self.w // 2 - MW // 2
+                    self.cells(int(4 + (sy - 4) * f), int(cx + (sx - cx) * f), art.back_cells(MW, MH))
+                fallen = st["fallen"][:min(drop["idx"])]
+                slots = st.get("slots")
+        else:
+            fallen, slots = st["fallen"], st.get("slots")
+        self.fall_table(fallen, st["pairs"], st.get("flip"), slots=slots)
         lines = st.get("page", [])
         for j, ln in enumerate(lines):
             self.text(16 + j, 2, ln, 189)
@@ -917,9 +982,61 @@ def ritual(scr, key, spirit_qs, reader, ctx, plan, domain, start):
 
 P_FALL = float(os.environ.get("TAROT_FALL_CHANCE", "0.36"))     # chance a card falls on each pass
 P_PAIR = float(os.environ.get("TAROT_PAIR_CHANCE", "0.14"))     # chance that a fall is two cards together
+ZODIAC_MONTHS = (
+    ("January", "Capricorn", "earth"), ("February", "Aquarius", "air"),
+    ("March", "Pisces", "water"), ("April", "Aries", "fire"),
+    ("May", "Taurus", "earth"), ("June", "Gemini", "air"),
+    ("July", "Cancer", "water"), ("August", "Leo", "fire"),
+    ("September", "Virgo", "earth"), ("October", "Libra", "air"),
+    ("November", "Scorpio", "water"), ("December", "Sagittarius", "fire"),
+)
 
 
-def falling_ritual(scr, reader, plan, domain, concern, start):
+def zodiac_picker(scr, next_index):
+    """Static arrow-key picker; None means use the next automatic sign."""
+    scr = _sized(scr)
+    ui = UI(scr)
+    selected = 0
+    while True:
+        scr.erase()
+        ui.center(1, "six-card reading: choose a zodiac lens", 51, True)
+        month, sign, element = ZODIAC_MONTHS[next_index]
+        ui.center(3, f"↑ ↓ move · Enter select · auto next: {month} / {sign} ({element})", 60)
+        options = [None, *range(len(ZODIAC_MONTHS))]
+        for row, option in enumerate(options):
+            if option is None:
+                label = f"AUTO  next in sequence: {month} · {sign} ({element})"
+            else:
+                month, sign, element = ZODIAC_MONTHS[option]
+                label = f"{month} · {sign} · {element}"
+            x = max(1, (ui.w - len(label) - 2) // 2)
+            ui.text(5 + row, x, ("› " if row == selected else "  ") + label,
+                    51 if row == selected else 153, row == selected)
+        scr.refresh()
+        key = scr.getch()
+        if key == curses.KEY_UP:
+            selected = (selected - 1) % len(options)
+        elif key == curses.KEY_DOWN:
+            selected = (selected + 1) % len(options)
+        elif key in ENTER:
+            return None if selected == 0 else selected - 1
+        elif key in (ord("q"), ord("Q"), 27):
+            return None
+
+
+def choose_zodiac(reader):
+    try:
+        next_index = int(reader.mem.get("next_zodiac_index", 0)) % len(ZODIAC_MONTHS)
+    except (TypeError, ValueError):
+        next_index = 0
+    selected = curses.wrapper(zodiac_picker, next_index)
+    automatic = selected is None
+    index = next_index if automatic else selected % len(ZODIAC_MONTHS)
+    month, sign, element = ZODIAC_MONTHS[index]
+    return month, sign, element, index if automatic else None
+
+
+def falling_ritual(scr, reader, plan, domain, concern, start, zodiac_sign=None, element=None):
     """Live Reading: Veyra asks the deck her own questions; six cards fall out of the shuffle, each
     answering the question asked just before it. Every step is logged so a video can replay it."""
     import live
@@ -930,7 +1047,8 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
     domain = domain or "inner"
     deck = build_deck()
     SYS.shuffle(deck)
-    st = {"fallen": [], "pairs": [], "pass_t0": ui.now(), "pass_n": 12, "page": [], "questions": [None] * 6}
+    st = {"fallen": [], "slots": [], "pairs": [], "pass_t0": ui.now(), "pass_n": 12,
+            "page": [], "questions": [None] * 6}
     log, asked = [], []
 
     def pages(text):
@@ -953,8 +1071,8 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
             st["pass_t0"], st["pass_n"] = ui.now(), SYS.randint(10, 15)
         ui.falling_frame(st, footer=footer)
 
-    while len(st["fallen"]) < 6:
-        i = len(st["fallen"])
+    while len(st["slots"]) < 6:
+        i = len(st["slots"])
         q, opener, feeling = live.next_question(i, st["fallen"], reader.mem, SYS, asked)
         asked.append(q)
         st["questions"][i] = q
@@ -969,11 +1087,13 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
                 ui.nap(40)
             if SYS.random() < P_FALL:
                 break
-        k = 2 if i <= 4 and SYS.random() < P_PAIR else 1
+        k = 2 if SYS.random() < P_PAIR else 1
         new = [(deck.pop(SYS.randrange(len(deck))), SYS.random() < 0.3) for _ in range(k)]
+        first_card = len(st["fallen"])
+        idx = list(range(first_card, first_card + k))
         st["fallen"] += new
-        idx = list(range(i, i + k))
-        st["drop"] = {"t0": ui.now(), "idx": idx}
+        st["slots"].append(idx)
+        st["drop"] = {"t0": ui.now(), "slot": i, "cards": idx}
         while ui.now() - st["drop"]["t0"] < 0.5:
             ui.falling_frame(st, footer="a card falls!" if k == 1 else "two cards fall together!")
             ui.scr.refresh()
@@ -986,15 +1106,19 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
             ui.nap(45)
         st["flip"] = None
         if k == 2:
-            st["pairs"].append((i, i + 1))
-        texts = [fall_reading(c, r, i + j, q if j == 0 else None, domain, reader.mem) for j, (c, r) in enumerate(new)]
+            st["pairs"].append(tuple(idx))
+        texts = [fall_reading(c, r, i, q if j == 0 else None, domain, reader.mem,
+                              sign=zodiac_sign, element=element) for j, (c, r) in enumerate(new)]
         if k == 2:
-            texts.append(pair_reading(new[0][0], new[0][1], new[1][0], new[1][1], domain, reader.mem))
-        log.append({"question": q, "opener": opener, "feeling": feeling, "passes": passes, "idx": idx,
+            texts.append(pair_reading(new[0][0], new[0][1], new[1][0], new[1][1], domain, reader.mem,
+                                      sign=zodiac_sign, element=element))
+        log.append({"question": q, "opener": opener, "feeling": feeling, "passes": passes,
+                    "slot": i, "idx": idx,
                     "cards": [list(x) for x in new], "text": " ".join(texts)})
-        show(" ".join(texts), "Enter" if len(st["fallen"]) < 6 else "Enter: see all six")
+        show(" ".join(texts), "Enter" if len(st["slots"]) < 6 else "Enter: see all six")
     spread = st["fallen"]
     ui.fall_pairs, ui.fall_questions = st["pairs"], st["questions"]
+    ui.fall_slots = st["slots"]
     j = start(spread, st["pairs"], st["questions"]) if start else None   # Live Readings end on the six cards
     ui.job = j
     ui.mood = plan["reveal"]
@@ -1002,7 +1126,7 @@ def falling_ritual(scr, reader, plan, domain, concern, start):
                                           "Enter: hear the full reading" if j else "Enter: close the reading", domain))
     if j and not j.done and (j.eta() is None or j.eta() > WAIT_LIMIT):
         ui.waiting_room(spread)
-    return spread, st["pairs"], st["questions"], j, log
+    return spread, st["pairs"], st["questions"], j, log, st["slots"]
 
 
 def grimoire_screen(scr):
@@ -1025,10 +1149,22 @@ def portrait(label=""):
     print()
 
 
-def show_table(key, spread):
+def show_table(key, spread, falls=None):
     """The laid cards as pixel art, printed above the reading."""
     pos = SPREADS[key]["positions"]
     cols = shutil.get_terminal_size((80, 24)).columns
+    if key == "falling":
+        slots = (falls or {}).get("slots") or [[i] for i in range(len(spread))]
+        for i, card_ids in enumerate(slots):
+            cards = [spread[j] for j in card_ids]
+            fx.show(f"{i + 1}. {pos[i][0]}", "hope", 2)
+            if len(cards) > 1:
+                block = _overlapped_mini(cards[1], cards[0])
+            else:
+                block = art.mini_cells(*cards[0])
+            fx.print_cells(block, 2)
+        print()
+        return
     if key == "three" and cols >= 3 * (BW + 2) + 2:
         blocks = [art.card_cells(c, r, BW, BH) for c, r in spread]
         labels = "".join(p[0].upper().center(BW + 2) for p in pos)
@@ -1167,16 +1303,26 @@ def reading(reader):
 
 def live_reading(reader):
     """Live Reading: no questions for you. Veyra asks the deck her own, and six cards fall."""
+    month, sign, element, auto_index = choose_zodiac(reader)
     fx.say("A Live Reading. You do not need to ask anything: I will put my own questions to the deck, "
            "and it will answer by dropping cards from the shuffle. Sometimes two fall together; those speak as one.",
            "mystic", "fade")
+    fx.say(f"{sign}, a sign of {element}. I will read the element against every card as it falls.", "mystic", "fade")
     fx.say("Press Enter when you are ready, and simply hold how you feel in mind.", "mystic", "pulse")
     fx.prompt()
     plan = {"intro": "calm", "wash": "storm", "cut": "mystic", "reveal": "dread", "reading": "mystic"}
     # each card is read as it falls, so there is no final reading: no model job is started
-    spread, pairs, questions, job, log = curses.wrapper(falling_ritual, reader, plan, None, "", None)
-    finish_reading(reader, "A Live Reading", "(not shared)", [], [], "falling", spread, job, plan, "inner",
-                   "A Live Reading.", {"pairs": pairs, "questions": questions, "log": log}, live=True)
+    spread, pairs, questions, job, log, slots = curses.wrapper(falling_ritual, reader, plan, None, "", None,
+                                                               sign, element)
+    if auto_index is not None:
+        reader.mem["next_zodiac_index"] = (auto_index + 1) % len(ZODIAC_MONTHS)
+        try:
+            reader._save()
+        except Exception as exc:
+            fx.say(f"I could not save the zodiac cycle: {str(exc)[:120]}", "dread", "fade")
+    falls = {"pairs": pairs, "questions": questions, "log": log, "slots": slots}
+    finish_reading(reader, "A Live Reading", f"sign: {sign} ({element})", [], [], "falling", spread, job, plan, "inner",
+                   "A Live Reading.", falls, live=True)
 
 
 def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls=None, live=False):
@@ -1184,7 +1330,7 @@ def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, p
     done = [0]
     if job is None:                                 # Live Reading: the cards were read as they fell
         import questions as Q
-        show_table(key, spread)
+        show_table(key, spread, falls)
         text = SYS.choice(Q.CLOSINGS)
         fx.say(text, "hope", "fade")
         done[0] = 1                                 # no channeled message either
@@ -1193,7 +1339,7 @@ def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, p
         reader.later(reader._reflect, "A Live Reading", [], names, heard)   # she still learns from it
     else:
         fx.banner("~ Veyra reads ~", plan["reading"], 20)
-        show_table(key, spread)
+        show_table(key, spread, falls)
 
         def on_channel():
             if done[0] < 1:
@@ -1243,6 +1389,8 @@ def _progress(f):
 
 def make_and_share(sess):
     import video
+    fx.say("What should the title at the top say? Leave blank for a reading-inspired title.", "hope", "fade")
+    sess["video_title"] = fx.prompt().strip()
     fx.say("Veyra draws the reading frame by frame...", "mystic", "fade")
     path = video.make(sess, _ask, _note, _progress)
     if path:
@@ -1316,6 +1464,39 @@ def _try(fn, *a):
         return e
 
 
+def _model_mode():
+    active = brain.find_gguf()
+    keys = list(brain.CATALOG)
+    print("\nBuilt-in models (enter a number or model key; q cancels):")
+    for index, key in enumerate(keys, 1):
+        _, filename, size, _ = brain.CATALOG[key]
+        path = brain.MODELS_DIR / filename
+        state = "active" if active and active.name == filename else ("installed" if path.exists() else f"download {size}")
+        print(f"  {index}) {key:<10} {state}")
+    choice = fx.prompt()
+    if choice.lower() in ("", "q", "quit"):
+        return False
+    key = choice if choice in brain.CATALOG else None
+    if key is None and choice.isdigit() and 1 <= int(choice) <= len(keys):
+        key = keys[int(choice) - 1]
+    if key is None:
+        print("Unknown model selection.")
+        return False
+
+    _, filename, _, _ = brain.CATALOG[key]
+    path = brain.MODELS_DIR / filename
+    try:
+        if not path.exists():
+            path = brain.download(key, log=lambda message: fx.say(message, "hope", "fade"))
+        else:
+            brain.ACTIVE.write_text(filename)
+    except Exception as exc:
+        print(f"Model download failed: {exc}", file=sys.stderr)
+        return False
+    print(f"Selected {key}. Restart tarot.py to load {path.name}.")
+    return True
+
+
 def _git_sync(*args, quiet=False):
     command = ["git", *args]
     env = os.environ.copy()
@@ -1361,6 +1542,9 @@ def _sync_after_session():
 def main():
     locale.setlocale(locale.LC_ALL, "")
     arg = (sys.argv[1:] or [""])[0]
+    if arg == "model":
+        _model_mode()
+        return
     if arg == "grimoire":
         return curses.wrapper(grimoire_screen)
     if arg == "video":                                 # python3 tarot.py video [session.json]
@@ -1393,7 +1577,7 @@ def main():
     else:
         while True:
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
-                   "5) Make a video of your last reading   6) Live Reading", "hope", "type")
+                   "5) Make a video of your last reading   6) Live Reading   7) Switch local model", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1410,6 +1594,9 @@ def main():
                 break
             elif c == "6":
                 live_reading(reader)
+            elif c == "7":
+                if _model_mode():
+                    break
             elif c == "5":
                 import video
                 src = video.latest_session()

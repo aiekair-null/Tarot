@@ -23,6 +23,8 @@ DEFAULT = "medium"
 CATALOG = {
     "medium": ("Qwen/Qwen2.5-3B-Instruct-GGUF", "qwen2.5-3b-instruct-q4_k_m.gguf", "2.1 GB",
                "DEFAULT: rich readings; 2-5 min per reading on 2 cores (the ritual covers the wait)"),
+    "qwen3-8b": ("Qwen/Qwen3-8B-GGUF", "Qwen3-8B-Q4_K_M.gguf", "5.0 GB",
+                 "Qwen3 8B, higher capacity; needs about 5 GB of disk and more memory"),
     "small": ("Qwen/Qwen2.5-1.5B-Instruct-GGUF", "qwen2.5-1.5b-instruct-q4_k_m.gguf", "1.1 GB",
               "faster, simpler readings; for slow machines"),
     "llama": ("bartowski/Llama-3.2-3B-Instruct-GGUF", "Llama-3.2-3B-Instruct-Q4_K_M.gguf", "2.0 GB",

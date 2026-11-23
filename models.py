@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Manage Veyra's brain.
   python models.py                  show what's installed and what's free to download
-  python models.py download [key]   download a free built-in model (medium = default | small | llama)
+    python models.py download [key]   download a free built-in model (medium = default | qwen3-8b | small | llama)
   python models.py use <key|file>   switch the built-in model
+    python models.py download qwen3-8b   install Qwen3-8B (about 5 GB)
+    python models.py use qwen3-8b         select it for the next launch
   python models.py hf [word]        (optional, PAID) list Hugging Face router models"""
 import json, os, sys, urllib.request
 import brain
