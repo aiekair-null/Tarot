@@ -60,7 +60,15 @@ class Reader:
         self._last = None
         self.brain = Brain(connect=False)
         self.fails, self.err = 0, self.brain.err
-        threading.Thread(target=self.brain.connect, daemon=True).start()
+        self.brain_ready = threading.Event()
+
+        def wake():
+            try:
+                self.brain.connect()
+            finally:
+                self.brain_ready.set()
+
+        threading.Thread(target=wake, daemon=True).start()
 
     # ---- status -----------------------------------------------------------------
     @property

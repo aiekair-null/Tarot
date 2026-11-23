@@ -113,6 +113,72 @@ def banner(text, mood="mystic", frames=30):
     print("\n")
 
 
+def startup_loading(reader):
+    """Whimsical startup scene until the local model connection finishes."""
+    cols = shutil.get_terminal_size((80, 24)).columns
+    rows = shutil.get_terminal_size((80, 24)).lines
+    ready = getattr(reader, "brain_ready", None)
+    k, start = 0, time.monotonic()
+    width = min(max(24, cols - 10), 72)
+
+    sys.stdout.write("\x1b[2J\x1b[H")
+    while ready and not ready.is_set():
+        elapsed = time.monotonic() - start
+        brain = getattr(reader, "brain", None)
+        reported = getattr(brain, "progress", 5) if brain else 5
+        stage = getattr(brain, "load_stage", "waking") if brain else "waking"
+        progress = max(reported, min(92, int(elapsed * 0.7)))
+
+        filled = int(width * progress / 100)
+        bar = ["·"] * width
+        for i in range(filled):
+            bar[i] = "~"
+        leaf_pos = max(0, min(width - 1, int(k * 1.7) % (filled + 1)))
+        bar[leaf_pos] = "❧"
+
+        scene = k % 72
+        sys.stdout.write("\x1b[H")
+        sys.stdout.write(paint("  ✦ Veyra wakes in the pages ✦".center(cols - 1), pal("mystic"), k * 0.05))
+        sys.stdout.write("\x1b[J")
+
+        if scene < 24:
+            jump = abs(scene - 12)
+            lane = max(4, 8 + scene)
+            x = lane if lane + 12 < cols else max(2, cols - 14)
+            y = max(5, 10 - (6 if jump < 5 else 0))
+            cat = ["  /\\_/\\  ", " ( o.o ) ", "  > ^ <   "]
+            for row, sprite in enumerate(cat):
+                sys.stdout.write(f"\x1b[{y + row};{x}H" + sprite)
+            sys.stdout.write(f"\x1b[{y + 4};{x}H⌞ table ⌟")
+        elif scene < 48:
+            x = max(2, cols // 2)
+            flame = "✦" if (k // 3) % 2 else "*"
+            sys.stdout.write(f"\x1b[{max(7, rows // 2 - 3)};{x}H" + flame)
+            sys.stdout.write(f"\x1b[{max(8, rows // 2 - 2)};{x - 1}H╾|╼")
+            sys.stdout.write(f"\x1b[{max(9, rows // 2 - 1)};{max(2, x - 11)}Hthe candle holds against the wind")
+        else:
+            lane = int((scene - 48) / 24 * max(4, cols - 18))
+            leaf = "❧" if k % 2 else "◆"
+            sys.stdout.write(f"\x1b[{max(8, rows // 2)};{lane + 2}H" + leaf + "  rustling through the pages")
+
+        bottom = max(3, rows - 2)
+        sys.stdout.write(f"\x1b[{bottom};4H" + "".join(bar))
+        sys.stdout.write(f"\x1b[{bottom + 1};4H" + f"{progress:3d}%  {stage}"[:cols - 8])
+        sys.stdout.flush()
+        time.sleep(0.06)
+        k += 1
+
+    brain = getattr(reader, "brain", None)
+    final_stage = getattr(brain, "load_stage", "Veyra is awake") if brain else "Veyra is awake"
+    for _ in range(3):
+        sys.stdout.write("\x1b[2J\x1b[H")
+        sys.stdout.write(paint("  ✦ Veyra is ready ✦".center(cols - 1), pal("hope"), 0.3))
+        sys.stdout.write(f"\x1b[{max(3, rows - 2)};4H" + "~" * width)
+        sys.stdout.write(f"\x1b[{max(4, rows - 1)};4H100%  {final_stage}")
+        sys.stdout.flush()
+        time.sleep(0.08)
+
+
 def run_with_animation(fn, min_frames=40, titles=("~ channeling the spirit realm ~", "words coming through now...")):
     """Animate 'channeling...' while fn() runs in a thread; returns fn's result (or None)."""
     res = {}

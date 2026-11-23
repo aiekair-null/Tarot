@@ -1637,7 +1637,8 @@ def main():
             return print("No videos yet. Make one with: python3 tarot.py video")
         return share_menu(src)
     fx.banner("✦   V   E   Y   R   A   ✦", "mystic")
-    reader = fx.run_with_animation(Reader, 10, ("~ Veyra wakes ~", "~ the candles catch ~")) or Reader()
+    reader = Reader()
+    fx.startup_loading(reader)
     if reader.online:
         ok, why = fx.run_with_animation(reader.check, 10, ("~ Veyra wakes ~",)) or (False, "")
     portrait(reader.label)

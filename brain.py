@@ -99,6 +99,8 @@ class Brain:
         self.kind, self.label, self.err = "none", "scripted knowledge (no model)", ""
         self.llm = self.client = None
         self.url = self.model = ""
+        self.progress = 0
+        self.load_stage = "waking"
         if connect:
             self.connect()
 
@@ -113,6 +115,7 @@ class Brain:
     # ---- connecting ------------------------------------------------------------
     def connect(self, prefer=None):
         prefer = (prefer or os.environ.get("TAROT_BACKEND", "auto")).lower()
+        self.progress, self.load_stage = 5, "looking for a model"
         self.kind, self.label, self.err, self.llm, self.client = "none", "scripted knowledge (no model)", "", None, None
         if prefer in ("none", "scripted", "off"):
             return self
@@ -122,22 +125,27 @@ class Brain:
             try:
                 if getattr(self, "_try_" + k)():
                     self.kind = k
+                    self.progress, self.load_stage = 100, "Veyra is awake"
                     return self
             except Exception as e:
                 notes.append(f"{k}: {str(e)[:120]}")
         self.err = "; ".join(notes) or "no model found"
+        self.progress, self.load_stage = 100, "scripted knowledge is ready"
         return self
 
     def _try_llama(self):
         path = find_gguf()
         if not path:
             raise RuntimeError("no .gguf in models/ (run: python models.py download)")
+        self.progress, self.load_stage = 25, "finding the familiar pages"
         try:
             from llama_cpp import Llama
         except ImportError:
             raise RuntimeError("llama-cpp-python not installed (run: bash setup_local.sh)")
+        self.progress, self.load_stage = 45, "warming the candle"
         self.llm = Llama(model_path=str(path), n_ctx=int(os.environ.get("TAROT_CTX", "8192")),
                          n_threads=int(os.environ.get("TAROT_THREADS", os.cpu_count() or 2)), verbose=False)
+        self.progress, self.load_stage = 100, "Veyra is awake"
         self.label = f"built-in {path.name}"
         return True
 
