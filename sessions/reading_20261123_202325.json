@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-23 20:23",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Hermit",
+   true
+  ],
+  [
+   "Six of Swords",
+   false
+  ],
+  [
+   "Queen of Cups",
+   false
+  ],
+  [
+   "The Lovers",
+   true
+  ],
+  [
+   "King of Cups",
+   false
+  ],
+  [
+   "Four of Wands",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    1,
+    2
+   ]
+  ],
+  "questions": [
+   "What do you need to understand about a bond that is on your mind, and how does establishing trust touch it?",
+   "What does the Hermit want you to stop pretending about?",
+   null,
+   "Where can you find rest while feeling lighter than before?",
+   "What would make you proud of how this was handled?",
+   "Where is this heading if you keep walking this path?"
+  ],
+  "log": [
+   {
+    "question": "What do you need to understand about a bond that is on your mind, and how does establishing trust touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "on the edge of something",
+    "passes": 3,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "The Hermit",
+      true
+     ]
+    ],
+    "text": "The Hermit falls upside down. The first card fell upside down: your concern is tangled in isolation turning to loneliness, hiding from help, lost direction. To \"What do you need to understand about a bond that is on your mind, and how does establishing trust touch it?\" it answers: Isolation turning to loneliness, hiding from help, lost direction; face that, then step back and find your own answer in the quiet. Picture a retreat, a search for your own light, but stalled or turned inward. It asks you: What answer would you hear if the noise stopped for a week?"
+   },
+   {
+    "question": "What does the Hermit want you to stop pretending about?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "at a crossroads",
+    "passes": 3,
+    "idx": [
+     1,
+     2
+    ],
+    "cards": [
+     [
+      "Six of Swords",
+      false
+     ],
+     [
+      "Queen of Cups",
+      false
+     ]
+    ],
+    "text": "The Six of Swords falls. My grimoire says: In the aftermath of a tumultuous divorce, your client is finally stepping into new waters as they move to a quieter home in a different state, away from lingering emotions and unresolved conflicts. What stands in the way: transition, pushed too far. Healing passage is what pushes back. To \"What does the Hermit want you to stop pretending about?\" it answers: Move toward calmer waters. It asks you: What would you leave behind to cross the water? The Queen of Cups falls. What you cannot see yet: deep intuition, compassion with boundaries. It asks you: Who needs your compassion, and have you left any for yourself? Two cards fell together: the Six of Swords and the Queen of Cups. They are one answer. Swords and Cups are neutral elements: they coexist and need you to link them. Together: transition meets compassion. Picture it: healing passage, while deep intuition, compassion with boundaries. Their shared counsel: move toward calmer waters, and lead with compassion and keep your boundaries."
+   },
+   {
+    "question": "Where can you find rest while feeling lighter than before?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "lighter than before",
+    "passes": 1,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Lovers",
+      true
+     ]
+    ],
+    "text": "The Lovers falls upside down. My grimoire says: Reversed: After months of uncertainty, you finally confront your long-held fear of commitment and realize it's not about the love itself but aligning that love with your deeply held values. Help is there but blocked: misalignment, temptation, avoiding a decision, a relationship out of sync. Clear the way and it reaches you. To \"Where can you find rest while feeling lighter than before?\" it answers: Misalignment, temptation, avoiding a decision, a relationship out of sync; face that, then choose with your values, not only your wants. Picture integrating head and heart; choosing who you will be, but stalled or turned inward. It asks you: Which choice would you make if it matched who you really are?"
+   },
+   {
+    "question": "What would make you proud of how this was handled?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "at a crossroads",
+    "passes": 2,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "King of Cups",
+      false
+     ]
+    ],
+    "text": "The King of Cups falls. My grimoire says: In the context of a recent breakup, the King of Cups (reversed) indicates that while she clings tightly to her memories and feelings for him, they are increasingly turbulent and difficult to manage. This inner turmoil has left her feeling lost and adrift emotionally. What to do next: stay calm and steady when feelings run high. To \"What would make you proud of how this was handled?\" it answers: Stay calm and steady when feelings run high. Picture it: emotional mastery under pressure. It asks you: Can you feel deeply without being ruled by it?"
+   },
+   {
+    "question": "Where is this heading if you keep walking this path?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "pulled by fate",
+    "passes": 1,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Four of Wands",
+      true
+     ]
+    ],
+    "text": "The Four of Wands falls upside down. My grimoire says: .. Where it settles if nothing shifts: tense home life, canceled celebrations, domestic friction. Steer it: celebrate and honor what has been built. To \"Where is this heading if you keep walking this path?\" it answers: Tension at home, a canceled celebration, instability; face that, then celebrate and honor what has been built. Picture harmony, belonging, relief, but stalled or turned inward. It asks you: What are you ready to celebrate?"
+   }
+  ]
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "date": "2026-11-23 20:12",
+ "question": "for romance",
+ "profile": "age: younger adult, career: white collar job, sex/gender: all, sign: air",
+ "qa": [
+  [
+   "Where does this relationship feel easy, and where does it feel like work?",
+   "closeness"
+  ],
+  [
+   "How long have you known them?",
+   "long time"
+  ],
+  [
+   "What are you afraid of here, at the bottom of it?",
+   "being alone"
+  ],
+  [
+   "Who in your life sees this situation most clearly?",
+   "unknown"
+  ],
+  [
+   "What specific fears or insecurities do you have about being alone, and how might they affect your current relationship dynamics?",
+   "not being loved"
+  ]
+ ],
+ "spirit_qs": [
+  "What is the other heart feeling but not saying?",
+  "What does this connection truly need?",
+  "What is the next right step?"
+ ],
+ "key": "three",
+ "spread": [
+  [
+   "Knight of Pentacles",
+   false
+  ],
+  [
+   "King of Pentacles",
+   false
+  ],
+  [
+   "The Emperor",
+   true
+  ]
+ ],
+ "domain": "love",
+ "reading": "[mood=gloom fx=glitch]  \nThe cards gather around us, like shadows in a misty forest. The air hangs heavy with the scent of old wood and damp earth; it is as if this reading asks you to dig deep beneath your surface to find what truly lies there. Let me weave our story from these cards.\n\n[CHANNEL]\nI stand here on behalf of the spirits who speak through me, gentle but direct. I will not hide my truth, for they have seen and spoken their truths with clarity.\n\n[mood=grief fx=pulse]  \nYou\u2019ve arranged this table in a quiet sorrow. Let us begin our tale from your past to what you carry now and towards where you seek to go.\n\n[Present: King of Pentacles]\nThe King of Pentacles, right before you like the sun rising after nightfall, says you have earned mastery over your current situation. Your business acumen shines through in every aspect of this relationship \u2013 it\u2019s a home where security is abundant. Yet, beneath that shine, there's an undercurrent of tension.\n\n[Past: Knight of Pentacles]\nThe Knight of Pentacles stands behind you like a loyal soldier on guard duty. You have a steady, if slow-moving partner who has been the soil from which this relationship grew \u2013 a past season of hard work and commitment, but one that is now ripe for harvest. Their loyalty is steadfast; they are not to be underestimated.\n\n[Future: The Emperor (reversed)]\nThe Emperor in your future, reversed, suggests tyranny, rigidity, and lack of discipline could hinder the path ahead if you don\u2019t address these elements soon. To shift this pattern, set clear rules \u2013 boundaries that keep everyone grounded yet open for growth \u2013 and build a structure within which to operate with purpose.\n\n[mood=gloom fx=glitch]  \nThe cards tell us: your fears are deep but not said aloud. What is the other heart feeling you have about being alone? How does this connection truly need to grow?\n\n[CHANNEL]\nWhat is the next right step in the path ahead for you and this relationship?\n\nYou asked what was the deepest fear here, that of being alone. This quiet desperation underlines your yearning \u2013 a longing to be cherished, loved, yet it's buried beneath layers of professional success and stability.\n\n[mood=gloom fx=pulse]  \nNow, I ask: What does this connection truly need? Your relationship is ripe for growth, but the obstacles are significant. How can you break through these barriers?\n\n[Present: King of Pentacles]\nYour current strength in business and leadership is a beacon here, but it\u2019s also what creates tension with your partner. There's a subtle conflict between their desire for stability and security and your own yearning to be cherished \u2013 both needing something more from each other.\n\nThe cards speak a story of growth: you have the past soil that nurtured this connection; now, in the present, there is an abundance. Yet, beneath it all, lies tension born not just of work but also from deep emotional wounds and unspoken fears about being alone \u2013 what keeps both of you holding back.\n\n[CHANNEL]\nWhat does your relationship truly need to grow? And how can you set boundaries or structure within this love that doesn\u2019t hurt?\n\nYou asked: What is the next right step in this path for you and this connection? The cards show a pattern where growth requires addressing hidden fears, setting clear rules, and building structures of trust. Let us find your way through these obstacles.\n\n[grateful closing]\nThank you for sharing your journey with me today. May we navigate together, finding the strength to address our deepest wounds and open up to love in ways that feel safe yet richly nourishing. Thank you once more for this opportunity to speak your truth.\n\n[mood=mystic fx=fade] Before the cards return to the deck, here is every card in its place:\n\n[mood=mystic fx=type] 1. The Past: Knight of Pentacles. Behind you: a loyal, steady, if slow-moving partner. That season of hard work is the soil this grew from.\n\n[mood=mystic fx=type] 2. The Present: King of Pentacles. Right now: earned mastery. The energy in the room is abundance, business acumen, security, leadership.\n\n[mood=storm fx=type] 3. The Future: The Emperor (reversed). Ahead, if the pattern holds: tyranny, rigidity, lack of discipline, abuse of power. To shift it: set the rules, build the structure, take charge.",
+ "plan": {
+  "intro": "hope",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "mystic",
+  "reading": "hope"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": null
+}

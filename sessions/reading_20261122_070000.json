@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-22 07:00",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Swords",
+   false
+  ],
+  [
+   "Five of Pentacles",
+   false
+  ],
+  [
+   "Nine of Cups",
+   false
+  ],
+  [
+   "Page of Pentacles",
+   false
+  ],
+  [
+   "Six of Pentacles",
+   false
+  ],
+  [
+   "The Emperor",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "What energy is gathering around you right now?",
+   null,
+   "What lesson keeps returning until it is learned?",
+   "What do you do better than you believe, and how does embrace life's repetitive patterns touch it?",
+   "How can you grow through this rather than around it?",
+   "What would let you feel lighter than practical?"
+  ],
+  "log": [
+   {
+    "question": "What energy is gathering around you right now?",
+    "opener": "The spirits ask through her:",
+    "feeling": "on the edge of something",
+    "passes": 1,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Four of Swords",
+      false
+     ],
+     [
+      "Five of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Four of Swords falls. My grimoire says: The team has just completed a grueling project deadline, and amidst the initial relief comes an unsettling feeling of needing to step back from their work before moving on. They've been so focused and intense that they're now craving a period of rest and reflection together. The first card out of the deck names your concern: rest, recovery, meditation, sanctuary. In your life it looks like much-needed rest, meditation. To \"What energy is gathering around you right now?\" it answers: Rest before you act again. It asks you: What would real rest look like? The Five of Pentacles falls. My grimoire says: Reversed Five of Pentacles: Jessica feels isolated and unsupported, struggling to connect with her community as she grapples with a recent move that left her feeling disconnected from friends and familiar support systems. What stands in the way: financial hardship, pushed too far. Feeling cut off; unable to ask is what pushes back. It asks you: What help is nearby that you have not knocked on? Two cards fell together: the Four of Swords and the Five of Pentacles. They are one answer. Swords and Pentacles are elementally hostile: friction, a tug-of-war between thoughts, words and conflict and work, money and the body. Together: rest meets financial hardship. Picture it: much-needed rest, meditation, while feeling cut off; unable to ask. Their shared counsel: rest before you act again, and ask for help; it is closer than you think."
+   },
+   {
+    "question": "What lesson keeps returning until it is learned?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "weighed down",
+    "passes": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Nine of Cups",
+      false
+     ]
+    ],
+    "text": "The Nine of Cups falls. What you cannot see yet: the wish granted, pleasure. To \"What lesson keeps returning until it is learned?\" it answers: Let yourself enjoy what you wished for. It asks you: What would enough feel like?"
+   },
+   {
+    "question": "What do you do better than you believe, and how does embrace life's repetitive patterns touch it?",
+    "opener": "Let the next card answer:",
+    "feeling": "worried",
+    "passes": 1,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Page of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Page of Pentacles falls. What helps you: financial opportunity, ambition, studious approach. Lean on patient practical curiosity. To \"What do you do better than you believe, and how does embrace life's repetitive patterns touch it?\" it answers: Take the first practical step and study. It asks you: What practical first step can be taken this week?"
+   },
+   {
+    "question": "How can you grow through this rather than around it?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "focused on money",
+    "passes": 1,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Six of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Six of Pentacles falls. What to do next: give and receive fairly. To \"How can you grow through this rather than around it?\" it answers: Give and receive fairly. A scene comes to me: generosity with boundaries. It asks you: Is the giving in this situation fair and free?"
+   },
+   {
+    "question": "What would let you feel lighter than practical?",
+    "opener": "She whispers to the cards:",
+    "feeling": "practical",
+    "passes": 2,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "The Emperor",
+      false
+     ]
+    ],
+    "text": "The Emperor falls. Where it settles: stability you build and keep. To \"What would let you feel lighter than practical?\" it answers: Set the rules, build the structure, take charge. Picture it: boundaries, taking charge of your own life. It asks you: Where do you need structure, and where is your control choking something?"
+   }
+  ]
+ }
+}

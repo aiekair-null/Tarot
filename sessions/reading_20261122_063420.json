@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-22 06:34",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Cups",
+   true
+  ],
+  [
+   "Queen of Pentacles",
+   false
+  ],
+  [
+   "Nine of Pentacles",
+   false
+  ],
+  [
+   "The Star",
+   false
+  ],
+  [
+   "Five of Wands",
+   true
+  ],
+  [
+   "Ten of Pentacles",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    1,
+    2
+   ]
+  ],
+  "questions": [
+   "Where is love moving in your life, and where has it gone still?",
+   "What is draining your energy without you noticing, and how does embrace life's repetitive patterns touch it?",
+   null,
+   "Who or what is on your side right now?",
+   "After the Star, what do you do now?",
+   "How do you make peace with what has been?"
+  ],
+  "log": [
+   {
+    "question": "Where is love moving in your life, and where has it gone still?",
+    "opener": "She whispers to the cards:",
+    "feeling": "curious",
+    "passes": 5,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      true
+     ]
+    ],
+    "text": "The Four of Cups falls upside down. For this card, upside down is relief: awakening, accepting the offered cup. To \"Where is love moving in your life, and where has it gone still?\" it answers: Look up and notice what is being offered. Picture the weight lifting from contemplation, numbness, a sulk. It asks you: What offer have you not looked at because you were sulking?"
+   },
+   {
+    "question": "What is draining your energy without you noticing, and how does embrace life's repetitive patterns touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "tender",
+    "passes": 5,
+    "idx": [
+     1,
+     2
+    ],
+    "cards": [
+     [
+      "Queen of Pentacles",
+      false
+     ],
+     [
+      "Nine of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Queen of Pentacles falls. What stands in the way: practicality, pushed too far. Being grounded and nurturing is what pushes back. To \"What is draining your energy without you noticing, and how does embrace life's repetitive patterns touch it?\" it answers: Care for yourself as well as others. It asks you: How do you take care of yourself while taking care of others? The Nine of Pentacles falls. What you cannot see yet: self-reliance, refined solitude. It asks you: What have you earned and not yet allowed yourself to enjoy? Two cards fell together: the Queen of Pentacles and the Nine of Pentacles. They are one answer. Both Pentacles: they amplify each other, doubling the theme of work, money and the body. Together: practicality meets luxury. Picture it: being grounded and nurturing, while self-reliance, refined solitude. Their shared counsel: care for yourself as well as others, and enjoy the independence you have earned."
+   },
+   {
+    "question": "Who or what is on your side right now?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "practical",
+    "passes": 1,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Star",
+      false
+     ]
+    ],
+    "text": "The Star falls. My grimoire says: In the midst of a long, grueling job search that feels like an endless storm, Jessica finds herself at a crossroads where she must either give up or persevere. The Star shows her that with faith and patience, she can find a glimmer of calm and hope amidst the chaos. What helps you: hope, faith, purpose, renewal, spiritual blessing. Lean on faith, calm after storm, being open and seen. To \"Who or what is on your side right now?\" it answers: Keep faith and let yourself heal. It asks you: What small light can you still see ahead?"
+   },
+   {
+    "question": "After the Star, what do you do now?",
+    "opener": "The spirits ask through her:",
+    "feeling": "lighter than before",
+    "passes": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Five of Wands",
+      true
+     ]
+    ],
+    "text": "The Five of Wands falls upside down. My grimoire says: A young man is involved in a heated argument with his friends, each holding a wand symbolizing their differing opinions. The conflict feels like it's tearing them apart. For this card, upside down is relief: avoiding conflict, finding agreement, petty tension easing. To \"After the Star, what do you do now?\" it answers: Treat the conflict as healthy competition, not war. Picture the weight lifting from inner conflict, voices arguing. It asks you: What argument is really about something else?"
+   },
+   {
+    "question": "How do you make peace with what has been?",
+    "opener": "The spirits ask through her:",
+    "feeling": "lighter than before",
+    "passes": 3,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Ten of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Ten of Pentacles falls upside down. Where it settles if nothing shifts: financial dispute, broken family ties, loss of inheritance. Steer it: think long-term and build what lasts. To \"How do you make peace with what has been?\" it answers: Family disputes over money, a fragile legacy; face that, then think long-term and build what lasts. Picture roots, belonging, but stalled or turned inward. It asks you: What legacy are you building, and is it yours to build?"
+   }
+  ]
+ }
+}

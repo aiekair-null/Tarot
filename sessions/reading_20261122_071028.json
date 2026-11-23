@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-22 07:10",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Cups",
+   false
+  ],
+  [
+   "Five of Cups",
+   true
+  ],
+  [
+   "The Tower",
+   false
+  ],
+  [
+   "Queen of Swords",
+   false
+  ],
+  [
+   "King of Swords",
+   false
+  ],
+  [
+   "Knight of Wands",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The spirits have said their piece. Carry what helps; leave the rest on the cloth.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    3,
+    4
+   ]
+  ],
+  "questions": [
+   "Where is love moving in your life, and where has it gone still?",
+   "Which mask have you worn so long it feels like a face?",
+   "How is this season meant to change you?",
+   "What resource have you overlooked?",
+   null,
+   "What does the King of Swords lead into?"
+  ],
+  "log": [
+   {
+    "question": "Where is love moving in your life, and where has it gone still?",
+    "opener": "Card, tell us:",
+    "feeling": "curious",
+    "passes": 1,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      false
+     ]
+    ],
+    "text": "The Four of Cups falls. The first card out of the deck names your concern: apathy, meditation, contemplation, missed blessing. In your life it looks like contemplation, numbness, a sulk. To \"Where is love moving in your life, and where has it gone still?\" it answers: Look up and notice what is being offered. It asks you: What offer have you not looked at because you were sulking?"
+   },
+   {
+    "question": "Which mask have you worn so long it feels like a face?",
+    "opener": "She whispers to the cards:",
+    "feeling": "worried",
+    "passes": 18,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Five of Cups",
+      true
+     ]
+    ],
+    "text": "The Five of Cups falls upside down. My grimoire says: A messy office party where Jessica feels left out, struggling to find a place within the team. For this card, upside down is relief: forgiveness, healing, turning to the cups still standing. To \"Which mask have you worn so long it feels like a face?\" it answers: Grieve, then turn toward what remains. Picture the weight lifting from looking at what spilled and not at what remains. It asks you: What remains standing that you have not yet turned around to see?"
+   },
+   {
+    "question": "How is this season meant to change you?",
+    "opener": "She whispers to the cards:",
+    "feeling": "full-hearted",
+    "passes": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Tower",
+      false
+     ]
+    ],
+    "text": "The Tower falls. What you cannot see yet: an awakening that clears false foundations. To \"How is this season meant to change you?\" it answers: Let the false structure fall instead of propping it up. It asks you: What was built on a lie, and what is already shaking?"
+   },
+   {
+    "question": "What resource have you overlooked?",
+    "opener": "She whispers to the cards:",
+    "feeling": "worried",
+    "passes": 2,
+    "idx": [
+     3,
+     4
+    ],
+    "cards": [
+     [
+      "Queen of Swords",
+      false
+     ],
+     [
+      "King of Swords",
+      false
+     ]
+    ],
+    "text": "The Queen of Swords falls. What helps you: clear boundaries, direct communication, objectivity. Lean on clarity with a scar behind it. To \"What resource have you overlooked?\" it answers: Set clear boundaries and speak directly. It asks you: What boundary are you willing to hold with honesty? The King of Swords falls. My grimoire says: .. What to do next: decide with logic and fairness. A scene comes to me: intellect used with ethics. It asks you: Can you be fair and kind at once? Two cards fell together: the Queen of Swords and the King of Swords. They are one answer. Both Swords: they amplify each other, doubling the theme of thoughts, words and conflict. Together: clear boundaries meets intellectual power. Picture it: clarity with a scar behind it, while intellect used with ethics. Their shared counsel: set clear boundaries and speak directly, and decide with logic and fairness."
+   },
+   {
+    "question": "What does the King of Swords lead into?",
+    "opener": "Card, tell us:",
+    "feeling": "uneasy",
+    "passes": 1,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Knight of Wands",
+      true
+     ]
+    ],
+    "text": "The Knight of Wands falls upside down. Where it settles if nothing shifts: haste, scattered energy, recklessness, delay. Steer it: act boldly but do not burn out. To \"What does the King of Swords lead into?\" it answers: Haste, burning out, a love-bomber who leaves; face that, then act boldly but do not burn out. Picture restless energy, craving adventure, but stalled or turned inward. It asks you: Where are you rushing because you are afraid to stand still?"
+   }
+  ]
+ }
+}

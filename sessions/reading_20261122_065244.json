@@ -1,0 +1,58 @@
+{
+ "date": "2026-11-22 06:52",
+ "question": "questions from a youngwoman in school",
+ "profile": "age: young or young adult, career: student, sex/gender: female, sign: any",
+ "qa": [
+  [
+   "Is this about the work itself, the people, or the direction you are heading?",
+   "the correct direction in the hardest decision all year"
+  ],
+  [
+   "Would a wrong move here be recoverable, or would it close doors?",
+   "it would close doors forever"
+  ],
+  [
+   "Is the fear about the outcome, or about how you will feel if it happens?",
+   "the outcome in the eyes of a youth"
+  ],
+  [
+   "Where would you like to be standing in two years?",
+   "someone in higher learning or completed and moving into field of study moving up"
+  ],
+  [
+   "What specific outcome are you most afraid of, and how does it make you feel?",
+   "not becoming"
+  ]
+ ],
+ "spirit_qs": [
+  "Is this the right time to move, or to hold?",
+  "Where is the querent's true work calling them?",
+  "What should be released?"
+ ],
+ "key": "three",
+ "spread": [
+  [
+   "Nine of Swords",
+   false
+  ],
+  [
+   "Ten of Cups",
+   false
+  ],
+  [
+   "The Empress",
+   true
+  ]
+ ],
+ "domain": "work",
+ "reading": "[mood=dread fx=glitch]  \n[CHANNEL]\n\nYou find yourself standing at the edge of a decision, your heart heavy with dread. The cards are poised before you like silent sentinels, their symbolism weaving intricate patterns that hint at both challenges and opportunities. Let's unravel this mystery together.\n\n[mood=grief fx=fade]\n1. [The Past: Nine of Swords]  \nYou see yourself back then, burdened by work stress and imposter syndrome. That season of anxiety was the soil from which this decision sprouted. You have been through much in your past year.\n\n[mood=storm fx=pulse]\n2. [The Present: Ten of Cups]  \nNow, you are in a state of emotional completeness, aligned with divine love and blissful family. Your present is filled with joy and contentment. This alignment is crucial as it shapes the future.\n\n[mood=hope fx=fade]\n3. [The Empress (reversed)]  \nLooking ahead to your future, there's a sense of dependence and creative block. The smothering care suggests you might feel suffocated by certain aspects. To shift this pattern, nurture what needs growth at its own pace.\n\n[mood=grief fx=glitch]\n[CHANNEL]  \nIs now the time to move forward or hold back? Where is your true work calling you? What should be released to allow for renewal?\n\nYou ask: \"Am I ready to make this decision and take my future into my hands?\"\n\n[grateful closing]  \nThank you, querent, for sharing your fears and hopes with me. May the cards guide you as they always do; let your path forward bring peace and clarity. Peace.\n\n[mood=mystic fx=fade] Before the cards return to the deck, here is every card in its place:\n\n[mood=dread fx=glitch] 1. The Past: Nine of Swords. Behind you: work stress, imposter anxiety, dread. That season of anxiety is the soil this grew from.\n\n[mood=hope fx=shimmer] 2. The Present: Ten of Cups. Right now: emotional completeness. The energy in the room is divine love, happy family, emotional bliss, alignment.\n\n[mood=grief fx=fade] 3. The Future: The Empress (reversed). Ahead, if the pattern holds: dependence, creative block, smothering care. To shift it: nurture it and let it grow at its own pace.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": null
+}

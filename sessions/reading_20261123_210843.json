@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-23 21:08",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Cups",
+   false
+  ],
+  [
+   "The Hanged Man",
+   true
+  ],
+  [
+   "Strength",
+   true
+  ],
+  [
+   "Page of Wands",
+   false
+  ],
+  [
+   "Nine of Pentacles",
+   true
+  ],
+  [
+   "Knight of Cups",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    4,
+    5
+   ]
+  ],
+  "questions": [
+   "What is really asking for attention in your life this week?",
+   "What part of yourself is asking to be forgiven?",
+   "What opportunity is quietly waiting at the edge of your sight, and how does overcoming past traumas touch it?",
+   "What resource have you overlooked, and how does overcoming past traumas touch it?",
+   "What should you begin, and what should you let go?",
+   null
+  ],
+  "log": [
+   {
+    "question": "What is really asking for attention in your life this week?",
+    "opener": "She whispers to the cards:",
+    "feeling": "unsettled",
+    "passes": 3,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      false
+     ]
+    ],
+    "text": "The Four of Cups falls. My grimoire says: A messy office party where Jessica feels left out, struggling to find a place within the team. The first card out of the deck names your concern: apathy, meditation, contemplation, missed blessing. In your life it looks like contemplation, numbness, a sulk. To \"What is really asking for attention in your life this week?\" it answers: Look up and notice what is being offered. It asks you: What offer have you not looked at because you were sulking?"
+   },
+   {
+    "question": "What part of yourself is asking to be forgiven?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "weighed down",
+    "passes": 5,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The Hanged Man",
+      true
+     ]
+    ],
+    "text": "The Hanged Man falls upside down. My grimoire says: A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward. What stands in the way: stalling, martyrdom, sacrificing for nothing. To \"What part of yourself is asking to be forgiven?\" it answers: Stalling, martyrdom, sacrificing for nothing; face that, then pause, let go of control, look from a new angle. Picture surrender, suspended animation before insight, but stalled or turned inward. It asks you: What shifts if you looked at this upside down?"
+   },
+   {
+    "question": "What opportunity is quietly waiting at the edge of your sight, and how does overcoming past traumas touch it?",
+    "opener": "She whispers to the cards:",
+    "feeling": "weighed down",
+    "passes": 9,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Strength",
+      true
+     ]
+    ],
+    "text": "Strength falls upside down. My grimoire says: .. Hidden from you, and turned inward: self-doubt, raw emotion spilling, burnout from suppressing. To \"What opportunity is quietly waiting at the edge of your sight, and how does overcoming past traumas touch it?\" it answers: Self-doubt, raw emotion spilling, burnout from suppressing; face that, then meet it with patience and gentle courage. Picture courage that is gentle; taming fear and anger, but stalled or turned inward. It asks you: Where would gentleness succeed where force has failed?"
+   },
+   {
+    "question": "What resource have you overlooked, and how does overcoming past traumas touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Page of Wands",
+      false
+     ]
+    ],
+    "text": "The Page of Wands falls. What helps you: exploration, excitement, free spirit, new ideas. Lean on enthusiasm, trying a new craft. To \"What resource have you overlooked, and how does overcoming past traumas touch it?\" it answers: Explore it playfully, like a beginner. It asks you: What are you curious enough to try badly?"
+   },
+   {
+    "question": "What should you begin, and what should you let go?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "pulled by fate",
+    "passes": 6,
+    "idx": [
+     4,
+     5
+    ],
+    "cards": [
+     [
+      "Nine of Pentacles",
+      true
+     ],
+     [
+      "Knight of Cups",
+      false
+     ]
+    ],
+    "text": "The Nine of Pentacles falls upside down. What to do next: watch for financial setback; then enjoy the independence you have earned. To \"What should you begin, and what should you let go?\" it answers: Overspending, an image of wealth, loneliness in luxury; face that, then enjoy the independence you have earned. Picture self-reliance, refined solitude, but stalled or turned inward. It asks you: What have you earned and not yet allowed yourself to enjoy? The Knight of Cups falls. My grimoire says: In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th. Where it settles: an offer or a romance arrives. In plain life, that is idealism, a dreamy quest. It asks you: Is it romance you want, or the feeling of being chosen? Two cards fell together: the Nine of Pentacles (upside down) and the Knight of Cups. They are one answer. Pentacles and Cups are elementally friendly: they reinforce each other. Together: financial setback meets romance. Picture it: overspending, an image of wealth, loneliness in luxury, while idealism, a dreamy quest. Their shared counsel: enjoy the independence you have earned, and follow your heart, but check that it is real."
+   }
+  ]
+ }
+}

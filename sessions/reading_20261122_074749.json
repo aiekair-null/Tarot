@@ -1,0 +1,153 @@
+{
+ "date": "2026-11-22 07:47",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Queen of Cups",
+   false
+  ],
+  [
+   "The High Priestess",
+   true
+  ],
+  [
+   "The Hanged Man",
+   true
+  ],
+  [
+   "The Hermit",
+   false
+  ],
+  [
+   "The Emperor",
+   true
+  ],
+  [
+   "Seven of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The cards are gathered with gratitude. What they showed is a lantern, not a cage; walk where it lights.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Which part of life is calling loudest at the moment?",
+   "Where are you holding on too tightly, and how does embrace moments of rest touch it?",
+   "What lesson keeps returning until it is learned?",
+   "What have you survived that proves you can handle this?",
+   "How can you turn feeling in a big season into something useful?",
+   "What is the likely shape of the next season?"
+  ],
+  "log": [
+   {
+    "question": "Which part of life is calling loudest at the moment?",
+    "opener": "She whispers to the cards:",
+    "feeling": "on the edge of something",
+    "passes": 1,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Queen of Cups",
+      false
+     ]
+    ],
+    "text": "The Queen of Cups falls. The first card out of the deck names your concern: compassion, warmth, emotional stability, intuition. In your life it looks like deep intuition, compassion with boundaries. To \"Which part of life is calling loudest at the moment?\" it answers: Lead with compassion and keep your boundaries. It asks you: Who needs your compassion, and have you left any for yourself?"
+   },
+   {
+    "question": "Where are you holding on too tightly, and how does embrace moments of rest touch it?",
+    "opener": "She whispers to the cards:",
+    "feeling": "emotional",
+    "passes": 4,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The High Priestess",
+      true
+     ]
+    ],
+    "text": "The High Priestess falls upside down. What stands in the way: ignoring your gut; secrets leaking; someone performing wisdom they lack. To \"Where are you holding on too tightly, and how does embrace moments of rest touch it?\" it answers: Ignoring your gut; secrets leaking; someone performing wisdom they lack; face that, then wait, watch, and trust what you sense before you act. Picture dreams, gut knowing, the pull to be still and listen, but stalled or turned inward. It asks you: What do you already know but have not admitted?"
+   },
+   {
+    "question": "What lesson keeps returning until it is learned?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "tender",
+    "passes": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Hanged Man",
+      true
+     ]
+    ],
+    "text": "The Hanged Man falls upside down. My grimoire says: A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward. Hidden from you, and turned inward: stalling, martyrdom, sacrificing for nothing. To \"What lesson keeps returning until it is learned?\" it answers: Stalling, martyrdom, sacrificing for nothing; face that, then pause, let go of control, look from a new angle. Picture surrender, suspended animation before insight, but stalled or turned inward. It asks you: What shifts if you looked at this upside down?"
+   },
+   {
+    "question": "What have you survived that proves you can handle this?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "in a big season",
+    "passes": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Hermit",
+      false
+     ]
+    ],
+    "text": "The Hermit falls. What helps you: soul-searching, introspection, solitude, inner guidance. Lean on a retreat, a search for your own light. To \"What have you survived that proves you can handle this?\" it answers: Step back and find your own answer in the quiet. It asks you: What answer would you hear if the noise stopped for a week?"
+   },
+   {
+    "question": "How can you turn feeling in a big season into something useful?",
+    "opener": "Let the next card answer:",
+    "feeling": "in a big season",
+    "passes": 8,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Emperor",
+      true
+     ]
+    ],
+    "text": "The Emperor falls upside down. What to do next: watch for tyranny; then set the rules, build the structure, take charge. To \"How can you turn feeling in a big season into something useful?\" it answers: Tyranny, rigid control, a father-figure conflict, chaos from no discipline; face that, then set the rules, build the structure, take charge. Picture boundaries, taking charge of your own life, but stalled or turned inward. It asks you: Where do you need structure, and where is your control choking something?"
+   },
+   {
+    "question": "What is the likely shape of the next season?",
+    "opener": "Let the next card answer:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Seven of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and. Where it settles: slow, steady growth that pays off. To \"What is the likely shape of the next season?\" it answers: Be patient and assess your investment. Picture it: assessing the harvest. It asks you: Is the effort rewarding you, or is it time to change fields?"
+   }
+  ]
+ }
+}

@@ -1,0 +1,147 @@
+{
+ "date": "2026-11-23 19:48",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Three of Swords",
+   false
+  ],
+  [
+   "Nine of Swords",
+   false
+  ],
+  [
+   "Three of Wands",
+   true
+  ],
+  [
+   "Nine of Cups",
+   true
+  ],
+  [
+   "The Devil",
+   true
+  ],
+  [
+   "Seven of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    2,
+    3
+   ]
+  ],
+  "questions": [
+   "What is really asking for attention in your life this week?",
+   "What keeps you from feeling less tired of carrying it?",
+   "What can you not see yet?",
+   null,
+   "After the Nine of Cups, what do you do now?",
+   "What is ready to be released for good, and how does seek balance and moderation touch it?"
+  ],
+  "log": [
+   {
+    "question": "What is really asking for attention in your life this week?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "unsettled",
+    "passes": 4,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Three of Swords",
+      false
+     ]
+    ],
+    "text": "The Three of Swords falls. My grimoire says: Past disappointments linger, creating a cloud over the current path forward. The first card out of the deck names your concern: heartbreak, emotional pain, sorrow, grief. In your life it looks like grief spoken plainly. To \"What is really asking for attention in your life this week?\" it answers: Let yourself feel the hurt so it can heal. It asks you: What pain is asking to be felt?"
+   },
+   {
+    "question": "What keeps you from feeling less tired of carrying it?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "tired of carrying it",
+    "passes": 6,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Nine of Swords",
+      false
+     ]
+    ],
+    "text": "The Nine of Swords falls. My grimoire says: A young woman feels overwhelmed by a project, trapped in negative self-talk about her abilities. What stands in the way: anxiety, pushed too far. Worry in the dark is what pushes back. To \"What keeps you from feeling less tired of carrying it?\" it answers: Say the worry out loud to someone you trust. It asks you: What do you worry about at 3 a.m., and who have you told?"
+   },
+   {
+    "question": "What can you not see yet?",
+    "opener": "She whispers to the cards:",
+    "feeling": "uneasy",
+    "passes": 2,
+    "idx": [
+     2,
+     3
+    ],
+    "cards": [
+     [
+      "Three of Wands",
+      true
+     ],
+     [
+      "Nine of Cups",
+      true
+     ]
+    ],
+    "text": "The Three of Wands falls upside down. Hidden from you, and turned inward: delays, obstacles in expansion, plans not materializing. To \"What can you not see yet?\" it answers: Delays, obstacles in expansion, plans not materializing; face that, then look further ahead and prepare for growth. Picture foresight, patience watching the horizon, but stalled or turned inward. It asks you: What are you waiting to see arrive? The Nine of Cups falls upside down. Help is there but blocked: smugness, unfulfilled even with plenty, excess. Clear the way and it reaches you. Picture the wish granted, pleasure, but stalled or turned inward. It asks you: What would enough feel like? Two cards fell together: the Three of Wands (upside down) and the Nine of Cups (upside down). They are one answer. Wands and Cups are elementally hostile: friction, a tug-of-war between drive, passion and action and feelings and relationships. Together: obstacles in expansion meets smugness. Picture it: delays, obstacles in expansion, plans not materializing, while smugness, unfulfilled even with plenty, excess. Their shared counsel: look further ahead and prepare for growth, and let yourself enjoy what you wished for."
+   },
+   {
+    "question": "After the Nine of Cups, what do you do now?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "tired of carrying it",
+    "passes": 1,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Devil",
+      true
+     ]
+    ],
+    "text": "The Devil falls upside down. For this card, upside down is relief: breaking free, naming the chain, early recovery from a hold. To \"After the Nine of Cups, what do you do now?\" it answers: Name what binds you and loosen its grip. Picture the weight lifting from shadow, patterns you feel unable to leave. It asks you: What do you tell yourself you cannot leave, and is the chain truly locked?"
+   },
+   {
+    "question": "What is ready to be released for good, and how does seek balance and moderation touch it?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "uneasy",
+    "passes": 1,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Seven of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and. Where it settles: slow, steady growth that pays off. To \"What is ready to be released for good, and how does seek balance and moderation touch it?\" it answers: Be patient and assess your investment. In plain life, that is assessing the harvest. It asks you: Is the effort rewarding you, or is it time to change fields?"
+   }
+  ]
+ }
+}

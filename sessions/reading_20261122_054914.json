@@ -1,0 +1,140 @@
+{
+ "date": "2026-11-22 05:49",
+ "question": "A Live Reading",
+ "profile": "(not shared)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Wheel of Fortune",
+   false
+  ],
+  [
+   "Nine of Wands",
+   false
+  ],
+  [
+   "The Fool",
+   true
+  ],
+  [
+   "Four of Cups",
+   false
+  ],
+  [
+   "Page of Cups",
+   true
+  ],
+  [
+   "King of Pentacles",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "I return the cards to the deck and the choice to you. Go gently.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ],
+   [
+    3,
+    4
+   ]
+  ],
+  "questions": [
+   "What is at the heart of feeling unsettled?",
+   null,
+   "Where are you being guided, if you would only follow, and how does emotional weight in professional relationships touch it?",
+   "What strength have you forgotten you have?",
+   null,
+   "What does recovery look like from here?"
+  ],
+  "log": [
+   {
+    "question": "What is at the heart of feeling unsettled?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "unsettled",
+    "passes": 1,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Wheel of Fortune",
+      false
+     ],
+     [
+      "Nine of Wands",
+      false
+     ]
+    ],
+    "text": "The Wheel of Fortune falls. My grimoire says: An elderly woman sits passively as her life seems to repeat the same cycle of financial struggles and missed opportunities. The first card out of the deck names your concern: good luck, karma, life cycles, destiny, turning point. In your life it looks like accepting that life moves in cycles. To \"What is at the heart of feeling unsettled?\" it answers: Ride the change instead of fighting it. It asks you: What cycle keeps repeating, and what is yours to change? The Nine of Wands falls. What stands in the way: resilience, pushed too far. Resilience, battle fatigue, hypervigilance is what pushes back. It asks you: Where are you armoring against something that is not attacking? Two cards fell together: the Wheel of Fortune and the Nine of Wands. They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: good luck meets resilience. Picture it: accepting that life moves in cycles, while resilience, battle fatigue, hypervigilance. Their shared counsel: ride the change instead of fighting it, and keep going; you are nearly there."
+   },
+   {
+    "question": "Where are you being guided, if you would only follow, and how does emotional weight in professional relationships touch it?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Fool",
+      true
+     ]
+    ],
+    "text": "The Fool falls upside down. My grimoire says: A woman stepping off a cliff into the unknown on her wedding day. Hidden from you, and turned inward: jumping without checking the ground; ignoring red flags; naive trust. To \"Where are you being guided, if you would only follow, and how does emotional weight in professional relationships touch it?\" it answers: Jumping without checking the ground; ignoring red flags; naive trust; face that, then take the first small step before you feel ready. Picture the itch to start over; curiosity before fear, but stalled or turned inward. It asks you: What would you try if you knew you could not look foolish?"
+   },
+   {
+    "question": "What strength have you forgotten you have?",
+    "opener": "The spirits ask through her:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "idx": [
+     3,
+     4
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      false
+     ],
+     [
+      "Page of Cups",
+      true
+     ]
+    ],
+    "text": "The Four of Cups falls. What helps you: apathy, meditation, contemplation, missed blessing. Lean on contemplation, numbness, a sulk. To \"What strength have you forgotten you have?\" it answers: Look up and notice what is being offered. It asks you: What offer have you not looked at because you were sulking? The Page of Cups falls upside down. What to do next: watch for emotional vulnerability; then listen to the soft message or the creative nudge. Picture gentle intuition, a dreamy idea, but stalled or turned inward. It asks you: What is the tender message you keep ignoring? Two cards fell together: the Four of Cups and the Page of Cups (upside down). They are one answer. Both Cups: they amplify each other, doubling the theme of feelings and relationships. Together: apathy meets emotional vulnerability. Picture it: contemplation, numbness, a sulk, while emotional immaturity, creative blocks, mixed messages. Their shared counsel: look up and notice what is being offered, and listen to the soft message or the creative nudge."
+   },
+   {
+    "question": "What does recovery look like from here?",
+    "opener": "The spirits ask through her:",
+    "feeling": "pulled by fate",
+    "passes": 6,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "King of Pentacles",
+      true
+     ]
+    ],
+    "text": "The King of Pentacles falls upside down. Where it settles if nothing shifts: greed, poor business decisions, stubbornness. Steer it: lead with practical wisdom and generosity. To \"What does recovery look like from here?\" it answers: Greed, stubborn, workaholism, poor business decisions; face that, then lead with practical wisdom and generosity. Picture earned mastery, but stalled or turned inward. It asks you: What does real security mean to you beyond money?"
+   }
+  ]
+ }
+}

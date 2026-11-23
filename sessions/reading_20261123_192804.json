@@ -1,0 +1,86 @@
+{
+ "date": "2026-11-23 19:28",
+ "question": "questions for someone waiting on a business decision",
+ "profile": "age: all, career: open, sex/gender: all, sign: all",
+ "qa": [
+  [
+   "If you could redesign your working day from scratch, what changes first?",
+   "free days"
+  ],
+  [
+   "Does this feel urgent, or slow and grinding?",
+   "urgent"
+  ],
+  [
+   "Whose opinion are you most afraid of here?",
+   "my own"
+  ],
+  [
+   "What would make you proud of how you handled this?",
+   "success"
+  ],
+  [
+   "What are the specific aspects of your own opinion you're most afraid to confront?",
+   "fear"
+  ]
+ ],
+ "spirit_qs": [
+  "What obstacle stands between effort and reward?",
+  "What skill or strength is ready to be used?",
+  "What is the next right step?"
+ ],
+ "key": "celtic",
+ "spread": [
+  [
+   "Two of Swords",
+   true
+  ],
+  [
+   "Three of Swords",
+   true
+  ],
+  [
+   "Justice",
+   false
+  ],
+  [
+   "Nine of Wands",
+   true
+  ],
+  [
+   "King of Swords",
+   false
+  ],
+  [
+   "Temperance",
+   false
+  ],
+  [
+   "Four of Wands",
+   false
+  ],
+  [
+   "Knight of Wands",
+   false
+  ],
+  [
+   "Eight of Swords",
+   true
+  ],
+  [
+   "Nine of Pentacles",
+   false
+  ]
+ ],
+ "domain": "work",
+ "reading": "[mood=dread fx=glitch]\nYou stand at the threshold, your path strewn with shadows and whispers. The cards before you are a somber chorus of advice, each whispering its tale in a language you may not yet fully understand.\n\n[CHANNEL]  \nThe spirits speak:  \n\"What obstacle stands between effort and reward?\" - Fear. \"What skill or strength is ready to be used?\" - Logic and fairness. \"What is the next right step?\" - Seek balance, moderation, and harmony.\n\n[mood=ecstatic fx=pulse]\nYour table weaves a tale of turning points and hidden motives, each card holding a piece of your journey's puzzle. Let us unravel it together.\n\n[CHANNEL]  \nThe spirits speak: Thank you for sharing your innermost thoughts and fears with me. I am here to guide you through this complex web of cards. You have been brave in asking about yourself and the decisions that matter most. Your courage is a beacon guiding you towards clarity.\n\n[mood=grief fx=fade]\n1+2 Central Crucible:  \nAt first glance, it seems as if 2 blocks out some potential from the core wisdom offered by 1. However, even a positive 2 brings friction and urgency. This suggests that while there may be good news ahead (like free days), you must also confront difficult decisions.\n\n3+5 Vertical Axis:\nBeneath the surface lies honesty and fairness, but hidden beneath these is trauma and fear of taking action. The subconscious mind's reluctance to act can undermine your conscious desire for logic and clarity. You need to find a way to reconcile these conflicting voices within yourself.\n\n4 -> 1/2 -> 6 Horizontal Timeline:\nYour recent past (Nine of Wands reversed) feels like a stepping stone towards the future goal you hold dear (King of Swords). Yet, this old pattern may be repeating itself if not managed carefully. You need to ensure that your journey from here to there is as clear and purposeful as possible.\n\n6 -> 7 Pivot Bridge:\nThe external change happening next (Temperance) should align with your internal shift in mindset (Near Future: King of Swords). However, insecurity about these changes could be holding you back. You need to trust that the balance and harmony you seek will come through.\n\n7+8 Internal vs External:\nYour actions within the environment around you (Knight of Wands) may not match your inner feelings or intentions. This blind spot can lead to misalignment between what you believe in and how others perceive it, which could hinder progress.\n\n5+9+10 Outcome Triangle:  \nThe ultimate outcome is a comfort zone built on independence earned through effort (Nine of Pentacles). However, the fear of failure under this stagnant 10 means that these outcomes are driven by your fears rather than your potential. You need to address and overcome this mindset issue.\n\nFinal Synthesis:\nTo summarize our journey together:  \nYour core desires for free days and success must align with a clear understanding of internal fears and insecurities. Your recent past of Nine Wands reversed should be used as motivation, not resistance. Seek balance in your mind, actions, and environment to truly find harmony.\n\n[CHANNEL]  \nThank you for sharing this journey so fully. I am honored by the trust placed in me. May these insights guide you towards a future filled with clarity, courage, and success. I remain here if you need further support or guidance on any aspect of your path.\n[mood=channel fx=fade]\n[CHANNEL]  \nThank you for sharing this journey so fully. I am honored by the trust placed in me. May these insights guide you towards a future filled with clarity, courage, and success. I remain here if you need further support or guidance on any aspect of your path.\n\n[mood=mystic fx=fade] Before the cards return to the deck, here is every card in its place:\n\n[mood=storm fx=type] 1. Heart of the Matter: Two of Swords (reversed). At the core, a turning point: forced choice, information overload, the blindfold coming off.\n\n[mood=calm fx=fade] 2. The Crossing Card: Three of Swords (reversed). Crossing you, oddly, is relief: healing, releasing pain, grief easing. Even good change creates friction.\n\n[mood=mystic fx=type] 3. The Root: Justice. Beneath it all: honest self-assessment; owning consequences. The hidden motive is fairness.\n\n[mood=storm fx=type] 4. Recent Past: Nine of Wands (reversed). Just leaving, not fully resolved: paranoia, burnout, quitting at the last step.\n\n[mood=mystic fx=type] 5. The Crown: King of Swords. Your best potential here, the goal worth holding: decide with logic and fairness. Its gift is intellectual power.\n\n[mood=hope fx=shimmer] 6. Near Future: Temperance. Coming next: blending teams or skills, steady moderation, a calm mediator. Expect balance, moderation, patience, purpose, harmony.\n\n[mood=hope fx=shimmer] 7. The Self: Four of Wands. How you carry yourself in this: harmony, belonging, relief.\n\n[mood=mystic fx=type] 8. The Environment: Knight of Wands. Around you: a fast-moving go-getter, quick pivots, relocation. Others bring action, adventure, impulsiveness, high energy.\n\n[mood=calm fx=fade] 9. Hopes & Fears: Eight of Swords (reversed). Your hope: seeing the exit, the blindfold off, release. Let yourself believe it can happen.\n\n[mood=hope fx=shimmer] 10. Final Outcome: Nine of Pentacles. Where this leads: comfort and self-sufficiency. Steer it with this: enjoy the independence you have earned.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in qwen2.5-3b-instruct-q4_k_m.gguf",
+ "falls": null
+}
