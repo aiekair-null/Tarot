@@ -1738,7 +1738,10 @@ def main():
         return share_menu(src)
     fx.banner("✦   V   E   Y   R   A   ✦", "mystic")
     reader = Reader()
-    fx.startup_loading(reader)
+    ready = getattr(reader, "brain_ready", None)       # no opening animation: just wait for the model
+    if ready and not ready.is_set():
+        print("  Veyra wakes...", flush=True)
+        ready.wait()
     if reader.online:
         ok, why = fx.run_with_animation(reader.check, 10, ("~ Veyra wakes ~",)) or (False, "")
     portrait(reader.label)
