@@ -1370,7 +1370,8 @@ def reading(reader):
     falls = None
     start = lambda sp, ch: reader.start_reading(question, profile, qa, spirit_qs, key, sp, ch)
     spread, channeled, job = curses.wrapper(ritual, key, spirit_qs, reader, ctx, plan, domain, start)
-    finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls)
+    finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls,
+                   channeled=channeled)
 
 
 def live_reading(reader):
@@ -1397,7 +1398,9 @@ def live_reading(reader):
                    "A Live Reading.", falls, live=True)
 
 
-def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls=None, live=False):
+def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, plan, domain, ctx, falls=None, live=False,
+                   channeled=None):
+    channeled = list(channeled or [])
     cards = ", ".join(c + (" (reversed)" if r else "") for c, r in spread)
     done = [0]
     if job is None:                                 # Live Reading: the cards were read as they fell
@@ -1415,20 +1418,24 @@ def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, p
 
         def on_channel():
             if done[0] < 1:
-                ansi_channel(reader, ctx + " Cards: " + cards)
+                msg = ansi_channel(reader, ctx + " Cards: " + cards)
+                if msg:
+                    channeled.append(msg)
                 done[0] += 1
         text = fx.play_stream(job.stream(), plan["reading"], on_channel)
         text = job.text() or text
+    if done[0] == 0 and SYS.random() < 0.6:
+        msg = ansi_channel(reader, ctx + " Cards: " + cards)
+        if msg:
+            channeled.append(msg)
     sess = {"date": time.strftime("%Y-%m-%d %H:%M"), "question": question, "profile": profile, "qa": qa,
             "spirit_qs": spirit_qs, "key": key, "spread": spread, "domain": domain, "reading": text,
-            "plan": plan, "mind": reader.label, "falls": falls}
+            "plan": plan, "mind": reader.label, "falls": falls, "channeled": channeled}
     try:
         import video
         video.save_session(sess)
     except Exception:
         pass
-    if done[0] == 0 and SYS.random() < 0.6:
-        ansi_channel(reader, ctx + " Cards: " + cards)
     print()
     if not live:                                    # a Live Reading asks you nothing
         fx.say("Did this ring true? Tell me what landed and what missed (Enter to skip).", "calm", "fade")

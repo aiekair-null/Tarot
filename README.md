@@ -115,6 +115,15 @@ After any reading she offers: **Would you like this reading as a video?** (or me
 - the reading replayed exactly as it happened on screen, on a navy cloth
 - each card held up to the camera while she reads it
 - her voice with a light digital edge, captions, and a prepared-piano music bed
+- **Spirit Realm Transmissions** cut in as their own segments: a burst of static, an animated title
+  ("Spirit Realm Transmission", "The Veil Thins", "A Signal From Beyond"...), the channeled message in
+  a radio-thin voice, then a "Words for the Living" card cuts back to the reading. Messages she
+  channeled during the reading are used first; older readings get messages woven from her memory.
+- **Cutaways on the words**: when she says "falls", "deck", "spirits", "grimoire", "zodiac", "table"...
+  the picture cuts to that part of the ritual right on the word, and the word punches onto the screen
+  across the cut. Quiet cutaways keep long passages moving. Title animations (decode, spring stagger,
+  scanline wipe, RGB glitch, tracking-in, typewriter, split-flap) never repeat within one video.
+  The edit lives in `edit.py`.
 
 Before rendering it checks for what it needs and asks before installing anything: numpy, Pillow,
 ffmpeg, and her voice (flite, the slightly digital voice from the first videos). It test-speaks a line

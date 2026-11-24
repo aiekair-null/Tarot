@@ -97,8 +97,9 @@ def live_script(sess):
 
 def build_script(sess):
     """Scenes with their lines: [{'name', 'lines': [caption, ...], 'card': index or None}]"""
+    import edit
     if sess.get("key") == "falling" and (sess.get("falls") or {}).get("log"):
-        return live_script(sess)
+        return edit.weave_in(live_script(sess), sess)
     from knowledge import position_meaning
     from spreads import SPREADS
     from spirit import named
@@ -160,7 +161,7 @@ def build_script(sess):
     if not close:
         close = [random.SystemRandom().choice(Q.CLOSINGS)]
     scenes.append({"name": "end", "lines": close})
-    return scenes
+    return edit.weave_in(scenes, sess)
 
 
 # ================================================================ voice
@@ -379,6 +380,9 @@ def plan(scenes, voice, say=print):
         sc["audio"] = []
         for cap in sc["lines"]:
             a = voice.say(cap)
+            if a is not None and sc.get("radio"):
+                import edit
+                a = edit.radio(a, SR)
             dur = len(a) / SR if a is not None else max(1.6, len(cap.split()) / 2.7)
             sc["audio"].append((cap, a, dur))
             done += 1
@@ -401,6 +405,10 @@ def plan(scenes, voice, say=print):
             dur, lead = max(6.5, speech + 1.5), 0.6
         elif sc["name"] == "end":
             dur, lead = speech + 2.8, 0.5
+        elif sc["name"].startswith(("txin", "living")):
+            dur, lead = max(2.6, speech + 1.3), 0.7
+        elif sc["name"].startswith("tx"):
+            dur, lead = speech + 1.4, 0.6
         else:
             dur, lead = speech + 0.9, 0.4
         sc["start"], sc["dur"] = t, dur
@@ -412,7 +420,7 @@ def plan(scenes, voice, say=print):
     return scenes, events, t
 
 
-def mix_audio(events, flips, total, path):
+def mix_audio(events, flips, total, path, sfx=()):
     import numpy as np
     N = int((total + 1) * SR)
     v = np.zeros(N, np.float32)
@@ -431,6 +439,9 @@ def mix_audio(events, flips, total, path):
         b = blip()
         s0 = int(at * SR)
         m[s0:s0 + len(b)] += b[:max(0, N - s0)]
+    for at, sig in sfx:
+        s0 = int(max(0, at) * SR)
+        m[s0:s0 + len(sig)] += sig[:max(0, N - s0)]
     fade = int(SR * 2.5)
     m[-fade:] *= np.linspace(1, 0, fade)
     m[:SR] *= np.linspace(0, 1, SR)
@@ -711,10 +722,14 @@ class Painter:
 
     def _pinned(self, img):
         left, right, title, line = self.hook
-        f = self.canvas.font(54, "DejaVuSans-Bold.ttf")
-        title_lines = self._wrap(title, f, OW - 450)[:2]
-        y = self._boxes(img, title_lines, 270, f, 54, (left, right))
-        self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, 54)
+        for size in (54, 48, 42, 38, 34):              # shrink until the whole title fits: never drop words
+            f = self.canvas.font(size, "DejaVuSans-Bold.ttf")
+            title_lines = self._wrap(title, f, OW - 450)
+            if len(title_lines) <= 2:
+                break
+        y = self._boxes(img, title_lines[:3], 270, f, size, (left, right))
+        f = self.canvas.font(54 if size >= 48 else 48, "DejaVuSans-Bold.ttf")
+        self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, f.size)
 
     # ---------- per-frame layers
     def ui(self, size):
@@ -813,7 +828,9 @@ def scene_content(p, sc, t, sess):
     import tarot
     key, spread = sess["key"], sess["spread"]
     name, local = sc["name"], t - sc["start"]
-    if name in ("intro", "end") or (key in ("celtic", "falling") and (name == "table" or name.startswith("card"))) \
+    if name.startswith("tx"):
+        size = LARGE
+    elif name in ("intro", "end") or (key in ("celtic", "falling") and (name == "table" or name.startswith("card"))) \
             or name.startswith(("ask", "drop", "read")):
         size = WIDE
     elif name == "interview":
@@ -822,7 +839,9 @@ def scene_content(p, sc, t, sess):
         size = SMALL
     scr, ui, ras = p.ui(size)
     scr.clock = t
-    if name == "intro":
+    if name.startswith("tx"):
+        transmission_frame(ui, sc, local)
+    elif name == "intro":
         ui.mood = ui.plan["intro"]
         ui.intro_frame("", footer="")
     elif name == "interview":
@@ -920,6 +939,96 @@ def scene_content(p, sc, t, sess):
     return ras.render(scr)
 
 
+def transmission_frame(ui, sc, local):
+    """The message coming through the veil: glyphs resolving into her words under a flickering Veyra.
+    Long messages turn like pages, each page decoding as it is spoken."""
+    import textwrap, fx
+    lines = textwrap.wrap(sc.get("message", ""), ui.w - 4)
+    vy = 0
+    room = max(1, ui.h - 16)
+    pages = [lines[i:i + room] for i in range(0, len(lines), room)] or [[]]
+    pos = min(0.999, local / max(0.5, sc["dur"] - 0.6)) * len(pages)
+    pg, k = min(len(pages) - 1, int(pos)), min(1.0, (pos - int(pos)) * 1.6)
+    ui.scr.erase()
+    ui.stars(50, int(local * 3), "channel")
+    ui.veyra(vy, ui.w // 2 - 13, 3.0)
+    ui.gcenter(vy + 14, "~ transmission ~", local * 0.4, "channel")
+    full = "\n".join(pages[pg])
+    step = int(len(full) * k)
+    rng = random.Random(int(local * 12))
+    shown = "".join(c if (i < step or c in " \n") else rng.choice(fx.GLYPHS) for i, c in enumerate(full))
+    for j, ln in enumerate(shown.split("\n")):
+        ui.gcenter(vy + 16 + j, ln, local * 0.3 + j * 0.1, "channel")
+
+
+def cutaway_content(p, shot, t, c0, sc, sess):
+    """One frame of a cutaway shot (the other parts of the ritual, cut into the reading)."""
+    import tarot
+    key, spread = sess["key"], sess["spread"]
+    local = t - c0
+    if shot == "wash" and key != "falling":
+        scr, ui, ras = p.ui(SMALL)
+    else:
+        scr, ui, ras = p.ui(WIDE)
+    scr.clock = t
+    live = key == "falling" and (sess.get("falls") or {}).get("log")
+    if shot in ("drop", "wash") and live:
+        log = sess["falls"]["log"]
+        ev = sc.get("event", 0)
+        if sc["name"].startswith("card"):
+            ev = next((n for n, e in enumerate(log) if sc["card"] in e["idx"]), 0)
+        e = log[ev]
+        before = sum(len(x["idx"]) for x in log[:ev])
+        cards = [tuple(c) for c in spread]
+        slots = sess["falls"].get("slots")
+        st = {"fallen": cards[:before], "pairs": [q for q in sess["falls"].get("pairs", []) if max(q) < before],
+              "slots": slots[:ev] if slots else None, "pass_n": 13, "page": [],
+              "pass_t0": c0 + (local // 1.7) * 1.7}
+        ui.mood = ui.plan["wash"]
+        if shot == "drop":
+            st["fallen"] = cards[:before + len(e["idx"])]
+            st["slots"] = slots[:ev + 1] if slots else None
+            if local < 0.6:
+                st["fallen"] = cards[:before]
+                st["slots"] = slots[:ev] if slots else None
+                st["drop"] = ({"t0": c0, "slot": e.get("slot", ev), "cards": e["idx"]} if slots
+                              else {"t0": c0, "idx": e["idx"]})
+            else:
+                st["flip"] = (tuple(e["idx"]), min(8, int((local - 0.6) / 0.5 * 9)))
+        ui.falling_frame(st, footer="")
+    elif shot in ("drop", "wash"):
+        ui.mood = ui.plan["wash"]
+        if "_wash" not in sess:
+            sess["_wash"] = ui.wash_cards(78, random.Random(3))
+        ui.wash_frame(sess["_wash"], int(t * 28))
+    elif shot == "veil":
+        ui.scr.erase()
+        ui.stars(50, 3, "channel")
+        ui.veyra(ui.h // 2 - 11, ui.w // 2 - 13, 2.0)
+        ui.gcenter(ui.h // 2 + 5, "the veil thins...", local * 0.6, "channel")
+    elif shot == "veyra":
+        ui.mood = ui.plan["intro"]
+        ui.intro_frame("", lines=["", "", "she turns a page", "in her grimoire..."], footer="")
+    elif shot == "stars":
+        ui.scr.erase()
+        ui.stars(140, 11, "mystic")
+        ui.gcenter(ui.h // 2, "☾  ✦  ☽", local * 0.5, "mystic")
+    else:                                                  # the whole table, as it lies now
+        ui.mood = ui.plan["reveal"]
+        upto = len(spread)
+        if sc["name"].startswith("card"):
+            upto = sc["card"] + 1
+        if key == "falling":
+            falls = sess.get("falls") or {}
+            ui.fall_pairs, ui.fall_slots = falls.get("pairs", []), falls.get("slots")
+            ui.fall_questions = falls.get("questions", [None] * 6)
+            if live and sc["name"].startswith("read"):
+                upto = len(falls["slots"][:sc["event"] + 1]) if falls.get("slots") else \
+                    sum(len(x["idx"]) for x in falls["log"][:sc["event"] + 1])
+        ui.reveal_scene(key, spread, upto, None, "", sess.get("domain", "inner"))
+    return ras.render(scr)
+
+
 def held_cards(sc, t, sess):
     """Which cards she holds up in this moment: (cards, seconds into scene, scene length) or None."""
     name, local = sc["name"], t - sc["start"]
@@ -962,21 +1071,74 @@ def transcript(sess):
 
 
 # ================================================================ the whole thing
+def compose(p, titles, pop, scenes, sc, t, sess, cuts, cap, fade):
+    """One finished frame: the scene or a cutaway, title cards, word pops and the cuts between them."""
+    import edit
+    name, local = sc["name"], t - sc["start"]
+    cut = next((c for c in cuts if c[0] <= t < c[1]), None)
+    if name.startswith(("txin", "living")):
+        out = p.frame(p.np.zeros((BOX, 1029, 3), p.np.uint8), cap, fade)
+        out[BOX_TOP:BOX_TOP + BOX, 26:26 + 1029] = titles.draw(sc["title"], sc["anim"], local, sc["dur"],
+                                                               "tx" if name.startswith("txin") else "living")
+    elif cut:
+        out = p.frame(cutaway_content(p, cut[2], t, cut[0], sc, sess), cap, fade)
+    else:
+        out = p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess))
+    # word tricks: the spoken word punches in right on the cut
+    for c0, c1, shot, word, _ in cuts:
+        if word and c0 - 0.15 <= t < c0 + 0.6:
+            out = out.copy()
+            out = pop.draw(out, word, (t - (c0 - 0.15)) / 0.75, OW / 2, BOX_TOP + BOX * 0.5)
+    # the cuts themselves: a whip in and out of each cutaway
+    for c0, c1, *_ in cuts:
+        for edge, direc in ((c0, 1), (c1, -1)):
+            if abs(t - edge) < 0.12:                      # only the picture on the cloth moves, never the words
+                if not out.flags.writeable:
+                    out = out.copy()
+                box = out[BOX_TOP:BOX_TOP + BOX, 26:26 + 1029]
+                out[BOX_TOP:BOX_TOP + BOX, 26:26 + 1029] = edit.whip(box, 1 - abs(t - edge) / 0.12, direc)
+    # into the spirit realm: a burst of static; back to the living: a warm flash
+    if name.startswith("txin") and local < 0.35:
+        out = edit.static_burst(out, 1 - local / 0.35, int(t * 30))
+    if name.startswith("tx") and not name.startswith("txin") and local < 0.2:
+        out = edit.static_burst(out, 0.6 * (1 - local / 0.2), int(t * 30))
+    if name.startswith("living") and local < 0.3:
+        out = edit.flash(out, 1 - local / 0.3)
+    nxt = scenes[scenes.index(sc) + 1] if scenes.index(sc) + 1 < len(scenes) else None
+    if nxt and nxt["name"].startswith("txin") and sc["start"] + sc["dur"] - t < 0.25:
+        out = edit.static_burst(out, 1 - (sc["start"] + sc["dur"] - t) / 0.25, int(t * 30))
+    return out
+
+
 def render(sess, out_path, voice_kind, say=print, progress=None):
     import deps
     sess = dict(sess)
     sess["_transcript"] = transcript(sess)
     voice = working_voice(voice_kind, say)
     say(f"Writing her lines and voicing them ({voice.kind or 'captions only'})...")
+    import edit
     scenes, events, total = plan(build_script(sess), voice, say)
     flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
+    cuts = edit.plan_cuts(scenes, events, sess)
+    sfx = []
+    for sc in scenes:
+        if sc["name"].startswith("txin"):
+            sfx.append((sc["start"] - 0.1, edit.static_sfx(SR)))
+        elif sc["name"].startswith("living"):
+            sfx.append((sc["start"] - 0.15, edit.static_sfx(SR, 0.3)))
+    for c0, c1, shot, word, _ in cuts:
+        sfx.append((c0 - 0.08, edit.swish_sfx(SR)))
+        sfx.append((c1 - 0.08, edit.swish_sfx(SR)))
+    say(f"Edit: {sum(1 for s in scenes if s['name'].startswith('txin'))} spirit transmissions, {len(cuts)} cutaways.")
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as d:
         wav = Path(d) / "audio.wav"
         say("Composing the music...")
-        mix_audio(events, flips, total, wav)
+        mix_audio(events, flips, total, wav, sfx)
         p = Painter(sess)
+        titles = edit.Titles(p, 1029, BOX)
+        pop = edit.WordPop(p)
         cmd = [deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast",
                "-crf", "21", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "160k", "-shortest",
@@ -990,8 +1152,9 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
             sc = next(s for s in reversed(scenes) if s["start"] <= t) if t >= 0 else scenes[0]
             cap = next((c for at, c, _, d in ev if at <= t < at + d + 0.25), None)
             fade = 1.0 if sc["name"] != "end" else min(1.0, (total - t) / 1.2)
+            out = compose(p, titles, pop, scenes, sc, t, sess, cuts, cap, fade)
             try:
-                proc.stdin.write(p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess)).tobytes())
+                proc.stdin.write(out.tobytes())
             except BrokenPipeError:
                 break
             if progress and n % FPS == 0:
