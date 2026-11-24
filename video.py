@@ -17,7 +17,7 @@ OW, OH = 1080, 1920                               # 9:16 reel
 BAND = 640                                        # tapestry backdrop + pinned hook
 BOX_TOP, BOX = 650, 930                           # the terminal table on the cloth
 CAP_TOP, CAP_H = 1590, 190                        # spoken captions (kept above Facebook's bottom overlay)
-CLOTH = (10, 14, 40)
+CLOTH = (23, 7, 38)                               # Visual Bible cloth
 FPS = 15
 SR = 44100
 SMALL = (30, 72, 15, 30)                          # rows, cols, cell w, cell h  (fills 1080 px wide)
@@ -306,59 +306,92 @@ def _convolve(x, ir, block=1 << 17):
     return out[:len(x)]
 
 
-def music_bed(total, seed=7):
-    """An original prepared-piano piece in the spirit of Aphex Twin's 'Jynweythek': sparse, detuned,
-    metallic plucks in a modal scale with a long airy room (original notes, not the song's)."""
+def music_bed(total, seed=None):
+    """An original generative piece in the spirit of Aphex Twin's 'Jynweythek' (original notes, not the song's):
+    a player piano and a harp in a modal scale, slow and rubato, no drums, rolling figures that echo an octave up,
+    soft swells, and a long airy room. A new piece every time (pass a seed to repeat one)."""
     import numpy as np
     rng = np.random.default_rng(seed)
     N = int((total + 1) * SR)
     music = np.zeros(N, np.float32)
 
-    def pluck(freq, length, vel):
+    def tone(freq, length, vel, metal=1.0, decay=1.0, bright=1.0):
         n = int(SR * length)
         tt = np.arange(n) / SR
         out = np.zeros(n, np.float32)
-        for k in range(1, 9):
-            fk = freq * k * math.sqrt(1 + 0.0006 * k * k)
+        for k in range(1, 10):
+            fk = freq * k * math.sqrt(1 + 0.0006 * k * k)      # piano-string stretch
             if fk > SR / 2.2:
                 break
-            for det in (-0.9, 0.9):
-                out += (1.0 / k ** 1.1) * np.sin(2 * np.pi * (fk + det) * tt + rng.uniform(0, 6.28)) * np.exp(-(1.6 + 0.9 * k) * tt)
-        for ratio, a, d in ((2.76, 0.35, 4.5), (5.40, 0.18, 7.0), (8.93, 0.08, 10.0)):
-            out += a * np.sin(2 * np.pi * freq * ratio * tt) * np.exp(-d * tt)
-        out = out * np.minimum(1, tt / 0.004) + rng.normal(0, 1, n) * np.exp(-tt * 90) * 0.15
+            amp = 1.0 / k ** (1.5 - 0.5 * bright)
+            for det in (-0.8, 0.8):                             # two slightly detuned strings
+                out += amp * np.sin(2 * np.pi * (fk + det) * tt + rng.uniform(0, 6.28)) * np.exp(-(1.4 + 0.8 * k) * decay * tt)
+        for ratio, a, d in ((2.76, 0.32, 4.5), (5.40, 0.16, 7.0), (8.93, 0.07, 10.0)):   # the "prepared" metal
+            out += metal * a * np.sin(2 * np.pi * freq * ratio * tt) * np.exp(-d * tt)
+        out = out * np.minimum(1, tt / 0.003) + rng.normal(0, 1, n) * np.exp(-tt * 110) * 0.12   # hammer / finger
         return (out * vel).astype(np.float32)
 
-    scale, base, beat = [0, 1, 3, 5, 7, 8, 10], 146.83, 0.5
+    piano = lambda f, v, L=3.2: tone(f, L, v, metal=1.0, decay=1.0, bright=0.9)
+    harp = lambda f, v, L=2.4: tone(f, L, v, metal=0.25, decay=1.5, bright=1.3)
+
+    modes = [[0, 1, 3, 5, 7, 8, 10], [0, 2, 3, 5, 7, 8, 10], [0, 2, 3, 5, 7, 9, 10], [0, 1, 4, 5, 7, 8, 10]]
+    scale = modes[int(rng.integers(0, len(modes)))]
+    base = float(rng.choice([130.81, 138.59, 146.83, 155.56]))
+    beat0 = float(rng.uniform(0.42, 0.55))
     note = lambda deg, octv=1: base * 2 ** ((scale[deg % 7] + 12 * (deg // 7) + 12 * (octv - 1)) / 12)
-    motifs = [[7, 9, 11, 9, 8, None, 7, None], [7, 11, 12, 11, 9, None, None, 8],
-              [4, 7, 8, 7, None, 6, 7, None], [9, 8, 7, None, 4, None, 5, None]]
-    pos, bar = 0.0, 0
+
+    def motif():
+        m, d = [], int(rng.integers(6, 10))
+        for j in range(8):
+            if j and rng.random() < 0.22:
+                m.append(None); continue
+            d = int(np.clip(d + rng.choice([-2, -1, -1, 0, 1, 1, 2]), 3, 13))
+            m.append(d)
+        return m
+    motifs = [motif() for _ in range(4)]
 
     def place(sig, at):
         s0 = int(max(0, at) * SR)
         music[s0:s0 + len(sig)] += sig[:max(0, N - s0)]
+
+    pos, bar = 0.0, 0
     while pos < total + 1:
+        section = (bar // 8) % 3                               # A sparse, B with harp rolls, C with echoes
+        swell = 0.62 + 0.38 * math.sin(math.pi * ((bar % 8) + 0.5) / 8)
+        beat = beat0 * (1 + 0.06 * math.sin(pos / 23 * 2 * math.pi))   # breathing rubato
         m = motifs[(bar // 2) % len(motifs)][:]
         if bar % 2:
             i = int(rng.integers(0, len(m)))
             if m[i] is not None:
                 m[i] += int(rng.choice([-1, 1]))
         for j, deg in enumerate(m):
-            at = pos + j * beat + rng.normal(0, 0.012)
-            if deg is not None and at < total + 1:
-                v = 0.55 + 0.35 * rng.random()
-                place(pluck(note(deg), 3.0, v), at)
-                if rng.random() < 0.18:
-                    place(pluck(note(deg - 4), 3.4, v * 0.5), at)
-        if bar % 4 == 0:
-            place(pluck(note(0, 0), 4.5, 0.6), pos)
+            at = pos + j * beat + rng.normal(0, 0.014)
+            if deg is None or at >= total + 1:
+                continue
+            v = (0.5 + 0.35 * rng.random()) * swell
+            place(piano(note(deg), v), at)
+            if section == 2 and rng.random() < 0.45:          # rolling echo an octave up
+                place(piano(note(deg + 7), v * 0.35, 2.4), at + beat * 0.75)
+            if rng.random() < 0.15:
+                place(piano(note(deg - 4), v * 0.45), at)
+        if section >= 1:                                      # harp rolls under the melody
+            for k in range(0, len(m), 4):
+                root = (m[k] if m[k] is not None else 7) - 7
+                at = pos + k * beat
+                for r, step in enumerate((0, 2, 4, 7)):
+                    place(harp(note(root + step), 0.28 * swell), at + r * beat / 4 + rng.normal(0, 0.006))
+        if bar % 2 == 0:                                      # low root, long and soft
+            place(piano(note(0 if bar % 4 == 0 else 4, 0), 0.5 * swell, 5.0), pos)
         pos += len(m) * beat
         bar += 1
-    ir_n = int(SR * 2.8)
-    ir = (rng.normal(0, 1, ir_n) * np.exp(-np.linspace(0, 7, ir_n))).astype(np.float32)
-    ir[0] = 6.0
-    music = _lowpass(_convolve(music, ir), 0.35)
+
+    ir_n = int(SR * 3.6)                                      # a big airy room with a little predelay
+    ir = (rng.normal(0, 1, ir_n) * (0.65 * np.exp(-np.linspace(0, 5.5, ir_n)) + 0.35 * np.exp(-np.linspace(0, 12, ir_n)))).astype(np.float32)
+    ir[: int(SR * 0.018)] *= 0.1
+    ir[0] = 7.0
+    music = _lowpass(_convolve(music, ir), 0.33)
+    fade = np.minimum(1, np.arange(N) / (SR * 1.5)).astype(np.float32)
+    music *= fade
     return music / max(1e-6, np.abs(music).max())
 
 
@@ -635,47 +668,29 @@ class Painter:
         return img.resize((m.shape[1] * k, m.shape[0] * k), self.Image.NEAREST)
 
     def _backdrop(self):
-        np, Image = self.np, self.Image
-        import art
-        W, H, S = OW // 8, BAND // 8, 8
-        yy, xx = np.mgrid[0:H, 0:W]
-        r = np.sqrt(((xx - W * 0.5) / W) ** 2 + ((yy - H * 0.45) / H) ** 2 * 0.8)
-        hot, edge = np.array([238, 132, 42]), np.array([150, 12, 40])
-        bayer = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
-        k = np.clip(r * 1.6 + (bayer[yy % 4, xx % 4] - 0.5) * 0.18, 0, 1)
-        k = np.round(k * 5) / 5
-        low = (hot[None, None] * (1 - k[..., None]) + edge[None, None] * k[..., None]).astype(np.uint8)
-        ink = (70, 8, 26)
-        v = art.veyra_pixels()
-        for j, row in enumerate(v):                       # her silhouette printed on the tapestry
-            for i, c in enumerate(row):
-                if c is not None:
-                    low[6 + j * 2:8 + j * 2, 84 + i * 2:86 + i * 2] = ink
-        cy, cx, R = 50, 22, 10                            # crescent moon
-        m = ((yy - cy) ** 2 + (xx - cx) ** 2 <= R * R) & ~(((yy - cy + 2) ** 2 + (xx - cx - 5) ** 2) <= (R - 1) ** 2)
-        low[m] = (255, 214, 110)
-        rng = random.Random(11)
-        for _ in range(40):
-            low[rng.randrange(H - 2), rng.randrange(W)] = (255, 236, 170)
-        t = art.text_pixels("VEYRA")
-        for j, row in enumerate(t):
-            for i, c in enumerate(row):
-                if c is not None:
-                    low[4 + j, 4 + i] = ink
-        low[H - 1] = (205, 160, 60)                       # gold edge where the tapestry meets the table
-        img = Image.fromarray(low).resize((OW, BAND), Image.NEAREST)
+        """Visual Bible backdrop: dithered night sky, crescent moon and the detailed Veyra holding her orb."""
+        Image = self.Image
+        import veyra_look as L
+        low = L.night_sky(OW // 4, BAND // 4)
         full = Image.new("RGB", (OW, OH), CLOTH)
-        full.paste(img, (0, 0))
+        full.paste(Image.fromarray(low).resize((OW, BAND), Image.NEAREST), (0, 0))
+        L.paste_glow(full, L.glow(150, (123, 60, 255)), OW // 2, 150, 0.6)
+        v = L.veyra(0.6, 0, False).crop((0, 0, 104, 104))
+        v = v.resize((v.width * 2, v.height * 2), Image.NEAREST)
+        full.paste(v, ((OW - v.width) // 2, 50), v)
         d = self.ImageDraw.Draw(full)
-        d.rounded_rectangle([22, BOX_TOP - 2, OW - 22, BOX_TOP + BOX + 2], 18, outline=(120, 124, 150), width=3)
-        d.text((OW / 2, 1840), "VEYRA  ✦  8-bit AI tarot", fill=(150, 130, 200), font=self.canvas.font(28), anchor="mm")
+        d.rectangle([0, BAND - 6, OW, BAND - 1], fill=L.GOLD)          # gold edge where the sky meets the table
+        L.put_text(full, 30, 30, "VEYRA", L.GOLD, scale=6)
+        L.put_text(full, 34, 108, "// " + L.BRAND, L.LAV, scale=3)
+        d.rectangle([22, BOX_TOP - 2, OW - 22, BOX_TOP + BOX + 2], outline=L.RIM, width=4)
+        L.put_text(full, OW / 2, 1826, "VEYRA // " + L.BRAND + " // 8-BIT AI TAROT", L.LAV, scale=3, center=True)
         self._pinned(full)
         return full
 
     def _boxes(self, img, lines, y, f, size, icon=None):
         d = self.ImageDraw.Draw(img)
         for n, ln in enumerate(lines):
-            w = d.textlength(ln, font=f)
+            w = f.getlength(ln)
             pair = icon if isinstance(icon, (tuple, list)) else (icon, icon)
             if icon and n == 0 and len(pair) == 2 and isinstance(pair[0], (tuple, list)):
                 left_names, right_names = pair
@@ -688,12 +703,16 @@ class Painter:
             wr = sum(ic.width + 6 for ic in right_icons)
             total = w + wl + wr
             x0 = (OW - total) / 2
-            d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
+            import veyra_look as L
+            d.rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], fill=L.BOX, outline=L.RIM, width=4)
             ix = x0
             for ic in left_icons:
                 img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
                 ix += ic.width + 6
-            d.text((x0 + wl, y), ln, fill=(0, 0, 0), font=f)
+            if hasattr(f, "draw"):
+                f.draw(img, x0 + wl, y + (size - f.scale * 11) / 2 + 2, ln)
+            else:
+                d.text((x0 + wl, y), ln, fill=L.TEXT, font=f)
             ix = x0 + wl + w + 6
             for ic in right_icons:
                 img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
@@ -706,7 +725,7 @@ class Painter:
         words, lines, cur = text.split(), [], ""
         for w in words:
             trial = (cur + " " + w).strip()
-            if d.textlength(trial, font=f) <= width:
+            if f.getlength(trial) <= width:
                 cur = trial
             else:
                 lines.append(cur)
@@ -715,10 +734,11 @@ class Painter:
 
     def _pinned(self, img):
         left, right, title, line = self.hook
-        f = self.canvas.font(54, "DejaVuSans-Bold.ttf")
+        import veyra_look as L
+        f, f2 = L.PixelFont(54, L.GOLD), L.PixelFont(44, L.TEXT)
         title_lines = self._wrap(title, f, OW - 450)[:2]
         y = self._boxes(img, title_lines, 270, f, 54, (left, right))
-        self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, 54)
+        self._boxes(img, self._wrap(line, f2, OW - 200)[:3], y, f2, 44)
 
     # ---------- per-frame layers
     def ui(self, size):
@@ -733,7 +753,8 @@ class Painter:
         if text not in self.caps:
             img = self.Image.new("RGB", (OW, CAP_H), CLOTH)
             for size in (40, 36, 32, 28):
-                f = self.canvas.font(size, "DejaVuSans-Bold.ttf")
+                import veyra_look as L
+                f = L.PixelFont(size, L.TEXT)
                 lines = self._wrap(text, f, OW - 150)
                 if len(lines) * (size + 20) <= CAP_H - 8:
                     break
@@ -994,6 +1015,7 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
         say("Composing the music...")
         mix_audio(events, flips, total, wav)
         p = Painter(sess)
+        import veyra_look as look
         cmd = [deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast",
                "-crf", "21", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "160k", "-shortest",
@@ -1014,6 +1036,7 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
                 img = p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess))
                 if trip:
                     img = psyche.trip_frame(img, t, n in cuts and (n // 3) % 2 == 0)
+                img = look.finish(img)                      # Visual Bible: bloom, scanlines, vignette
                 proc.stdin.write(img.tobytes())
             except BrokenPipeError:
                 break

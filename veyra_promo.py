@@ -15,7 +15,8 @@ Reuses what the Veyra project already has (auto-discovered from the current fold
   * memory files   : anything named *memor* (.md .txt .json .jsonl), or --memory PATH
   * Veyra's picture: any image named *veyra* (png/jpg/webp), or --portrait PATH
   * the model      : the same GGUF tarot.py uses (brain.find_gguf, Qwen3 8B), else Ollama qwen3:8b
-  * a voice        : piper (with --piper-model), else espeak-ng or pyttsx3, else captions only
+  * her voice      : ON by default, the same voice as the reading videos (video.py: piper, else flite,
+                     else espeak). --voice none for captions only
 
 Run:   python veyra_promo.py
 Quick: python veyra_promo.py --fps 30 --length 30        (short test render)
@@ -28,6 +29,10 @@ from functools import lru_cache
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+try:
+    import veyra_look as LOOK          # the Visual Bible: the detailed original Veyra
+except Exception:
+    LOOK = None
 
 # ------------------------------------------------------------------ settings
 CONTACT_NAME = "Veyra"
@@ -545,6 +550,8 @@ def build_veyra():
     return s
 
 def veyra_frame(base, has_face, t, env, blink):
+    if has_face and LOOK is not None:
+        return LOOK.veyra(t, env, blink)
     s = base.copy()
     if has_face:
         d = ImageDraw.Draw(s)
@@ -863,7 +870,7 @@ class Renderer:
             fx, fy = W - 76, int(272 + (1 - pk) * 40)
             d.rectangle((fx - 3, fy - 3, fx + 63, fy + 51), fill=(20, 8, 40), outline=hexrgb("#ffd36b"))
             spr = veyra_frame(self.vbase, self.has_face, t, env, (t % self.blink_period) < 0.11)
-            spr = spr.crop((12, 4, 88, 64)).resize((61, 48), Image.NEAREST)
+            spr = spr.crop((12, 2, 92, 62)).resize((61, 46), Image.NEAREST)
             f.paste(spr, (fx, fy), spr)
 
     def title(self, f, t):
@@ -991,7 +998,7 @@ def main():
     ap.add_argument("--ollama-host", default=os.environ.get("OLLAMA_HOST", "http://localhost:11434"))
     ap.add_argument("--gguf", default=None, help="use llama-cpp-python with this GGUF instead of Ollama")
     ap.add_argument("--no-llm", action="store_true", help="templates only (fast)")
-    ap.add_argument("--voice", default="auto", choices=["auto", "piper", "espeak", "pyttsx3", "none"])
+    ap.add_argument("--voice", default="auto", choices=["auto", "piper", "flite", "espeak", "pyttsx3", "none"])
     ap.add_argument("--piper-model", default=os.environ.get("PIPER_MODEL"), help="path to a piper .onnx voice")
     ap.add_argument("--exclude", nargs="*", default=[], help="skip lore/memory passages containing these words")
     ap.add_argument("--length", type=float, default=150, help="target seconds (default 150 = 2:30)")
@@ -1058,27 +1065,58 @@ def main():
 
     ff = find_ffmpeg()
     tmp = tempfile.mkdtemp(prefix="veyra_")
-    engine = pick_voice(a)
-    print(f"  voice: {engine or 'none (captions carry the speech)'}")
     voiced = False
-    if engine:
+    repo_voice = None
+    if a.voice in ("auto", "piper", "flite", "espeak"):
+        try:                                     # her real voice: the same engine as the reading videos
+            import video as V, deps as D
+            want = a.voice if a.voice != "auto" else ("piper" if D.piper_ready() else "flite")
+            repo_voice = V.working_voice(want, say=lambda m: print("  " + m))
+            if not repo_voice.kind: repo_voice = None
+        except Exception as e:
+            print(f"  (couldn't load video.py's voice: {e})")
+    engine = ("veyra/" + repo_voice.kind) if repo_voice else pick_voice(a)
+    print(f"  voice: {engine or 'none (captions carry the speech)'}")
+    if repo_voice:
+        for i, s in enumerate(segs):
+            if not s["text"]: continue
+            aud = repo_voice.say(s["text"])
+            if aud is None or not len(aud): continue
+            p = os.path.join(tmp, f"v{i}.wav")
+            with wave.open(p, "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(V.SR)
+                w.writeframes((np.clip(aud, -1, 1) * 32767).astype(np.int16).tobytes())
+            s["audio_path"] = p; s["audio"] = to_pcm(ff, p); voiced = True
+    elif engine:
         for i, s in enumerate(segs):
             if not s["text"]: continue
             p = os.path.join(tmp, f"v{i}.wav")
             if speak(engine, s["text"], p, a):
                 s["audio_path"] = p; s["audio"] = to_pcm(ff, p); voiced = True
-        if voiced:
-            natural = sum(len(s["audio"]) / SR + 0.55 for s in segs if s.get("audio") is not None) + 4.2 + 1.5
-            if natural > a.length:
-                tempo = min(1.15, natural / a.length)
-                for s in segs:
-                    if s.get("audio_path"): s["audio"] = to_pcm(ff, s["audio_path"], tempo)
+    if voiced:
+        natural = sum(len(s["audio"]) / SR + 0.55 for s in segs if s.get("audio") is not None) + 4.2 + 1.5
+        if natural > a.length:
+            tempo = min(1.15, natural / a.length)
+            for s in segs:
+                if s.get("audio_path"): s["audio"] = to_pcm(ff, s["audio_path"], tempo)
     total = plan_timing(segs, a, voiced)
     print(f"  length: {int(total // 60)}:{int(total % 60):02d}   segments: {len(segs)}")
 
     # audio mix
     cuts = [s["start"] for s in segs[1:]]
-    music = make_music(total, rng, cuts)
+    try:                                     # the Jynweythek-style piano bed shared by every Veyra video
+        import video as VV
+        music = VV.music_bed(total, seed=rng.randrange(1 << 30))[:int(total * SR)] * 0.6
+        music = np.pad(music, (0, max(0, int(total * SR) - len(music))))
+        for c in cuts:                       # a soft bell on each jump cut instead of chiptune noise
+            i0 = int(c * SR); L = int(0.9 * SR)
+            if i0 + L < len(music):
+                tt = np.arange(L) / SR
+                music[i0:i0 + L] += 0.06 * np.sin(2 * np.pi * 1318.5 * tt) * np.exp(-tt * 5)
+        fl = int(2.5 * SR); music[-fl:] *= np.linspace(1, 0, fl)
+    except Exception as e:
+        print(f"  (piano bed unavailable, using chiptune: {e})")
+        music = make_music(total, rng, cuts)
     voice = np.zeros_like(music)
     for s in segs:
         if s.get("audio") is not None:
