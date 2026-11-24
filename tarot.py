@@ -55,6 +55,17 @@ def xterm_rgb(i):
     return g, g, g
 
 
+def _shimmering(fn):
+    """While waiting or channeling, every glowing word shimmers in Veyra's sheen."""
+    def run(self, *a, **k):
+        self.waiting = True
+        try:
+            return fn(self, *a, **k)
+        finally:
+            self.waiting = False
+    return run
+
+
 class UI:
     def __init__(self, scr, plan=None):
         self.scr = scr
@@ -147,6 +158,8 @@ class UI:
                 self.put(y + j, x + i + dx, ch, self.attr(fg, bg))
 
     def glow(self, y, x, s, phase=None, mood=None):
+        if getattr(self, "waiting", False):
+            mood = "sheen"                          # waiting / channeling: Veyra's shimmer
         p = fx.pal(mood or self.mood)[3:]          # bright half only: always legible
         ph = (self.now() - self.t0) * 0.8 if phase is None else phase
         for i, ch in enumerate(s):
@@ -707,6 +720,7 @@ class UI:
                     selected = n - 1
 
     # ---- channeling ------------------------------------------------------------------------
+    @_shimmering
     def channel(self, summon):
         """The veil thins; the querent's timing becomes entropy; a message comes through."""
         import threading
@@ -838,6 +852,7 @@ class UI:
                             for i, c in enumerate(ln))
             self.glow(6 + j, x, shown, (self.now() - self.t0) * 0.5 + j * 0.2, "channel")
 
+    @_shimmering
     def waiting_room(self, spread):
         """Cover the wait with visions until the reading is written, then let the querent choose
         the moment: 'press Enter when you are ready'."""
@@ -1736,7 +1751,7 @@ def main():
         if not src:
             return print("No videos yet. Make one with: python3 tarot.py video")
         return share_menu(src)
-    fx.banner("✦   V   E   Y   R   A   ✦", "mystic")
+    fx.banner("✦   V   E   Y   R   A   ✦", "sheen")
     reader = Reader()
     ready = getattr(reader, "brain_ready", None)       # no opening animation: just wait for the model
     if ready and not ready.is_set():
@@ -1746,7 +1761,7 @@ def main():
     portrait(reader.label)
     try:                                               # she reads the sky herself, once a day
         import astro
-        fx.say("I read the sky myself tonight: " + astro.summary(short=True) + ".", "channel", "shimmer")
+        fx.say("I read the sky myself tonight: " + astro.summary(short=True) + ".", "sheen", "shimmer")
     except Exception:
         pass
     offer_model(reader)

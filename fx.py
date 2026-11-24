@@ -230,7 +230,7 @@ def run_with_animation(fn, min_frames=40, titles=("~ channeling the spirit realm
     cols, k, order = shutil.get_terminal_size().columns, 0, ["mystic", "storm", "dread", "channel"]
     while t.is_alive() or k < min_frames:
         title = titles[0] if k < 20 else titles[-1]
-        _out("\r\x1b[2K" + paint(title.center(cols - 1), pal(order[(k // 8) % 4]), k * 0.07, 0.03))
+        _out("\r\x1b[2K" + paint(title.center(cols - 1), SHEEN, k * 0.045, 0.03))
         time.sleep(0.002 if FAST else 0.06)
         k += 1
     _out("\r\x1b[2K")
@@ -349,7 +349,7 @@ def _stream_loop(q, END, keys, buf, full, finished, k, cols, titles, render):
             render(buf)
             break
         title = titles[(k // 40) % len(titles)]
-        _out("\r\x1b[2K" + paint(title.center(cols - 1), pal(["mystic", "channel", "storm"][(k // 12) % 3]), k * 0.07, 0.03))
+        _out("\r\x1b[2K" + paint(title.center(cols - 1), SHEEN, k * 0.045, 0.03))
         time.sleep(0.06)
         k += 1
     return "".join(full)
@@ -370,4 +370,5 @@ def shimmer_until(text, done, indent=2):
         time.sleep(0.05)
         k += 1
     _out("\r" + " " * indent + paint(text, SHEEN, 0.5, 0.05) + "\n")
-
+MOODS["sheen"] = SHEEN
+SPEED["sheen"] = 1.0
