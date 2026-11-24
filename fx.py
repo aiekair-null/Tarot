@@ -353,3 +353,21 @@ def _stream_loop(q, END, keys, buf, full, finished, k, cols, titles, render):
         time.sleep(0.06)
         k += 1
     return "".join(full)
+
+
+# Veyra's own shimmer: dark purple and deep blue rising to bright white, sliding across the words.
+SHEEN = [53, 54, 55, 17, 18, 19, 56, 57, 63, 69, 105, 147, 189, 195, 231, 255]
+
+
+def shimmer_until(text, done, indent=2):
+    """Hold a line on screen, shimmering, until done() is true."""
+    if FAST:
+        print(" " * indent + text)
+        return
+    k = 0
+    while not done():
+        _out("\r" + " " * indent + paint(text, SHEEN, k * 0.045, 0.05))
+        time.sleep(0.05)
+        k += 1
+    _out("\r" + " " * indent + paint(text, SHEEN, 0.5, 0.05) + "\n")
+

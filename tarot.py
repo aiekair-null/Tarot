@@ -1740,8 +1740,7 @@ def main():
     reader = Reader()
     ready = getattr(reader, "brain_ready", None)       # no opening animation: just wait for the model
     if ready and not ready.is_set():
-        print("  Veyra wakes...", flush=True)
-        ready.wait()
+        fx.shimmer_until("Veyra wakes...", ready.is_set)
     if reader.online:
         ok, why = fx.run_with_animation(reader.check, 10, ("~ Veyra wakes ~",)) or (False, "")
     portrait(reader.label)
