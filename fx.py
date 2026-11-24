@@ -6,7 +6,7 @@ FAST = os.environ.get("TAROT_FAST") == "1"
 SKIP = False
 RESET = "\x1b[0m"
 MOODS = {   # dark -> bright
-    "calm": [17, 18, 19, 25, 31, 38, 44, 80],
+    "calm": [17, 54, 55, 56, 98, 141, 183, 189],          # Visual Bible: violet night to lilac
     "mystic": [54, 55, 56, 57, 93, 99, 135, 141],
     "dread": [17, 53, 54, 55, 60, 61, 97, 98],
     "hope": [24, 30, 37, 44, 45, 51, 87, 123],

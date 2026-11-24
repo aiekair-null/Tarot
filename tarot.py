@@ -73,6 +73,11 @@ class UI:
                 pass
             curses.start_color()
             self.big = curses.COLORS >= 256
+            try:                       # Visual Bible: the background becomes Veyra's violet night
+                if self.big and curses.can_change_color():
+                    curses.init_color(16, 51, 20, 125)      # #0d0520
+            except curses.error:
+                pass
             scr.bkgd(" ", self.attr(153))
 
     # size is read fresh every time, so a resized terminal re-lays everything out on the next frame
@@ -95,7 +100,10 @@ class UI:
         r, g, b = xterm_rgb(idx)
         return min(range(8), key=lambda k: sum((a - c) ** 2 for a, c in zip(xterm_rgb(k), (r, g, b))))
 
+    THEME = {153: 189}                 # Visual Bible: default text is pale lavender, not sky blue
+
     def attr(self, fg, bg=16, bold=False):
+        fg = self.THEME.get(fg, fg)
         if self.virtual:
             return (fg & 0xFF) | ((bg & 0xFF) << 8) | ((1 << 16) if bold else 0)
         key = (self._c(fg), self._c(bg))
@@ -166,11 +174,16 @@ class UI:
 
     def veyra(self, y, x, speed=1.0):
         t = (self.now() - self.t0) * speed
-        frame, blink = int(t * 8), (int(t * 10) % 46) in (0, 1)
-        self.cells(y, x, art.veyra_cells(frame, blink))
+        blink = (int(t * 10) % 46) in (0, 1)
+        try:                           # Visual Bible: the detailed original Veyra
+            import veyra_look
+            self.cells(y, x, veyra_look.veyra_cells(t, 0.0, blink))
+        except Exception:
+            frame = int(t * 8)
+            self.cells(y, x, art.veyra_cells(frame, blink))
 
     def title(self, y, x=None):
-        rows = art.halfblock(art.text_pixels("VEYRA"))
+        rows = art.halfblock(art.text_pixels("VEYRA", (136, 172, 178, 214, 220, 221, 222, 229)))   # gold, per the bible
         self.cells(y, (self.w - len(rows[0])) // 2 if x is None else x, rows)
 
     def footer(self, s, meter=True):
@@ -1218,11 +1231,16 @@ def grimoire_screen(scr):
 # ===================================================================== plain-terminal parts
 def portrait(label=""):
     print()
-    title = art.halfblock(art.text_pixels("VEYRA"))
+    title = art.halfblock(art.text_pixels("VEYRA", (136, 172, 178, 214, 220, 221, 222, 229)))
+    try:
+        import veyra_look
+        her = veyra_look.veyra_cells(0.6)
+    except Exception:
+        her = art.veyra_cells()
     if shutil.get_terminal_size((80, 24)).columns >= 72:
-        fx.print_cells(art.side_by_side([art.veyra_cells(), title], 4), None)
+        fx.print_cells(art.side_by_side([her, title], 4), None)
     else:                                   # narrow screen: stack her above the title
-        fx.print_cells(art.veyra_cells(), None)
+        fx.print_cells(her, None)
         if shutil.get_terminal_size((80, 24)).columns >= 40:
             fx.print_cells(title, None)
     if label:

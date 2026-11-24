@@ -52,6 +52,11 @@ Rule of thumb: purple for the world, gold for meaning, cyan for life and thinkin
 - She's always alive: she bobs gently (±2 px), blinks every 3 to 5 s, her gem pulses, the orb swirls, and her mouth moves with her voice.
 - In her scene she's shown at ×2, between two candles at a gold-edged table, with a soft violet aura. In picture-in-picture she's cropped to her head at about 0.6×. In reading videos she sits at the top of the sky above the headline.
 
+### In the terminal (tarot.py)
+- `veyra_look.veyra_cells()` draws the same detailed Veyra in quarter-block characters (▘▝▖▗▚▞…). She takes 26 columns × 14 rows, the same space as the old sprite, with twice the detail across.
+- She's mapped to xterm-256 violets, lilacs and golds, avoiding greys. Outlines use the darkest violet (53).
+- If the terminal allows it, the background becomes the bible's night violet `#0d0520`. Default text is pale lavender (189), the VEYRA title is gold, and the calm glow runs violet to lilac.
+
 ## 5. Cards
 - Small card: 20×32 px. Cream border `#f3e6c4`, brown edge `#8a6a2a`, a coloured panel (deep blue, plum, teal, wine or indigo) with one gold symbol (sun, moon, star or eye).
 - Card back: violet `#2b0f55` with gold border, inner lilac frame and a gold diamond with a cyan dot.

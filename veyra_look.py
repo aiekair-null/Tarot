@@ -257,3 +257,80 @@ def finish(img, pixel=4, bloom=0.55):
     b = Image.fromarray((s * mask).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3)).resize((w, h), Image.BILINEAR)
     out = (a.astype(np.float32) + bloom * np.asarray(b, np.float32)) * _FIN[key]
     return np.clip(out, 0, 255).astype(np.uint8)
+
+# ------------------------------------------------------------------ terminal (tarot.py): Veyra in quarter blocks
+QUAD = " ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█"          # index = TL*1 + TR*2 + BL*4 + BR*8
+
+def _xterm_rgb(i):
+    if i < 16:
+        return [(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128),
+                (192, 192, 192), (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 0, 255),
+                (255, 0, 255), (0, 255, 255), (255, 255, 255)][i]
+    if i < 232:
+        v = (0, 95, 135, 175, 215, 255); i -= 16
+        return v[i // 36], v[(i // 6) % 6], v[i % 6]
+    g = 8 + (i - 232) * 10
+    return g, g, g
+
+# her colours: skip 16 (transparent), the grey ramp and the darkest pure blues, so she stays violet, not grey
+_XI = [i for i in range(17, 232) if i not in (17, 18, 19, 59, 102, 145, 188) and not 52 <= i <= 52] + [231]
+_XT = np.array([_xterm_rgb(i) for i in _XI], np.float32)
+
+@lru_cache(maxsize=8192)
+def xterm(c):
+    if max(c) < 72:                                  # outlines and deepest shadow: the darkest violet
+        return 53
+    c = np.array(c, np.float32)
+    rm = (c[0] + _XT[:, 0]) / 2                      # "redmean" perceptual distance
+    d = (2 + rm / 256) * (_XT[:, 0] - c[0]) ** 2 + 4 * (_XT[:, 1] - c[1]) ** 2 + (2 + (255 - rm) / 256) * (_XT[:, 2] - c[2]) ** 2
+    return _XI[int(np.argmin(d))]
+
+def _quadrants(img):
+    """RGBA image (w even, h even) -> rows of (ch, fg, bg) cells, 2x2 pixels per cell, 16 = transparent."""
+    a = np.asarray(img)
+    rows = []
+    for y in range(0, a.shape[0], 2):
+        row = []
+        for x in range(0, a.shape[1], 2):
+            px = [a[y, x], a[y, x + 1], a[y + 1, x], a[y + 1, x + 1]]
+            cols = [None if p[3] < 128 else (int(p[0]) // 8 * 8, int(p[1]) // 8 * 8, int(p[2]) // 8 * 8) for p in px]
+            solid = [c for c in cols if c is not None]
+            if not solid:
+                row.append((" ", 16, 16)); continue
+            # the two most different colours (transparent counts as one), then each pixel picks the nearer
+            cand = list(dict.fromkeys(cols))
+            best, pair = -1, (cand[0], cand[0])
+            for i in range(len(cand)):
+                for j in range(i + 1, len(cand)):
+                    p, q = cand[i], cand[j]
+                    dist = 1e9 if (p is None) != (q is None) else (0 if p is None else sum((u - v) ** 2 for u, v in zip(p, q)))
+                    if dist > best: best, pair = dist, (p, q)
+            fg, bg = pair if pair[0] is not None else (pair[1], pair[0])
+            def near(c, ref):
+                if c is None or ref is None: return c is ref
+                return sum((u - v) ** 2 for u, v in zip(c, ref))
+            bits = 0
+            for k, c in enumerate(cols):
+                if c is None:
+                    on = bg is not None
+                elif bg is None:
+                    on = True
+                else:
+                    on = near(c, fg) <= near(c, bg)
+                if on: bits |= 1 << k
+            row.append((QUAD[bits], xterm(fg), 16 if bg is None else xterm(bg)))
+        rows.append(row)
+    return rows
+
+_CELLS = {}
+def veyra_cells(t=0.0, mouth=0.0, blink=False, big=False):
+    """The detailed Veyra as terminal cells. Compact: 26 cols x 14 rows (same space as the old sprite,
+    twice the detail across). Big: 26 cols x 28 rows."""
+    key = (round(t * 6) % 240, round(mouth * 3), blink, big)
+    if key not in _CELLS:
+        if len(_CELLS) > 600: _CELLS.clear()
+        v = veyra(t, mouth, blink).crop((0, 0, 104, 104))
+        v = v.resize((52, 52 if big else 26), Image.BOX)
+        if v.height % 2: v = v.crop((0, 0, 52, v.height - 1))
+        _CELLS[key] = _quadrants(v.convert("RGBA"))
+    return _CELLS[key]

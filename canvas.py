@@ -78,6 +78,8 @@ class Raster:
     BLOCKS = {"█": (0, 0, 1, 1), "▀": (0, 0, 1, .5), "▄": (0, .5, 1, 1), "▌": (0, 0, .5, 1), "▐": (.5, 0, 1, 1),
               "▗": (.5, .5, 1, 1), "▖": (0, .5, .5, 1), "▝": (.5, 0, 1, .5), "▘": (0, 0, .5, .5)}
 
+    QUADS = " ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█"
+
     def __init__(self, cw, ch):
         self.cw, self.ch, self.cache = cw, ch, {}
         size = int(min(ch * 0.8, cw / 0.6 * 0.95))     # fill the cell like a terminal font does
@@ -92,7 +94,13 @@ class Raster:
             from PIL import Image, ImageDraw
             img = Image.new("RGB", (self.cw, self.ch), xterm_rgb(bg))
             d = ImageDraw.Draw(img)
-            if ch in self.BLOCKS:
+            if ch in self.QUADS:                                    # quarter blocks: draw each lit quarter
+                bits = self.QUADS.index(ch)
+                for k, (qx, qy) in enumerate(((0, 0), (.5, 0), (0, .5), (.5, .5))):
+                    if bits >> k & 1:
+                        d.rectangle([round(qx * self.cw), round(qy * self.ch), round((qx + .5) * self.cw) - 1,
+                                     round((qy + .5) * self.ch) - 1], fill=xterm_rgb(fg))
+            elif ch in self.BLOCKS:
                 x0, y0, x1, y1 = self.BLOCKS[ch]
                 d.rectangle([round(x0 * self.cw), round(y0 * self.ch), round(x1 * self.cw) - 1, round(y1 * self.ch) - 1],
                             fill=xterm_rgb(fg))
