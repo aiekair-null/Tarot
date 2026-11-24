@@ -90,31 +90,6 @@ def _get_json(url, timeout=2.0, data=None):
         return json.load(r)
 
 
-def github_token(ask_git=True):
-    """A GitHub token for GitHub Models: TAROT_GITHUB_TOKEN / GITHUB_TOKEN, else `gh auth token`,
-    else (ask_git) the login git already saved for github.com."""
-    for k in ("TAROT_GITHUB_TOKEN", "GITHUB_TOKEN", "GH_TOKEN"):
-        if os.environ.get(k):
-            return os.environ[k].strip()
-    if not ask_git:
-        return ""
-    import shutil, subprocess
-    try:
-        if shutil.which("gh"):
-            t = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=10).stdout.strip()
-            if t:
-                return t
-        r = subprocess.run(["git", "credential", "fill"], input="protocol=https\nhost=github.com\n\n",
-                           capture_output=True, text=True, timeout=20,
-                           env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"})
-        for line in r.stdout.splitlines():
-            if line.startswith("password="):
-                return line[9:].strip()
-    except Exception:
-        pass
-    return ""
-
-
 def ollama_models():
     try:
         return [m["name"] for m in _get_json(OLLAMA + "/api/tags").get("models", [])]
@@ -148,9 +123,7 @@ class Brain:
         self.kind, self.label, self.err, self.llm, self.client = "none", "scripted knowledge (no model)", "", None, None
         if prefer in ("none", "scripted", "off"):
             return self
-        order = [prefer] if prefer != "auto" else ((["github"] if github_token() else [])
-                                                    + (["openai"] if os.environ.get("TAROT_LOCAL_URL") else [])
-                                                    + ["llama", "ollama"])
+        order = [prefer] if prefer != "auto" else (["openai"] if os.environ.get("TAROT_LOCAL_URL") else []) + ["llama", "ollama"]
         notes = []
         for k in order:
             try:
@@ -196,24 +169,6 @@ class Brain:
             raise RuntimeError("TAROT_LOCAL_URL not set")
         self.model = os.environ.get("TAROT_MODEL", "local")
         self.label = f"local server {self.url}"
-        return True
-
-    def _try_github(self):
-        """GitHub Models: free, rate-limited cloud models signed in with a GitHub token."""
-        token = github_token()
-        if not token:
-            raise RuntimeError("GitHub Models needs TAROT_GITHUB_TOKEN (a token with Models: read)")
-        self.url = os.environ.get("TAROT_GITHUB_URL", "https://models.github.ai/inference").rstrip("/")
-        self.model = os.environ.get("TAROT_GITHUB_MODEL", "openai/gpt-4.1-mini")
-        self.key = token
-        req = urllib.request.Request(self.url + "/chat/completions", json.dumps(
-            {"model": self.model, "messages": [{"role": "user", "content": "hi"}], "max_tokens": 1}).encode(),
-            {"Content-Type": "application/json", "Authorization": "Bearer " + token})
-        try:
-            urllib.request.urlopen(req, timeout=20).read()
-        except urllib.error.HTTPError as e:
-            raise RuntimeError(f"GitHub Models said {e.code}: {e.read()[:120]!r}")
-        self.label = f"GitHub Models {self.model}"
         return True
 
     def _try_hf(self):
@@ -274,13 +229,11 @@ class Brain:
                     piece = ch["choices"][0].get("delta", {}).get("content")
                     if piece:
                         yield out(piece)
-            elif self.kind in ("ollama", "openai", "github"):
+            elif self.kind in ("ollama", "openai"):
                 body = {"model": self.model, "messages": msgs, "max_tokens": max_tokens,
                         "temperature": temperature, "stream": True, **tune}
-                head = {"Content-Type": "application/json"}
-                if self.kind == "github":
-                    head["Authorization"] = "Bearer " + self.key
-                req = urllib.request.Request(self.url + "/chat/completions", json.dumps(body).encode(), head)
+                req = urllib.request.Request(self.url + "/chat/completions", json.dumps(body).encode(),
+                                             {"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=600) as r:
                     for raw in r:
                         line = raw.decode("utf-8", "ignore").strip()

@@ -50,23 +50,6 @@ Make the terminal at least **80x24** (bigger is nicer). In VS Code, set
 `terminal.integrated.minimumContrastRatio` to `1` so the 8-bit colors aren't altered
 (the devcontainer already does this).
 
-## The brain on GitHub (no download)
-
-Veyra can think with **GitHub Models** (free, rate-limited) instead of a local model. Make a
-fine-grained token at https://github.com/settings/personal-access-tokens/new with
-**Account permissions → Models: Read-only**, then:
-
-```powershell
-setx TAROT_GITHUB_TOKEN "github_pat_..."        # Windows (reopen Veyra after)
-```
-```bash
-export TAROT_GITHUB_TOKEN=github_pat_...        # Linux, e.g. in ~/.bashrc
-```
-
-When a token is found she uses GitHub first and falls back to a local model if it fails.
-Pick the model with `TAROT_GITHUB_MODEL` (default `openai/gpt-4.1-mini`). Both are also in the
-control room (`tarot.py control`).
-
 ## The brain: free and local
 
 Veyra tries these in order and uses the first that works:
