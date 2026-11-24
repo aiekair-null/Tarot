@@ -335,16 +335,25 @@ def halfblock(px, bg=TABLE_BG):
     return rows
 
 
-def veyra_pixels(frame=0, blink=False, orb=(57, 63, 69, 75, 81, 87, 123, 159)):
-    """Veyra with an animated orb and blinking eyes."""
+def veyra_pixels(frame=0, blink=False, orb=(57, 63, 69, 75, 81, 87, 123, 159), mouth=0):
+    """Veyra with an animated orb and blinking eyes. mouth: 0 closed, 1 half open, 2 wide open (she is speaking)."""
     k = frame % len(orb)
     colors = {"O": orb[k], "*": 231 if frame % 6 < 4 else orb[(k + 3) % len(orb)],
               "e": PAL["S"] if blink else 51}
-    return grid(VEYRA, colors)
+    px = grid(VEYRA, colors)
+    if mouth:
+        dark = 52
+        for c in range(11, 15):
+            px[11][c] = dark
+        if mouth > 1:
+            px[11][10] = px[11][15] = dark
+            for c in range(11, 15):
+                px[12][c] = dark
+    return px
 
 
-def veyra_cells(frame=0, blink=False, bg=TABLE_BG):
-    return halfblock(veyra_pixels(frame, blink), bg)
+def veyra_cells(frame=0, blink=False, bg=TABLE_BG, mouth=0):
+    return halfblock(veyra_pixels(frame, blink, mouth=mouth), bg)
 
 
 def _text_row(row, x, s, fg, bg):

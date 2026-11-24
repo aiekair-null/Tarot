@@ -5,7 +5,7 @@ from pathlib import Path
 from cards import ELEMENTS, meaning
 from spreads import SPREADS, diagnostics
 from research import search
-from knowledge import lore_context, position_notes, compose_reading, card_summary, card_profile, detect_domains, split, element_note, profile_element
+from knowledge import lore_context, position_notes, position_meaning, compose_reading, card_summary, card_profile, detect_domains, split, element_note, profile_element
 from lore import LORE
 from fx import MOODS, FX
 import spirit
@@ -316,39 +316,115 @@ class Reader:
             f"(moods: {', '.join(MOODS)}; fx: {', '.join(FX)}). Put [CHANNEL] alone on its own line once, "
             f"where the spirits should speak. Separate paragraphs with a blank line. About {words} words.")
 
+    # ---- the reading, card by card ------------------------------------------------------
+    # The program states every card, its position and its orientation itself, from the real draw,
+    # and picks every visual effect itself. The model is only asked to go deep into ONE card at a
+    # time and is never asked for tags, so it cannot mislabel a card or leak "Mood/Fx" words.
+    _ORIENT = re.compile(r"\b(reversed|reversal|upside[- ]down|inverted|upright|right[- ]side up)\b", re.I)
+    _LEAK = re.compile(r"\[[^\]]*\]|\b(moods?|fx|effect)\s*[:=]\s*\w+|^\s*(card|position|paragraph)\s*\d*\s*:", re.I)
+
+    @staticmethod
+    def _look(card, rev):
+        """Her visual mood for a card: chosen by the program from the card itself."""
+        mood = {"Wands": "ecstatic", "Cups": "calm", "Swords": "storm", "Pentacles": "hope"}.get(card.rsplit(" of ", 1)[-1], "mystic")
+        if rev:
+            mood = "grief" if mood in ("calm", "hope") else "dread"
+        fx = {"ecstatic": "pulse", "calm": "fade", "storm": "glitch", "hope": "shimmer", "mystic": "shimmer",
+              "grief": "fade", "dread": "glitch"}[mood]
+        return f"[mood={mood} fx={fx}]"
+
+    def _clean_sentences(self, text):
+        """Keep only sentences that cannot misstate the draw: no orientation words, no tags or labels."""
+        text = re.sub(r"\s+", " ", text.replace("*", "").replace("#", "")).strip()
+        out = []
+        for sent in re.split(r"(?<=[.!?])\s+", text):
+            if not sent or self._ORIENT.search(sent):
+                continue
+            sent = self._LEAK.sub("", sent).strip(" -:;")
+            if len(sent) > 3:
+                out.append(sent)
+        return " ".join(out)
+
+    def _model_paragraph(self, prompt, max_tokens):
+        """Stream one paragraph from the model, released sentence by sentence once it is checked."""
+        buf = ""
+        for piece in self.brain.stream(self._msgs(prompt), max_tokens=max_tokens, temperature=psyche.temperature()):
+            buf += piece
+            while True:
+                m = re.search(r"[.!?](\s+|$)", buf)
+                if not m or m.end() == len(buf) and not buf.endswith(" "):
+                    break
+                sent, buf = buf[:m.end()], buf[m.end():]
+                good = self._clean_sentences(sent)
+                if good:
+                    for i in range(0, len(good) + 1, 6):    # small pieces, like tokens, so the timer stays true
+                        yield good[i:i + 6] + (" " if i + 6 >= len(good) else "")
+        good = self._clean_sentences(buf)
+        if good:
+            yield good + " "
+
+    def _card_prompt(self, question, profile, qa, spirit_qs, key, i, card, rev, label, dom):
+        learned = " / ".join(self.mem.get("learned", {}).get(card, [])[-3:])
+        lore = LORE.get(card, {})
+        return (self._prefix(question, profile, qa, spirit_qs) +
+                (f"\nThe querent's astrological element: {element_note(profile_element(profile), [(card, rev)])}"
+                 if profile_element(profile) else "") +
+                f"\n\nYou are reading ONE card of a {SPREADS[key]['name']}.\n"
+                f"Position {i + 1}, {label}.\nCard: {card}. It is {'REVERSED' if rev else 'UPRIGHT'} - "
+                f"this is already decided and already said aloud; do not mention orientation at all.\n"
+                f"Meaning here: {position_meaning(card, rev, label, dom)}\n"
+                + (f"Its lore: {lore.get('inner', '')}; advice: {lore.get('advice', '')}\n" if lore else "")
+                + (f"What your grimoire has learned about it: {learned}\n" if learned else "")
+                + "Go deep into this card for the querent in 5 to 7 sentences: what it shows in this position, "
+                "the symbols and feeling of the card, a concrete scene from their life it points to, how it "
+                "speaks to what they told you, and one clear piece of advice. Speak as Veyra, warm and vivid, "
+                "addressing them as 'you'. Plain prose only: no headings, no labels, no brackets, no lists.")
+
+    def _story_prompt(self, question, profile, qa, spirit_qs, key, spread):
+        cards = "; ".join(f"{p[0]}: {c}" for (c, r), p in zip(spread, SPREADS[key]["positions"]))
+        return (self._prefix(question, profile, qa, spirit_qs) +
+                f"\n\nThe whole {SPREADS[key]['name']}: {cards}.\n"
+                f"How these positions work together: {SPREADS[key]['guide']}\n"
+                "Every card has already been read one by one. Now write one paragraph (5 to 7 sentences) on the "
+                "story the cards tell together, then answer each question put to the spirits in one sentence, "
+                "then ask the querent one question back, then a brief grateful closing. Speak as Veyra to 'you'. "
+                "Never say whether any card is upright or reversed. Plain prose only: no headings, labels or brackets.")
+
     def read_stream(self, question, profile, qa, spirit_qs, key, spread, channeled=(), falls=None):
         """Yield the reading as it is written. Falls back to the scripted reader if the model fails."""
         names = [f"{c}{' (reversed)' if r else ''}" for c, r in spread]
-        got = []
+        dom = detect_domains(question + " " + " ".join(a for _, a in qa))[0]
+        got, wrote = [], 0
         if self.online:
+            per = {"three": 260, "falling": 200}.get(key, 170)
             try:
-                buf, n = "", 0
-                for piece in self.brain.stream(self._msgs(self._prompt(question, profile, qa, spirit_qs, key, spread, channeled, falls)),
-                                               max_tokens={"three": 900, "falling": 1100}.get(key, 1400),
-                                               temperature=psyche.temperature()):
-                    buf, n = buf + piece, n + 1
-                    if "\n" in buf:                 # fix each finished line before anyone sees it
-                        done, buf = buf.rsplit("\n", 1)
-                        done = _finish_line(done, spread) + "\n"
-                        got.append(done)
-                        yield from _as_tokens(done, n)   # same token count, so the time estimate stays true
-                        n = 0
-                if buf:
-                    buf = _finish_line(buf, spread)
-                    got.append(buf)
-                    yield from _as_tokens(buf, max(n, 1))
+                for i, ((card, rev), pos) in enumerate(zip(spread, SPREADS[key]["positions"])):
+                    head = (f"{self._look(card, rev)} {pos[0]}: {card}, {'reversed' if rev else 'upright'}.\n")
+                    got.append(head)
+                    yield head
+                    for piece in self._model_paragraph(
+                            self._card_prompt(question, profile, qa, spirit_qs, key, i, card, rev, pos[0], dom), per):
+                        got.append(piece)
+                        wrote += len(piece)
+                        yield piece
+                    got.append("\n\n")
+                    yield "\n\n"
+                bridge = "[CHANNEL]\n\n[mood=mystic fx=shimmer] "
+                got.append(bridge)
+                yield bridge
+                for piece in self._model_paragraph(self._story_prompt(question, profile, qa, spirit_qs, key, spread), 320):
+                    got.append(piece)
+                    wrote += len(piece)
+                    yield piece
                 self.fails = 0
             except Exception as e:
                 self.err, self.fails = str(e)[:200], self.fails + 1
         text = "".join(got)
-        if len(re.sub(r"\[[^\]]*\]", "", text).strip()) < 200:
+        if wrote < 200:
             fallback = compose_reading(question, qa, spirit_qs, key, spread, channeled, SYS, profile, falls)
-            if psyche.active():
-                fallback = "\n".join(psyche.dissociate(l, spread) for l in fallback.split("\n"))
             yield ("\n\n" if text else "") + fallback
             text += fallback
-        else:                                   # the model wrote it: close with every card, none skipped
-            dom = detect_domains(question + " " + " ".join(a for _, a in qa))[0]
+        else:                                   # close with every card, none skipped
             summary = "\n\n" + card_summary(key, spread, dom)
             yield summary
             text += summary

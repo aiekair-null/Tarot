@@ -167,7 +167,7 @@ class UI:
     def veyra(self, y, x, speed=1.0):
         t = (self.now() - self.t0) * speed
         frame, blink = int(t * 8), (int(t * 10) % 46) in (0, 1)
-        self.cells(y, x, art.veyra_cells(frame, blink))
+        self.cells(y, x, art.veyra_cells(frame, blink, mouth=getattr(self, "mouth", 0)))
 
     def title(self, y, x=None):
         rows = art.halfblock(art.text_pixels("VEYRA"))
