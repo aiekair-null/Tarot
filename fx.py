@@ -1,6 +1,12 @@
 """Terminal effects: cool neon moods, animated text, and the channeling animation.
 Colors are 256-color indexes (blues, violets, cyans) on black. Ctrl-C skips animation."""
 import math, os, queue, random, re, shutil, sys, textwrap, threading, time
+if os.name == "nt":                                   # Windows: turn on ANSI colors + UTF-8 output
+    os.system("")
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 FAST = os.environ.get("TAROT_FAST") == "1"
 SKIP = False
@@ -171,9 +177,16 @@ class _Keys:
                 tty.setcbreak(self.fd)
         except Exception:
             self.fd = None
+        self.win = self.fd is None and os.name == "nt" and sys.stdin.isatty()
         return self
 
     def ctrl_w(self):
+        if self.win:                                  # Windows: no termios, read the console directly
+            import msvcrt
+            hit = False
+            while msvcrt.kbhit():
+                hit = hit or msvcrt.getwch() == CTRL_W
+            return hit
         if self.fd is None:
             return False
         import select

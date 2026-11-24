@@ -4,6 +4,14 @@ A tarot reader who lives in your terminal: pixel art for Veyra and all 78 cards,
 take part in (wash, cut, reassemble, turn the cards), real randomness, and a reader who thinks with
 a **free AI model running on your own machine**. No Hugging Face bill.
 
+## Windows 10
+
+Download `windows/install_veyra.bat` and double-click it. It installs Git, Python 3.12, ffmpeg and
+Windows Terminal with winget, clones this repo to `%USERPROFILE%\Tarot` (a browser asks you to sign
+in to GitHub once), builds her engine, downloads Qwen3 8B (or uses Ollama if llama.cpp has no
+build for that PC) and puts a **Veyra** shortcut on the desktop. Run it again any time to update.
+Memory and sessions sync to GitHub after each reading, same as everywhere else.
+
 ## Arch Linux (installed package)
 
 ```bash

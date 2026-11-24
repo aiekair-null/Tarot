@@ -30,7 +30,7 @@ CATALOG = {
     "llama": ("bartowski/Llama-3.2-3B-Instruct-GGUF", "Llama-3.2-3B-Instruct-Q4_K_M.gguf", "2.0 GB",
               "a different voice, similar size to medium"),
 }
-OLLAMA_PREFER = ("qwen2.5", "llama3", "gemma", "mistral", "phi")
+OLLAMA_PREFER = ("qwen3", "qwen2.5", "llama3", "gemma", "mistral", "phi")
 
 
 def find_gguf():
