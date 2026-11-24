@@ -101,9 +101,109 @@ def show(text, mood="hope", indent=2):
     print(" " * indent + paint(text, pal(mood), 0.3))
 
 
+CTRL_W = "\x17"
+
+
+def _input_keep_ctrl_w():
+    """input(), except Ctrl+W reaches us instead of erasing a word."""
+    try:
+        import termios
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+    except Exception:
+        return input()
+    new = termios.tcgetattr(fd)
+    cc = new[6]
+    as_byte = (lambda v: v) if isinstance(cc[termios.VWERASE], bytes) else (lambda v: v[0])
+    cc[termios.VWERASE] = as_byte(b"\x00")             # Ctrl+W no longer erases a word...
+    cc[termios.VEOL] = as_byte(b"\x17")                # ...it ends the line at once, so the room opens
+    try:
+        termios.tcsetattr(fd, termios.TCSANOW, new)
+        sys.stdout.flush()
+        data = b""
+        while True:                                       # the terminal hands over a line at Enter or Ctrl+W
+            chunk = os.read(fd, 4096)
+            if not chunk:
+                if not data:
+                    raise EOFError
+                break
+            data += chunk
+            if data.endswith((b"\n", b"\x17")):
+                break
+        if data.endswith(b"\x17"):
+            _out("\n")
+        return data.decode("utf-8", "ignore").rstrip("\n")
+    finally:
+        termios.tcsetattr(fd, termios.TCSANOW, old)
+
+
+def open_control():
+    """Ctrl+W: the control room. The model pauses until you leave it."""
+    import control
+    if control.IN_ROOM:
+        return
+    print()
+    control.open_from_terminal()
+    for m in control.HISTORY[-3:]:
+        _out(f"\x1b[38;5;60m  ⚙ {m}{RESET}\n")
+
+
 def prompt(mood="storm"):
-    _out(f"\x1b[38;5;{pal(mood)[-1]}m  › {RESET}")
-    return input().strip()
+    while True:
+        _out(f"\x1b[38;5;{pal(mood)[-1]}m  › {RESET}")
+        ans = _input_keep_ctrl_w()
+        if CTRL_W in ans:
+            open_control()
+            continue
+        return ans.strip()
+
+
+class _Keys:
+    """Watch for Ctrl+W while a reading streams (cbreak mode: Ctrl+C still works)."""
+
+    def __enter__(self):
+        self.fd, self.old = None, None
+        try:
+            import termios, tty
+            if sys.stdin.isatty():
+                self.fd = sys.stdin.fileno()
+                self.old = termios.tcgetattr(self.fd)
+                tty.setcbreak(self.fd)
+        except Exception:
+            self.fd = None
+        return self
+
+    def ctrl_w(self):
+        if self.fd is None:
+            return False
+        import select
+        hit = False
+        while select.select([sys.stdin], [], [], 0)[0]:
+            ch = os.read(self.fd, 1)
+            if not ch:
+                break
+            hit = hit or ch == b"\x17"
+        return hit
+
+    def suspend(self):
+        if self.fd is not None:
+            import termios
+            termios.tcsetattr(self.fd, termios.TCSANOW, self.old)
+
+    def resume(self):
+        if self.fd is not None:
+            import tty
+            tty.setcbreak(self.fd)
+
+    def pause_for_room(self):
+        self.suspend()
+        open_control()
+        self.resume()
+
+    def __exit__(self, *a):
+        if self.fd is not None:
+            import termios
+            termios.tcsetattr(self.fd, termios.TCSANOW, self.old)
 
 
 def banner(text, mood="mystic", frames=30):
@@ -256,6 +356,7 @@ def play_stream(gen, default_mood="mystic", on_channel=None,
     threading.Thread(target=work, daemon=True).start()
     buf, full, finished, k, pending = "", [], False, 0, [None, None]
     cols = shutil.get_terminal_size().columns
+    keys = _Keys().__enter__()
 
     def render(line):
         line = re.sub(r"^\s*#+\s*|\*\*|__", "", line).strip()
@@ -263,7 +364,11 @@ def play_stream(gen, default_mood="mystic", on_channel=None,
             return
         if line.upper().startswith("[CHANNEL]"):
             if on_channel:
-                on_channel()
+                keys.suspend()                     # she may ask for Enter: normal typing again
+                try:
+                    on_channel()
+                finally:
+                    keys.resume()
             line = line[9:].strip()
             if not line:
                 return
@@ -279,7 +384,17 @@ def play_stream(gen, default_mood="mystic", on_channel=None,
         pending[:] = [None, None]
         say(strip_tags(line), mood or default_mood, fxn or "type")
 
+    try:
+        return _stream_loop(q, END, keys, buf, full, finished, k, cols, titles, render)
+    finally:
+        keys.__exit__()
+
+
+def _stream_loop(q, END, keys, buf, full, finished, k, cols, titles, render):
     while True:
+        if keys.ctrl_w():
+            _out("\r\x1b[2K")
+            keys.pause_for_room()
         try:
             while True:
                 item = q.get_nowait()

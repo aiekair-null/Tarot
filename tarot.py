@@ -1003,6 +1003,14 @@ class FitScreen:
 
     def getch(self):
         k = self.real.getch()
+        if k == 23:                                  # Ctrl+W: the control room (the model pauses)
+            import control
+            if not control.IN_ROOM:
+                control.room(self)
+                self.real.clear()
+                self.erase()
+                self.real.timeout(70)
+                return -1
         if k == curses.KEY_RESIZE:
             try:
                 curses.update_lines_cols()
@@ -1660,8 +1668,9 @@ def main():
         import promo
         path = promo.make(_ask, _note, _progress)
         return share_menu(path) if path else None
-    if arg in ("wires", "config"):                     # python3 tarot.py wires -> the wiring room
-        return curses.wrapper(psyche.wiring_room)
+    if arg in ("wires", "config", "control"):          # python3 tarot.py control -> the control room
+        import control
+        return curses.wrapper(control.room, "wires" if arg != "control" else "dials")
     if arg == "psy":                                   # python3 tarot.py psy -> psilocybin mode on/off
         print("Psilocybin mode ON. Psyche engaged: dissociate() is running." if psyche.toggle() else "Psilocybin mode off.")
         return
@@ -1687,7 +1696,7 @@ def main():
         while True:
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
-                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Wiring room", "hope", "type")
+                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1710,7 +1719,8 @@ def main():
                 else:
                     fx.say("The colours settle. Psilocybin mode is off.", "calm", "fade")
             elif c == "9":
-                curses.wrapper(psyche.wiring_room)
+                import control
+                curses.wrapper(control.room)
             elif c == "7":
                 if _model_mode():
                     break

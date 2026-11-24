@@ -60,6 +60,8 @@ class Reader:
         self.lock = threading.RLock()
         self._last = None
         self.brain = Brain(connect=False)
+        import control
+        control.BRAIN = self.brain          # the control room's agent talks to the same model
         self.fails, self.err = 0, self.brain.err
         self.brain_ready = threading.Event()
 

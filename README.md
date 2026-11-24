@@ -65,6 +65,33 @@ On a 2-core Codespace the 3B model takes a few minutes per reading, so Veyra hid
 Faster machine or shorter wait wanted? `TAROT_WAIT_LIMIT=60` streams live unless more than a minute
 is left; `python3 models.py download small` roughly halves the time.
 
+## The control room (Ctrl+W, anywhere)
+
+Press **Ctrl+W** at any moment (at a prompt, during the ritual, or while a reading is being written)
+and the model **pauses at its next word** while the control room opens. Leave with `q` or Esc and
+she carries on exactly where she stopped. Also: menu **9**, or `python3 tarot.py control`.
+
+Three pages (Tab or 1-3), one command window at the bottom:
+
+- **Dials**: every tunable knob drawn as a dial you tick left/right: temperature, top-p, top-k, min-p,
+  repeat penalty, presence, frequency, length, word gain, dissociation. Above them the **spectrum**
+  (steady <-> wild) and five **layer switches** (sampling, repetition, context, vocab, psyche). Each
+  layer can only be tuned, and only reaches the model, when its switch is on *and* the spectrum is
+  inside its band, so sliding the spectrum changes which parts of the network you can reach.
+- **Words**: the words she just wrote, each drawn as bright or dim as you have set it. Tick a word
+  brighter to lean her toward it, dimmer to steer her away (a logit bias on the built-in model; an
+  instruction in her prompt on Ollama and local servers).
+- **Wiring**: every setting, key and secret wired into her core (the wiring room).
+
+**Talk to the service agent** with Ctrl+W or `/` inside the room: "temperature 1.1", "make her warmer",
+"less repetitive", "brighten moon", "never say darkness", "spectrum 0.8", "turn off psyche",
+"tell her to keep it gentle", "clear notes". The agent tries its own rules first, then asks the local
+model to turn your words into settings (twice, the second time more strictly), then fuzzy-matches
+your words against every dial and switch, then passes requests about how she speaks to her as an
+operator note. Only if every one of those fails, and only after you answer **y**, does it send that
+one request to the Anthropic API (needs `pip install anthropic` and an Anthropic key on the Wiring
+page). If the model is paused mid-reading, its part of the request waits until she resumes.
+
 ## What's in a reading
 
 1. **Interview.** Questions drawn from a scripted bank of 188 (openers per topic, follow-ups
@@ -158,6 +185,8 @@ Keys: ← → card · ↑ ↓ scroll · r reverse · w c s p jump to a suit · 0
 | `cards.py`, `spreads.py` | Deck, upright/reversed meanings, spreads and position guides |
 | `fx.py` | Neon text effects and the live streaming display |
 | `spirit.py`, `research.py` | Channeling entropy; optional web research for study |
+| `control.py` | The control room (Ctrl+W): pause, dials, layer switches, word brightness, service agent |
+| `edit.py` | The video editor's pass: spirit transmissions, word-matched cutaways, animated titles |
 
 ## Settings (environment variables)
 

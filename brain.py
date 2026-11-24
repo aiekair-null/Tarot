@@ -186,22 +186,51 @@ class Brain:
         return True
 
     # ---- talking ---------------------------------------------------------------
-    def stream(self, msgs, max_tokens=600, temperature=0.8, wait=True):
-        """Yield text pieces as they are generated. wait=False yields nothing if the model is busy."""
+    def stream(self, msgs, max_tokens=600, temperature=0.8, wait=True, _control=False):
+        """Yield text pieces as they are generated. wait=False yields nothing if the model is busy.
+        The control room (Ctrl+W) can pause it between tokens and tunes how it samples;
+        _control=True is the control room's own agent talking, which is never paused or tuned."""
         if not self.online:
             return
         if not self.lock.acquire(blocking=wait):
             return
+        import control
+        if not _control:
+            msgs = [dict(m) for m in msgs]
+            note = control.operator_note()
+            if note and msgs and msgs[0].get("role") == "system":
+                msgs[0]["content"] += note
+            elif note:
+                msgs.insert(0, {"role": "system", "content": note.strip()})
+            max_tokens = control.max_tokens(max_tokens)
+        tune = {} if _control else control.sampling(self.kind)
+
+        def out(piece):
+            if not _control:
+                control.gate()                      # Ctrl+W: hold here until the control room closes
+                control.saw(piece)
+            return piece
         try:
             if self.kind == "llama":
-                for ch in self.llm.create_chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temperature,
-                                                          repeat_penalty=1.12, stream=True):
+                extra = dict(tune)
+                if not _control:
+                    bias = control.logit_bias(self.llm.tokenize)
+                    if bias:
+                        extra["logit_bias"] = bias
+                extra.setdefault("repeat_penalty", 1.12)
+                try:
+                    it = self.llm.create_chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temperature,
+                                                         stream=True, **extra)
+                except TypeError:                   # an older llama-cpp-python without some knob
+                    it = self.llm.create_chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temperature,
+                                                         repeat_penalty=extra["repeat_penalty"], stream=True)
+                for ch in it:
                     piece = ch["choices"][0].get("delta", {}).get("content")
                     if piece:
-                        yield piece
+                        yield out(piece)
             elif self.kind in ("ollama", "openai"):
                 body = {"model": self.model, "messages": msgs, "max_tokens": max_tokens,
-                        "temperature": temperature, "stream": True}
+                        "temperature": temperature, "stream": True, **tune}
                 req = urllib.request.Request(self.url + "/chat/completions", json.dumps(body).encode(),
                                              {"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=600) as r:
@@ -214,13 +243,13 @@ class Brain:
                         except Exception:
                             piece = None
                         if piece:
-                            yield piece
+                            yield out(piece)
             elif self.kind == "hf":
                 for ch in self.client.chat_completion(messages=msgs, max_tokens=max_tokens,
                                                       temperature=temperature, stream=True):
                     piece = ch.choices[0].delta.content if ch.choices else None
                     if piece:
-                        yield piece
+                        yield out(piece)
         finally:
             self.lock.release()
 
@@ -231,8 +260,8 @@ class Brain:
             return False
         return True
 
-    def chat(self, msgs, max_tokens=600, temperature=0.8, wait=True):
-        return "".join(self.stream(msgs, max_tokens, temperature, wait)).strip()
+    def chat(self, msgs, max_tokens=600, temperature=0.8, wait=True, _control=False):
+        return "".join(self.stream(msgs, max_tokens, temperature, wait, _control)).strip()
 
     def check(self):
         """One tiny call so problems show before the ritual starts."""

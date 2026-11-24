@@ -4,7 +4,7 @@
   passes through one more random generator, the psyche's dissociate() function, before it is shown.
 - Videos made in this mode become fast-cut trips: flashes of quotes, an 8-bit crowd standing
   around confused, back to the words, then cuts of lines saved as interesting.
-- The wiring room (python3 tarot.py wires): every setting, key name and secret on one screen,
+- The wiring room (python3 tarot.py wires, or Ctrl+W anywhere: it is the control room's Wiring page): every setting, key name and secret on one screen,
   all wired into one core and run through the gauges for tokens, words, temperature and psyche.
 Settings you change there are kept in veyra_config.json (git-ignored; secrets never leave the codespace).
 """
@@ -39,6 +39,7 @@ KNOBS = [
     ("HF_TOKEN", "Hugging Face key", True, "", True, "secret"),
     ("FB_PAGE_ID", "Facebook Page id", False, "", False, "for uploads"),
     ("FB_PAGE_TOKEN", "Facebook token", True, "", False, "secret"),
+    ("ANTHROPIC_API_KEY", "Anthropic key", True, "", False, "secret; last-resort helper only, asks first"),
 ]
 
 
@@ -343,96 +344,87 @@ def _gauges():
             ("PSYCHE", level() if active() else 0.0, 1.0, f"{level():.2f}" if active() else "off")]
 
 
+def draw_wires(ui, sel, t, top=2, bottom=3):
+    """The wiring page: every setting wired into the core, then down through the gauges."""
+    lw = min(40, max(24, ui.w // 2 - 6))
+    bus = lw + 3
+    rows = max(1, min(len(KNOBS), ui.h - top - bottom))
+    first = max(0, min(sel - rows + 1, len(KNOBS) - rows))
+    shown = KNOBS[first:first + rows]
+    for j, (key, label, secret, default, restart, note) in enumerate(shown):
+        y, i = top + j, first + j
+        raw = os.environ.get(key, "")
+        val = mask(raw) if secret else (raw or (f"({default})" if default else "(not set)"))
+        hot = i == sel
+        line = f"{'▶' if hot else '◉'} {label[:16]:<16} {val}"[:lw - 1]
+        ui.text(y, 1, line, 231 if hot else (213 if secret else 117), hot)
+        for x in range(len(line) + 2, bus):                         # the wire to the core
+            ui.put(y, x, "─", ui.attr(60))
+        p = len(line) + 2 + int((t * 9 + i * 3) % max(1, bus - len(line) - 2))
+        ui.put(y, p, "●", ui.attr(RAINBOW[(i * 3 + int(t * 8)) % len(RAINBOW)], 16, True))
+        ui.put(y, bus, "╋" if j not in (0, len(shown) - 1) else ("┳" if j == 0 else "┻"), ui.attr(141, 16, True))
+    mid = top + len(shown) // 2
+    core = " VEYRA CORE "
+    ui.glow(mid, bus + 1, "═" * 2 + core + "═" * 2)
+    gx = bus + len(core) + 6
+    gw = max(10, ui.w - gx - 16)
+    gauges = _gauges()
+    gy = [top + 1 + k * max(2, (len(shown) - 1) // max(1, len(gauges) - 1)) for k in range(len(gauges))]
+    rail = gx - 2
+    for y in range(min(mid, gy[0]), max(gy[-1], mid) + 1):
+        ui.put(y, rail, "┃", ui.attr(98))
+    flow = int((t * 10) % max(1, gy[-1] - gy[0] + 1)) + gy[0]
+    ui.put(flow, rail, "◆", ui.attr(226, 16, True))
+    for k, (name, v, vmax, label) in enumerate(gauges):
+        y = gy[k]
+        ui.put(y, rail, "┣", ui.attr(98))
+        ui.put(y, rail + 1, "━", ui.attr(98))
+        r = max(0.0, min(1.0, v / vmax)) if vmax else 0
+        fill = int(r * gw)
+        ui.text(y, gx, f"{name:<9}", 189, True)
+        for x in range(gw):
+            col = [27, 33, 45, 51, 49, 154, 226, 214, 202, 196][min(9, int(x / max(1, gw) * 10))]
+            ui.put(y, gx + 9 + x, "█" if x < fill else "░", ui.attr(col if x < fill else 237))
+        ui.text(y, gx + 10 + gw, label, 231)
+    k, label, secret, default, restart, note = KNOBS[sel]
+    ui.text(ui.h - bottom - 1 if bottom > 3 else ui.h - 3, 1,
+            f"{k}: {note}" + ("  (applies after restart)" if restart else ""), 103)
+
+
+def edit_knob(scr, ui, sel, y=None):
+    """Ask for a new value for one wire. Returns a short status message."""
+    import curses
+    key, label, secret, *_ = KNOBS[sel]
+    y = ui.h - 2 if y is None else y
+    ask = f"new {label} ({'typing hidden, ' if secret else ''}Enter keeps, '-' clears): "
+    scr.move(y, 0)
+    scr.clrtoeol()
+    scr.addstr(y, 1, ask[: ui.w - 2])
+    scr.timeout(-1)
+    (curses.noecho if secret else curses.echo)()
+    try:
+        curses.curs_set(1)
+    except curses.error:
+        pass
+    try:
+        v = scr.getstr(y, min(ui.w - 2, len(ask) + 1), 300).decode("utf-8", "ignore").strip()
+    finally:
+        curses.noecho()
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            pass
+        scr.timeout(70)
+    if v == "-":
+        set_value(key, "")
+        return f"{label} cleared"
+    if v:
+        set_value(key, v)
+        return f"{label} saved" + (" (masked)" if secret else "")
+    return f"{label} unchanged"
+
+
 def wiring_room(scr):
-    import curses, tarot
-    ui = tarot.UI(scr)
-    ui.mood = "channel"
-    sel, msg = 0, "↑↓ choose · Enter edit · p psilocybin · q leave"
-    while True:
-        t = ui.now() - ui.t0
-        scr.erase()
-        ui.stars(25)
-        ui.gcenter(0, "~ the wiring room ~")
-        lw = min(40, max(24, ui.w // 2 - 6))
-        bus = lw + 3
-        top, rows = 2, max(1, min(len(KNOBS), ui.h - 6))
-        first = max(0, min(sel - rows + 1, len(KNOBS) - rows))
-        shown = KNOBS[first:first + rows]
-        for j, (key, label, secret, default, restart, note) in enumerate(shown):
-            y, i = top + j, first + j
-            raw = os.environ.get(key, "")
-            val = mask(raw) if secret else (raw or (f"({default})" if default else "(not set)"))
-            hot = i == sel
-            line = f"{'▶' if hot else '◉'} {label[:16]:<16} {val}"[:lw - 1]
-            ui.text(y, 1, line, 231 if hot else (213 if secret else 117), hot)
-            for x in range(len(line) + 2, bus):                         # the wire to the core
-                ui.put(y, x, "─", ui.attr(60))
-            p = len(line) + 2 + int((t * 9 + i * 3) % max(1, bus - len(line) - 2))
-            ui.put(y, p, "●", ui.attr(RAINBOW[(i * 3 + int(t * 8)) % len(RAINBOW)], 16, True))
-            ui.put(y, bus, "╋" if j not in (0, len(shown) - 1) else ("┳" if j == 0 else "┻"), ui.attr(141, 16, True))
-        mid = top + len(shown) // 2
-        core = " VEYRA CORE "
-        ui.glow(mid, bus + 1, "═" * 2 + core + "═" * 2)
-        # the bound wires run right, then down through every gauge in series
-        gx = bus + len(core) + 6
-        gw = max(10, ui.w - gx - 16)
-        gauges = _gauges()
-        gy = [top + 1 + k * max(2, (len(shown) - 1) // max(1, len(gauges) - 1)) for k in range(len(gauges))]
-        rail = gx - 2
-        for y in range(min(mid, gy[0]), max(gy[-1], mid) + 1):
-            ui.put(y, rail, "┃", ui.attr(98))
-        flow = int((t * 10) % max(1, gy[-1] - gy[0] + 1)) + gy[0]
-        ui.put(flow, rail, "◆", ui.attr(226, 16, True))
-        for k, (name, v, vmax, label) in enumerate(gauges):
-            y = gy[k]
-            ui.put(y, rail, "┣", ui.attr(98))
-            ui.put(y, rail + 1, "━", ui.attr(98))
-            r = max(0.0, min(1.0, v / vmax)) if vmax else 0
-            fill = int(r * gw)
-            ui.text(y, gx, f"{name:<9}", 189, True)
-            for x in range(gw):
-                col = [27, 33, 45, 51, 49, 154, 226, 214, 202, 196][min(9, int(x / max(1, gw) * 10))]
-                ui.put(y, gx + 9 + x, "█" if x < fill else "░", ui.attr(col if x < fill else 237))
-            ui.text(y, gx + 10 + gw, label, 231)
-        k, label, secret, default, restart, note = KNOBS[sel]
-        ui.text(ui.h - 3, 1, f"{k}: {note}" + ("  (applies after restart)" if restart else ""), 103)
-        if active():
-            ui.text(ui.h - 3, ui.w - 22, "✦ psyche engaged ✦", RAINBOW[int(t * 6) % len(RAINBOW)], True)
-        ui.center(ui.h - 1, msg, 60)
-        scr.refresh()
-        c = scr.getch()
-        if c in (ord("q"), 27):
-            return
-        if c == curses.KEY_UP:
-            sel = (sel - 1) % len(KNOBS)
-        elif c == curses.KEY_DOWN:
-            sel = (sel + 1) % len(KNOBS)
-        elif c in (ord("p"), ord("P")):
-            msg = "psilocybin mode ON · psyche engaged" if toggle() else "psilocybin mode off"
-        elif c in (10, 13, curses.KEY_ENTER):
-            key, label, secret, *_ = KNOBS[sel]
-            ask = f"new {label} ({'typing hidden, ' if secret else ''}Enter keeps, '-' clears): "
-            scr.move(ui.h - 2, 0)
-            scr.clrtoeol()
-            scr.addstr(ui.h - 2, 1, ask[: ui.w - 2])
-            scr.timeout(-1)
-            (curses.noecho if secret else curses.echo)()
-            try:
-                curses.curs_set(1)
-            except curses.error:
-                pass
-            try:
-                v = scr.getstr(ui.h - 2, min(ui.w - 2, len(ask) + 1), 300).decode("utf-8", "ignore").strip()
-            finally:
-                curses.noecho()
-                try:
-                    curses.curs_set(0)
-                except curses.error:
-                    pass
-                scr.timeout(70)
-            if v == "-":
-                set_value(key, "")
-                msg = f"{label} cleared"
-            elif v:
-                set_value(key, v)
-                msg = f"{label} saved" + (" (masked)" if secret else "")
+    """The wiring room now lives inside the control room (its Wiring page)."""
+    import control
+    control.room(scr, page="wires")
