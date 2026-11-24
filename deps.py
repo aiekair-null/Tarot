@@ -140,10 +140,12 @@ def ensure_voice(ask=default_ask, say=default_say):
     """Her video voice. The default is the slightly digital flite voice used in the first videos;
     set TAROT_VOICE_ENGINE=piper for the softer Piper voice. Returns 'flite', 'piper', 'espeak' or None."""
     want = os.environ.get("TAROT_VOICE_ENGINE", "flite").lower()
+    if want != "piper" and not flite_ready() and not shutil.which("apt-get"):
+        want = "piper"                                 # Windows/Arch without flite: Piper works everywhere
     if want == "piper":
         if piper_ready():
             return "piper"
-        if ask("You chose the Piper voice. Set it up now? (free, about 80 MB, one time)"):
+        if ask("Her voice needs the Piper speech engine. Set it up now? (free, about 80 MB, one time)"):
             if not has_module("piper"):
                 say("Installing the Piper voice engine...")
                 _run([sys.executable, "-m", "pip", "install", "-q", "-U", "piper-tts"])
@@ -154,7 +156,7 @@ def ensure_voice(ask=default_ask, say=default_say):
                 say(f"The voice file did not download ({str(e)[:80]}).")
             if piper_ready():
                 return "piper"
-        say("Piper is not ready, so I will use her usual voice.")
+        say("Piper is not ready yet.")
     if flite_ready():
         return "flite"
     sudo, apt = _sudo(), shutil.which("apt-get")
@@ -167,6 +169,7 @@ def ensure_voice(ask=default_ask, say=default_say):
     if shutil.which("espeak-ng") or shutil.which("espeak"):
         say("Using espeak for her voice.")
         return "espeak"
-    say("No voice engine is available, so this video will have captions and music but no voice. "
-        "To fix it: sudo apt-get install -y flite")
+    say("No voice engine is available, so this video will have captions and music but no voice. " +
+        ("To fix it: sudo apt-get install -y flite" if shutil.which("apt-get") else
+        "To fix it: make another video and say yes to the Piper voice."))
     return None

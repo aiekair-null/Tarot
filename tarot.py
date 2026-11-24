@@ -1311,7 +1311,7 @@ def offer_model(reader):
     try:
         import llama_cpp  # noqa
         has_engine = True
-    except ImportError:
+    except Exception:                     # missing, or installed but its DLL will not load
         has_engine = False
     if has_engine and not brain.find_gguf():
         size = brain.CATALOG[brain.DEFAULT][2]
@@ -1511,10 +1511,42 @@ def make_and_share(sess):
         share_menu(path)
 
 
+def promo_video(reader):
+    """The promo reel maker (veyra_promo.py), run inside Veyra with the model she already has loaded."""
+    try:
+        import veyra_promo
+    except Exception as e:
+        return fx.say(f"The promo maker would not start: {str(e)[:120]}", "dread", "type")
+    import deps
+    if not deps.ensure_ffmpeg(_ask, _note):
+        return
+    fx.say("Veyra makes a new promo reel (about 2:30, different every time). This takes a while...", "mystic", "fade")
+    b, orig, argv = reader.brain, veyra_promo.Brain.__init__, sys.argv
+    if b.kind == "llama" and b.llm is not None:         # share her loaded model instead of loading it twice
+        def shared(self, a):
+            self.a, self.kind, self.llama = a, "llama.cpp", b.llm
+        veyra_promo.Brain.__init__ = shared
+    sys.argv = ["veyra_promo.py"]
+    path = None
+    try:
+        with b.lock:
+            path = veyra_promo.main()
+    except SystemExit as e:
+        fx.say(f"The promo did not finish: {e}", "dread", "type")
+    except Exception as e:
+        fx.say(f"The promo did not finish: {str(e)[:160]}", "dread", "type")
+    finally:
+        veyra_promo.Brain.__init__, sys.argv = orig, argv
+    if path:
+        fx.say(f"The promo is ready: {path}", "hope", "shimmer")
+        share_menu(path)
+
+
 def share_menu(path):
     import share
     while True:
-        fx.say("1) Save it to your device   2) Share to Facebook   3) Done", "hope", "type")
+        first = "Save it to your device" if share.in_codespace() else "Open the video folder"
+        fx.say(f"1) {first}   2) Share to Facebook   3) Done", "hope", "type")
         c = fx.prompt()
         if c == "1":
             offer_download(path)
@@ -1526,6 +1558,17 @@ def share_menu(path):
 
 def offer_download(path):
     import share
+    if not share.in_codespace():                       # on your own machine it is already saved here
+        folder = Path(path).resolve().parent
+        fx.say(f"Saved on this machine: {Path(path).resolve()}", "hope", "fade")
+        try:
+            if os.name == "nt":
+                os.startfile(folder)
+            elif shutil.which("xdg-open"):
+                subprocess.Popen(["xdg-open", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        return
 
     def wait(link, port):
         fx.say("Open this link to download your video:", "hope", "fade")
@@ -1767,6 +1810,8 @@ def main():
     offer_model(reader)
     if arg == "read":
         reading(reader)
+    elif arg == "promo":                                # python3 tarot.py promo -> a new promo reel
+        promo_video(reader)
     elif arg in ("live", "fall"):
         live_reading(reader)
     else:
@@ -1774,7 +1819,7 @@ def main():
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
                    f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)   "
-                   "10) Today's horoscope   11) Star chart", "hope", "type")
+                   "10) Today's horoscope   11) Star chart   12) Make a promo video", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1787,6 +1832,8 @@ def main():
                     t = reader.study_async(int(os.environ.get("TAROT_STUDY", "3")))
                     fx.run_with_animation(lambda: t.join(), 20, ("~ Veyra studies in the quiet ~",))
                     fx.say("Her notes are saved to memory.json.", "hope", "fade")
+            elif c == "12":
+                promo_video(reader)
             elif c == "10":
                 horoscope_menu(reader)
             elif c == "11":

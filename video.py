@@ -11,7 +11,26 @@ Everything optional (ffmpeg, numpy, Pillow, a voice engine) is checked and reque
 import json, math, os, random, re, subprocess, tempfile, time, wave
 from pathlib import Path
 
-VIDEOS = Path(os.environ.get("TAROT_VIDEOS", "videos"))
+def _videos_dir():
+    """Videos stay on the machine making them, outside the git repo: ~/Videos/Veyra
+    (on Windows, your Videos folder). In a Codespace they stay in ./videos for download."""
+    if os.environ.get("TAROT_VIDEOS"):
+        return Path(os.environ["TAROT_VIDEOS"]).expanduser()
+    if os.environ.get("CODESPACE_NAME"):
+        return Path("videos")
+    base = Path.home() / "Videos"
+    if os.name != "nt":
+        try:                                           # honor a localized XDG videos folder
+            import subprocess
+            x = subprocess.run(["xdg-user-dir", "VIDEOS"], capture_output=True, text=True, timeout=3).stdout.strip()
+            if x and x != str(Path.home()):
+                base = Path(x)
+        except Exception:
+            pass
+    return base / "Veyra"
+
+
+VIDEOS = _videos_dir()
 SESSIONS = Path(os.environ.get("TAROT_SESSIONS", "sessions"))
 OW, OH = 1080, 1920                               # 9:16 reel
 BAND = 640                                        # tapestry backdrop + pinned hook
