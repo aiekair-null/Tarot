@@ -7,14 +7,14 @@ Each run produces a different video: a new speech, different lore and memory pic
   * She pulls 3 passages from her lore and memory. Each one jump-cuts out of the
     narrative into a Lore or Memory scene, then cuts back.
   * She explains what she has been doing, thanks people for participating, and ends with
-    "questions or a live reading? contact Daniel".
+    "questions or a live reading? contact Veyra".
   * Output: a 1080x1920, 60fps reel (MP4) of about 2:30, plus a transcript you can use as the post caption.
 
 Reuses what the Veyra project already has (auto-discovered from the current folder):
   * lore files     : anything named *lore* (.md .txt .json .jsonl), or --lore PATH
   * memory files   : anything named *memor* (.md .txt .json .jsonl), or --memory PATH
   * Veyra's picture: any image named *veyra* (png/jpg/webp), or --portrait PATH
-  * the model      : Qwen 8B through Ollama (default qwen3:8b), or a GGUF file via --gguf
+  * the model      : the same GGUF tarot.py uses (brain.find_gguf, Qwen3 8B), else Ollama qwen3:8b
   * a voice        : piper (with --piper-model), else espeak-ng or pyttsx3, else captions only
 
 Run:   python veyra_promo.py
@@ -30,8 +30,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 # ------------------------------------------------------------------ settings
-CONTACT_NAME = "Daniel"
-CONTACT_LINE = "Send Daniel a message right here on Facebook."
+CONTACT_NAME = "Veyra"
+CONTACT_LINE = "Send me a message right here on Facebook."
 BRAND = "8b/8b(L)"           # 8-bit / 8 billion / Local
 MODEL_LABEL = "QWEN 8B"
 W, H = 270, 480              # pixel-art canvas, upscaled with nearest-neighbour to 1080x1920
@@ -157,6 +157,36 @@ def load_snippets(files, kind, exclude):
                         out.append({"kind": kind, "text": c[:320], "src": os.path.basename(f)})
     return out
 
+def repo_snippets(rng, exclude):
+    """Lore from lore.py and memory from memory.json, the files tarot.py already keeps.
+    Only Veyra's own notes are used (channelings, learned images, card combos, card stats);
+    people's questions, readings and feedback are never put in a public video."""
+    out = []
+    def add(kind, text, src):
+        text = ascii_clean(text)
+        if len(text) >= 45 and not BLOCK.search(text) and not any(w.lower() in text.lower() for w in exclude):
+            out.append({"kind": kind, "text": text[:320], "src": src})
+    try:
+        import lore as L
+        for card, d in L.LORE.items():
+            add("lore", f"{card}. Within, {d['inner']}. Reversed, {d['rev']}. It asks: {d['ask']}", card)
+    except Exception:
+        pass
+    try:
+        m = json.load(open("memory.json"))
+        for c in m.get("channelings", []): add("memory", c, "channelings")
+        for card, imgs in m.get("learned", {}).items():
+            for im in imgs: add("memory", f"What I learned about {card}: {im}", "learned")
+        for combo, meaning in m.get("combos", {}).items(): add("memory", f"When {combo} land together: {meaning}", "combos")
+        cc = m.get("card_counts", {})
+        if cc:
+            top = sorted(cc.items(), key=lambda kv: -kv[1])[:3]
+            add("memory", f"Across {sum(cc.values())} cards drawn so far, the deck keeps choosing " +
+                ", ".join(f"{k} ({v} times)" for k, v in top) + ". Chance has favorites, or it looks that way.", "card_counts")
+    except Exception:
+        pass
+    return out
+
 # Used only when no lore/memory files are found. Replace with Veyra's real lore.
 FALLBACK = [
     ("lore", "Veyra was born in a terminal window at midnight, stitched together from seventy-eight cards and a few billion whispered numbers. She reads in 8-bit because the old pixels remember everything.", "built-in"),
@@ -265,9 +295,9 @@ ENDS = ["See you in the cards.", "The deck is shuffled. Your turn.", "Until the 
 
 def contact_line(rng):
     return rng.choice([
-        f"If you have any questions, or you'd like to set up a live reading, just contact {CONTACT_NAME}, my celestial sysadmin. {CONTACT_LINE}",
-        f"Got questions? Want a live reading? Just contact {CONTACT_NAME}! {CONTACT_LINE}",
-        f"And if you have any questions, or want to book a live reading with me, contact {CONTACT_NAME}. {CONTACT_LINE}",
+        f"If you have any questions, or you'd like to set up a live reading, just contact me, {CONTACT_NAME}! {CONTACT_LINE}",
+        f"Got questions? Want a live reading? Just contact me, {CONTACT_NAME}! {CONTACT_LINE}",
+        f"And if you have any questions, or want to book a live reading, contact me, {CONTACT_NAME}. {CONTACT_LINE}",
     ])
 
 STOP = set("about after again being their there these those which would could should every other where while still into from with that this have just they them then than your yours what when".split())
@@ -972,6 +1002,13 @@ def main():
     ap.add_argument("--preview", action="store_true", help="print the script and stop")
     a = ap.parse_args()
     if a.ollama_host and not a.ollama_host.startswith("http"): a.ollama_host = "http://" + a.ollama_host
+    if not a.gguf and not a.no_llm:          # use the same built-in model tarot.py uses (models/*.gguf)
+        try:
+            from brain import find_gguf
+            g = find_gguf()
+            if g and os.path.exists(str(g)): a.gguf = str(g)
+        except Exception:
+            pass
 
     seed = a.seed if a.seed is not None else int(time.time() * 1000) % (1 << 31)
     rng = random.Random(seed); np.random.seed(seed % (1 << 32))
@@ -986,7 +1023,9 @@ def main():
 
     print(f"Veyra promo  |  seed {seed}")
     print(f"  lore files:   {len(lore_files)}   memory files: {len(mem_files)}   portrait: {portrait or 'built-in pixel Veyra'}")
-    snippets = load_snippets(lore_files, "lore", a.exclude) + load_snippets(mem_files, "memory", a.exclude)
+    snippets = load_snippets(lore_files, "lore", a.exclude) + repo_snippets(rng, a.exclude)
+    if not any(os.path.basename(f) == "memory.json" for f in mem_files):
+        snippets += load_snippets(mem_files, "memory", a.exclude)
     if not snippets:
         print("  (no lore/memory found - using built-in placeholder lore; point --lore/--memory at Veyra's files)")
         snippets = [{"kind": k, "text": t, "src": s} for k, t, s in FALLBACK]
