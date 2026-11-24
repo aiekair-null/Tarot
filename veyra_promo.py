@@ -1026,8 +1026,10 @@ def main():
         portrait = imgs[0] if imgs else None
 
     print(f"Veyra promo  |  seed {seed}")
-    print(f"  lore files:   {len(lore_files)}   memory files: {len(mem_files)}   portrait: {portrait or 'built-in pixel Veyra'}")
+    print(f"  extra lore files: {len(lore_files)}   memory files: {len(mem_files)}   portrait: {portrait or 'built-in pixel Veyra'}")
     snippets = load_snippets(lore_files, "lore", a.exclude) + repo_snippets(rng, a.exclude)
+    print(f"  using {sum(x['kind'] == 'lore' for x in snippets)} lore passages (lore.py) and "
+          f"{sum(x['kind'] == 'memory' for x in snippets)} memory notes")
     if not any(os.path.basename(f) == "memory.json" for f in mem_files):
         snippets += load_snippets(mem_files, "memory", a.exclude)
     if not snippets:
