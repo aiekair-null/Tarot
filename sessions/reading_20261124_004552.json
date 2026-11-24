@@ -1,0 +1,194 @@
+{
+ "date": "2026-11-24 00:45",
+ "question": "A Live Reading",
+ "profile": "sign: Aquarius (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Wheel of Fortune",
+   true
+  ],
+  [
+   "Five of Pentacles",
+   true
+  ],
+  [
+   "The Sun",
+   false
+  ],
+  [
+   "The Chariot",
+   false
+  ],
+  [
+   "Queen of Pentacles",
+   false
+  ],
+  [
+   "Death",
+   true
+  ],
+  [
+   "Seven of Pentacles",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The cards are gathered with gratitude. What they showed is a lantern, not a cage; walk where it lights.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    2,
+    3
+   ]
+  ],
+  "questions": [
+   "What connection matters most right now, and why?",
+   "What fear is dressed up as common sense?",
+   "What practice would steady your spirit right now?",
+   "What resource have you overlooked?",
+   "What should you begin, and what should you let go, and how does overcoming past traumas touch it?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "What connection matters most right now, and why?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "curious",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Wheel of Fortune",
+      true
+     ]
+    ],
+    "text": "The Wheel of Fortune falls upside down. My grimoire says: An elderly woman sits passively as her life seems to repeat the same cycle of financial struggles and missed opportunities. The first card fell upside down: your concern is tangled in bad timing, resisting change, repeating the same cycle. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in bad luck; reversed, this current turns inward or slows. To \"What connection matters most right now, and why?\" it answers: Bad timing, resisting change, repeating the same cycle; face that, then ride the change instead of fighting it. Picture accepting that life moves in cycles, but stalled or turned inward. It asks you: What cycle keeps repeating, and what is yours to change?"
+   },
+   {
+    "question": "What fear is dressed up as common sense?",
+    "opener": "The spirits ask through her:",
+    "feeling": "pulled by fate",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Five of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Five of Pentacles falls upside down. My grimoire says: Jessica feels isolated and unsupported after moving away, struggling financially and emotionally. For this card, upside down is relief: recovery, help arriving, improving finances. Zodiac lens: Aquarius' air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"What fear is dressed up as common sense?\" it answers: Ask for help; it is closer than you think. Picture the weight lifting from feeling cut off; unable to ask. It asks you: What help is nearby that you have not knocked on?"
+   },
+   {
+    "question": "What practice would steady your spirit right now?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "turned inward",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     2,
+     3
+    ],
+    "cards": [
+     [
+      "The Sun",
+      false
+     ],
+     [
+      "The Chariot",
+      false
+     ]
+    ],
+    "text": "The Sun falls. What you cannot see yet: vitality, confidence, being truly seen. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in joy; upright, this current can move openly. To \"What practice would steady your spirit right now?\" it answers: Be open, be seen, enjoy it. It asks you: What would feel like pure daylight for you right now? The Chariot falls. What you cannot see yet: steering opposing impulses with will. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in control; upright, this current can move openly. It asks you: What are the two forces pulling you, and who is holding the reins? Two cards fell together: The Sun and The Chariot. They are one answer. Two Major Arcana side by side: fate speaking twice, so this is a turning point, not a passing mood. Together: joy meets control. Picture it: vitality, confidence, being truly seen, while steering opposing impulses with will. Their shared counsel: be open, be seen, enjoy it, and commit to one direction and drive through. Through the zodiac lens: Aquarius' air element grounds this Major Arcana lesson in joy; upright, this current can move openly. Aquarius' air element grounds this Major Arcana lesson in control; upright, this current can move openly."
+   },
+   {
+    "question": "What resource have you overlooked?",
+    "opener": "The spirits ask through her:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Queen of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Queen of Pentacles falls. What helps you: practicality, nurturing home, financial security. Lean on being grounded and nurturing. Zodiac lens: Aquarius' air element challenges the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What resource have you overlooked?\" it answers: Care for yourself as well as others. It asks you: How do you take care of yourself while taking care of others?"
+   },
+   {
+    "question": "What should you begin, and what should you let go, and how does overcoming past traumas touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "pulled by fate",
+    "passes": 2,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Death",
+      true
+     ]
+    ],
+    "text": "Death falls upside down. What to do next: watch for resistance to change; then let the ending happen so the new can begin. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in resistance to change; reversed, this current turns inward or slows. To \"What should you begin, and what should you let go, and how does overcoming past traumas touch it?\" it answers: Clinging to what is over, stagnation, fear of the ending; face that, then let the ending happen so the new can begin. Picture grief followed by rebirth; shedding an identity, but stalled or turned inward. It asks you: What is already over that you are still holding onto?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "Let the next card answer:",
+    "feeling": "at a crossroads",
+    "passes": 6,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "Seven of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Seven of Pentacles falls upside down. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and. Where it settles if nothing shifts: impatience, wasted effort, poor return on investment. Steer it: be patient and assess your investment. Zodiac lens: Aquarius' air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"What needs healing so this can move?\" it answers: Impatience, wasted effort, poor returns; face that, then be patient and assess your investment. Picture assessing the harvest, but stalled or turned inward. It asks you: Is the effort rewarding you, or is it time to change fields?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ }
+}

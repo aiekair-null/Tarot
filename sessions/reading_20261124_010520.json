@@ -1,0 +1,194 @@
+{
+ "date": "2026-11-24 01:05",
+ "question": "A Live Reading",
+ "profile": "sign: Cancer (water)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Seven of Wands",
+   false
+  ],
+  [
+   "Four of Wands",
+   false
+  ],
+  [
+   "Three of Cups",
+   false
+  ],
+  [
+   "King of Pentacles",
+   false
+  ],
+  [
+   "Queen of Wands",
+   false
+  ],
+  [
+   "Six of Cups",
+   true
+  ],
+  [
+   "Four of Cups",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The spirits have said their piece. Carry what helps; leave the rest on the cloth.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "Where is love moving in your life, and where has it gone still, and how does overcoming past traumas touch it?",
+   "What are you avoiding looking at?",
+   "How is this season meant to change you, and how does overcoming past traumas touch it?",
+   "What will help most in the days ahead?",
+   "What is this chapter teaching you?",
+   "What is the likely shape of the next season?"
+  ],
+  "log": [
+   {
+    "question": "Where is love moving in your life, and where has it gone still, and how does overcoming past traumas touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "searching",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Seven of Wands",
+      false
+     ],
+     [
+      "Four of Wands",
+      false
+     ]
+    ],
+    "text": "The Seven of Wands falls. My grimoire says: Reversed: A recent disagreement with a colleague at work led to an argument over project priorities. Despite feeling defensive and standing firm, the conversation left her emotionally drained and questioning whether she was truly justified in holding her ground. The Seven of Wands Tarot card has ill. The first card out of the deck names your concern: defense, protection, standing your ground, perseverance. In your life it looks like standing your ground when challenged. Zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"Where is love moving in your life, and where has it gone still, and how does overcoming past traumas touch it?\" it answers: Hold your ground and defend what matters. It asks you: What is worth defending, and what are you only defending out of habit? The Four of Wands falls. My grimoire says: .. The first card out of the deck names your concern: celebration, homecoming, community, harmony. In your life it looks like harmony, belonging, relief. Zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. It asks you: What are you ready to celebrate? Two cards fell together: the Seven of Wands and the Four of Wands. They are one answer. Both Wands: they amplify each other, doubling the theme of drive, passion and action. Together: defense meets celebration. Picture it: standing your ground when challenged, while harmony, belonging, relief. Their shared counsel: hold your ground and defend what matters, and celebrate and honor what has been built. Through the zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly."
+   },
+   {
+    "question": "What are you avoiding looking at?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "driven",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Three of Cups",
+      false
+     ]
+    ],
+    "text": "The Three of Cups falls. My grimoire says: In the midst of a challenging project at work, Jessica leaned on her closest friends for support and celebrated their collective successes with heartfelt gatherings, finding solace in the camaraderie that brought them all closer. What stands in the way: celebration, pushed too far. Community, joy with others is what pushes back. Zodiac lens: Cancer's water element resonates with the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What are you avoiding looking at?\" it answers: Lean on friends and celebrate together. It asks you: Who nourishes you, and who drains you?"
+   },
+   {
+    "question": "How is this season meant to change you, and how does overcoming past traumas touch it?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "open",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "King of Pentacles",
+      false
+     ]
+    ],
+    "text": "The King of Pentacles falls. What you cannot see yet: earned mastery. Zodiac lens: Cancer's water element harmonizes with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"How is this season meant to change you, and how does overcoming past traumas touch it?\" it answers: Lead with practical wisdom and generosity. It asks you: What does real security mean to you beyond money?"
+   },
+   {
+    "question": "What will help most in the days ahead?",
+    "opener": "The spirits ask through her:",
+    "feeling": "open",
+    "passes": 3,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Queen of Wands",
+      false
+     ]
+    ],
+    "text": "The Queen of Wands falls. My grimoire says: The Queen of Wands in an upright reading might suggest that you are leading a community project with warmth, confidence, and leadership skills. Despite initial hesitation or perceived lack of visibility, your magnetic charm and creative authority inspire others to take action, fostering a sense of s. What helps you: courage, confidence, warmth, independence. Lean on warm self-confidence, being the main character. Zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What will help most in the days ahead?\" it answers: Own your confidence and your warmth. It asks you: Where are you dimming your own light?"
+   },
+   {
+    "question": "What is this chapter teaching you?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "impatient",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Six of Cups",
+      true
+     ]
+    ],
+    "text": "The Six of Cups falls upside down. My grimoire says: In the context of a recent stressful work project, the Six of Cups appeared in a reversed position, symbolizing unresolved childhood emotions and nostalgia for simpler times\u2014situations at home that need to be reconciled before moving forward professionally. What to do next: watch for living in the past; then draw on the sweetness of the past without living there. Zodiac lens: Cancer's water element resonates with the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows. To \"What is this chapter teaching you?\" it answers: Living in the past, idealizing it, refusing to grow; face that, then draw on the sweetness of the past without living there. Picture memories, innocence, healing the inner child, but stalled or turned inward. It asks you: What from the past is calling, and is it nourishment or avoidance?"
+   },
+   {
+    "question": "What is the likely shape of the next season?",
+    "opener": "Let the next card answer:",
+    "feeling": "impatient",
+    "passes": 2,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      false
+     ]
+    ],
+    "text": "The Four of Cups falls. My grimoire says: A messy office party where Jessica feels left out and struggles to find a place within her team. Where it settles: an offer you can still choose to see. Zodiac lens: Cancer's water element resonates with the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What is the likely shape of the next season?\" it answers: Look up and notice what is being offered. In plain life, that is contemplation, numbness, a sulk. It asks you: What offer have you not looked at because you were sulking?"
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ }
+}
