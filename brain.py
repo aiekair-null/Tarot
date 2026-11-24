@@ -148,7 +148,8 @@ class Brain:
             raise RuntimeError("llama-cpp-python not installed (run: bash setup_local.sh)")
         self.progress, self.load_stage = 45, "warming the candle"
         self.llm = Llama(model_path=str(path), n_ctx=int(os.environ.get("TAROT_CTX", "8192")),
-                         n_threads=int(os.environ.get("TAROT_THREADS", os.cpu_count() or 2)), verbose=False)
+                         n_threads=int(os.environ.get("TAROT_THREADS", os.cpu_count() or 2)),
+                         n_gpu_layers=int(os.environ.get("TAROT_GPU_LAYERS", "0")), verbose=False)
         self.progress, self.load_stage = 100, "Veyra is awake"
         self.label = f"built-in {path.name}"
         return True

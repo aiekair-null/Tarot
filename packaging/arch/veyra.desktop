@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Veyra
+Comment=8-bit terminal tarot with a local AI reader
+Exec=veyra
+Terminal=true
+Icon=applications-games
+Categories=Game;

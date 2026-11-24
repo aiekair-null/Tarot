@@ -1,0 +1,20 @@
+# Veyra - 8-bit terminal tarot (8b/8b(L))
+# Build:  cd packaging/arch && makepkg -si
+pkgname=veyra
+pkgver=1.0
+pkgrel=1
+pkgdesc="Veyra: 8-bit terminal tarot reader with a local AI model"
+arch=('any')
+license=('custom')
+depends=('python' 'python-numpy' 'python-pillow' 'python-huggingface-hub'
+         'git' 'ffmpeg' 'flite' 'cmake' 'gcc' 'ttf-dejavu')
+optdepends=('ollama: alternative local model server'
+            'vulkan-icd-loader: GPU readings with VEYRA_GPU=vulkan'
+            'piper-tts-bin: nicer video voice (AUR)')
+source=('veyra' 'veyra.desktop')
+sha256sums=('SKIP' 'SKIP')
+
+package() {
+  install -Dm755 veyra "$pkgdir/usr/bin/veyra"
+  install -Dm644 veyra.desktop "$pkgdir/usr/share/applications/veyra.desktop"
+}

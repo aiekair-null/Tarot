@@ -4,6 +4,19 @@ A tarot reader who lives in your terminal: pixel art for Veyra and all 78 cards,
 take part in (wash, cut, reassemble, turn the cards), real randomness, and a reader who thinks with
 a **free AI model running on your own machine**. No Hugging Face bill.
 
+## Arch Linux (installed package)
+
+```bash
+git clone https://github.com/aiekair-null/Tarot.git ~/Tarot
+cd ~/Tarot/packaging/arch && makepkg -si     # installs the `veyra` command + menu entry
+veyra                                         # first run builds her engine and downloads Qwen3 8B
+```
+
+`veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
+goes to tarot.py (`veyra model`, `veyra video`...). GPU: `VEYRA_GPU=vulkan veyra setup`
+(or `cuda` / `rocm`). Her Python engine lives in `~/.local/share/veyra/venv`; the clone in `~/Tarot`
+still syncs memory and sessions to GitHub.
+
 ## Quick start (GitHub Codespaces or any Linux/Mac)
 
 ```bash
