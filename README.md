@@ -28,7 +28,7 @@ veyra                                         # first run builds her engine and 
 ```
 
 `veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
-goes to tarot.py (`veyra model`, `veyra video`...). GPU: `VEYRA_GPU=vulkan veyra setup`
+goes to tarot.py (`veyra model`, `veyra video`...). Promos are also menu option 12. GPU: `VEYRA_GPU=vulkan veyra setup`
 (or `cuda` / `rocm`). Her Python engine lives in `~/.local/share/veyra/venv`; the clone in `~/Tarot`
 still syncs memory and sessions to GitHub.
 

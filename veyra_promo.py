@@ -1135,6 +1135,7 @@ def main():
     json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w"))
     shutil.rmtree(tmp, ignore_errors=True)
     print(f"\nDone: {out}\n      {txt}")
+    return out
 
 if __name__ == "__main__":
     main()
