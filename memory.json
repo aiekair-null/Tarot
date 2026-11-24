@@ -20,9 +20,9 @@
     "King of Swords": 4,
     "Five of Cups": 3,
     "Page of Cups": 2,
-    "The Hierophant": 1,
+    "The Hierophant": 2,
     "Knight of Cups": 3,
-    "Four of Pentacles": 3,
+    "Four of Pentacles": 4,
     "Nine of Cups": 3,
     "Six of Swords": 2,
     "Eight of Pentacles": 1,
@@ -30,7 +30,7 @@
     "Three of Wands": 3,
     "Knight of Pentacles": 3,
     "Ace of Swords": 2,
-    "Death": 1,
+    "Death": 2,
     "Ten of Wands": 3,
     "Ten of Swords": 1,
     "Six of Cups": 1,
@@ -57,7 +57,7 @@
     "Temperance": 2,
     "Seven of Pentacles": 4,
     "Nine of Wands": 3,
-    "King of Pentacles": 2,
+    "King of Pentacles": 3,
     "The Hanged Man": 4,
     "Page of Wands": 3,
     "The Tower": 2,
@@ -69,15 +69,15 @@
     "The Empress": 1,
     "Page of Pentacles": 1,
     "Six of Pentacles": 1,
-    "Queen of Swords": 1,
-    "Queen of Cups": 2,
+    "Queen of Swords": 2,
+    "Queen of Cups": 3,
     "The High Priestess": 1,
     "The Hermit": 2,
     "Two of Swords": 1,
     "The Devil": 1,
     "Six of Wands": 1,
     "Ace of Cups": 2,
-    "King of Wands": 1,
+    "King of Wands": 2,
     "The Moon": 1
   },
   "readings": [
@@ -398,6 +398,20 @@
         "Nine of Wands (reversed)"
       ],
       "summary": "The Three of Wands falls. The first card out of the deck names your concern: expansion, foresight, overseas opportunities, enterprise. In your life it looks like foresight, patience watching the horiz"
+    },
+    {
+      "date": "2026-11-24",
+      "question": "A Live Reading",
+      "cards": [
+        "Queen of Cups",
+        "The Hierophant",
+        "King of Wands",
+        "Four of Pentacles",
+        "Queen of Swords",
+        "Death",
+        "King of Pentacles"
+      ],
+      "summary": "The Queen of Cups falls. My grimoire says: An individual grappling with deep intuition and compassionate boundaries. The first card out of the deck names your concern: compassion, warmth, emotional st"
     }
   ],
   "channelings": [

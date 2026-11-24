@@ -1,0 +1,206 @@
+{
+ "date": "2026-11-24 15:16",
+ "question": "A Live Reading",
+ "profile": "sign: Leo (fire)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Queen of Cups",
+   false
+  ],
+  [
+   "The Hierophant",
+   false
+  ],
+  [
+   "King of Wands",
+   false
+  ],
+  [
+   "Four of Pentacles",
+   false
+  ],
+  [
+   "Queen of Swords",
+   false
+  ],
+  [
+   "Death",
+   false
+  ],
+  [
+   "King of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The cards are gathered with gratitude. What they showed is a lantern, not a cage; walk where it lights.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "scripted knowledge (no model)",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "Why does this moment feel so unsettled, and how does overcoming past traumas touch it?",
+   "What are you avoiding looking at?",
+   "What practice would steady your spirit right now, and how does overcoming past traumas touch it?",
+   "What will help most in the days ahead?",
+   "How can you align daily work with what matters most?",
+   "Where does all of this want to land?"
+  ],
+  "log": [
+   {
+    "question": "Why does this moment feel so unsettled, and how does overcoming past traumas touch it?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "unsettled",
+    "passes": 4,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Queen of Cups",
+      false
+     ],
+     [
+      "The Hierophant",
+      false
+     ]
+    ],
+    "text": "The Queen of Cups falls. My grimoire says: An individual grappling with deep intuition and compassionate boundaries. The first card out of the deck names your concern: compassion, warmth, emotional stability, intuition. In your life it looks like deep intuition, compassion with boundaries. Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"Why does this moment feel so unsettled, and how does overcoming past traumas touch it?\" it answers: Lead with compassion and keep your boundaries. It asks you: Who needs your compassion, and have you left any for yourself? The Hierophant falls. The first card out of the deck names your concern: spiritual wisdom, tradition, institutions, mentorship. In your life it looks like a belief system, a teacher, asking what you were taught and still hold. Zodiac lens: Leo's fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly. It asks you: Which inherited rule are you following without having chosen it? Two cards fell together: the Queen of Cups and The Hierophant. They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: compassion meets spiritual wisdom. Picture it: deep intuition, compassion with boundaries, while a belief system, a teacher, asking what you were taught and still hold. Their shared counsel: lead with compassion and keep your boundaries, and seek good counsel and the proven path. Through the zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly. Leo's fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly."
+   },
+   {
+    "question": "What are you avoiding looking at?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "tender",
+    "passes": 4,
+    "slot": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "King of Wands",
+      false
+     ]
+    ],
+    "text": "The King of Wands falls. What stands in the way: natural leader, pushed too far. Leadership with heart, honor is what pushes back. Zodiac lens: Leo's fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What are you avoiding looking at?\" it answers: Lead with vision and take the first step. It asks you: What vision are you willing to stand behind?"
+   },
+   {
+    "question": "What practice would steady your spirit right now, and how does overcoming past traumas touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "longing",
+    "passes": 6,
+    "slot": 2,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Four of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Four of Pentacles falls. My grimoire says: A business meeting where a team member holds onto old contracts, causing delays and misunderstandings. What you cannot see yet: the grip of security. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What practice would steady your spirit right now, and how does overcoming past traumas touch it?\" it answers: Protect what matters, but do not grip too tight. It asks you: What are you gripping, and what is it protecting you from?"
+   },
+   {
+    "question": "What will help most in the days ahead?",
+    "opener": "Card, tell us:",
+    "feeling": "full-hearted",
+    "passes": 2,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Queen of Swords",
+      false
+     ]
+    ],
+    "text": "The Queen of Swords falls. What helps you: clear boundaries, direct communication, objectivity. Lean on clarity with a scar behind it. Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What will help most in the days ahead?\" it answers: Set clear boundaries and speak directly. It asks you: What boundary are you willing to hold with honesty?"
+   },
+   {
+    "question": "How can you align daily work with what matters most?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "longing",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Death",
+      false
+     ]
+    ],
+    "text": "Death falls. What to do next: let the ending happen so the new can begin. Zodiac lens: Leo's fire element grounds this Major Arcana lesson in transformation; upright, this current can move openly. To \"How can you align daily work with what matters most?\" it answers: Let the ending happen so the new can begin. Picture it: grief followed by rebirth; shedding an identity. It asks you: What is already over that you are still holding onto?"
+   },
+   {
+    "question": "Where does all of this want to land?",
+    "opener": "She whispers to the cards:",
+    "feeling": "pulled by fate",
+    "passes": 3,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "King of Pentacles",
+      false
+     ]
+    ],
+    "text": "The King of Pentacles falls. Where it settles: material success and stability. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"Where does all of this want to land?\" it answers: Lead with practical wisdom and generosity. Picture it: earned mastery. It asks you: What does real security mean to you beyond money?"
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly.",
+  "Leo's fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly.",
+  "The King of Pentacles falls.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly."
+ ]
+}
