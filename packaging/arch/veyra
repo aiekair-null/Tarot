@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Veyra launcher for Arch Linux.
+#   veyra               start a reading (menu)
+#   veyra setup         (re)build her Python engine and download the model
+#   veyra update        pull the newest code
+#   veyra promo [...]   make a promo video (veyra_promo.py)
+#   veyra <anything>    passed to tarot.py  (model, video, intro, control, horoscope, grimoire...)
+#
+# Settings (env vars):
+#   VEYRA_HOME   where the git clone lives        (default: ~/Tarot)
+#   VEYRA_REPO   repo to clone on first run        (default: github.com/aiekair-null/Tarot)
+#   VEYRA_MODEL  model key for setup               (default: qwen3-8b)
+#   VEYRA_GPU    vulkan | cuda | rocm | cpu        (default: cpu) - builds llama.cpp for that GPU
+set -euo pipefail
+
+HOME_DIR="${VEYRA_HOME:-$HOME/Tarot}"
+REPO="${VEYRA_REPO:-https://github.com/aiekair-null/Tarot.git}"
+MODEL="${VEYRA_MODEL:-qwen3-8b}"
+GPU="${VEYRA_GPU:-cpu}"
+VENV="${XDG_DATA_HOME:-$HOME/.local/share}/veyra/venv"
+PY="$VENV/bin/python"
+
+say() { printf '\e[35m✦\e[0m %s\n' "$*"; }
+
+clone() {
+  [ -f "$HOME_DIR/tarot.py" ] && return
+  say "Cloning Veyra into $HOME_DIR"
+  git clone "$REPO" "$HOME_DIR"
+}
+
+setup() {
+  clone
+  say "Building her engine in $VENV"
+  python -m venv --system-site-packages "$VENV"   # reuses pacman's numpy / pillow / huggingface-hub
+  "$PY" -m pip install -q --upgrade pip
+  "$PY" -m pip install -q ddgs || say "(ddgs skipped: web research while studying is off)"
+
+  export CMAKE_ARGS=""
+  case "$GPU" in
+    vulkan) CMAKE_ARGS="-DGGML_VULKAN=on" ;;
+    cuda)   CMAKE_ARGS="-DGGML_CUDA=on" ;;
+    rocm)   CMAKE_ARGS="-DGGML_HIP=on" ;;
+  esac
+  if [ -n "$CMAKE_ARGS" ]; then
+    say "Compiling llama.cpp for $GPU (a few minutes)"
+    "$PY" -m pip install -q --force-reinstall --no-cache-dir --no-binary llama-cpp-python llama-cpp-python
+    mkdir -p "$(dirname "$VENV")"; echo 99 > "$(dirname "$VENV")/gpu_layers"
+  else
+    say "Installing llama.cpp (CPU)"
+    "$PY" -m pip install -q llama-cpp-python --prefer-binary \
+        --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu \
+      || "$PY" -m pip install -q llama-cpp-python
+    rm -f "$(dirname "$VENV")/gpu_layers"
+  fi
+
+  say "Downloading the model ($MODEL)"
+  (cd "$HOME_DIR" && "$PY" models.py download "$MODEL" && "$PY" models.py use "$MODEL") \
+    || say "(model download failed; run: veyra model)"
+  say "Ready. Type: veyra"
+}
+
+case "${1:-}" in
+  setup)  shift; setup; exit ;;
+  update) clone; git -C "$HOME_DIR" pull --rebase --autostash; exit ;;
+esac
+
+[ -x "$PY" ] && [ -f "$HOME_DIR/tarot.py" ] || setup
+
+GL="$(dirname "$VENV")/gpu_layers"
+[ -f "$GL" ] && export TAROT_GPU_LAYERS="${TAROT_GPU_LAYERS:-$(cat "$GL")}"
+
+cd "$HOME_DIR"
+if [ "${1:-}" = promo ]; then shift; exec "$PY" veyra_promo.py "$@"; fi
+exec "$PY" tarot.py "$@"

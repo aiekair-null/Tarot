@@ -3,3 +3,4 @@ __pycache__/
 models/Qwen3-8B-Q4_K_M.gguf
 veyra_config.json
 sky/
+models/*.gguf
