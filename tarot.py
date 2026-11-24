@@ -9,6 +9,8 @@ import shutil
 import curses, locale, math, os, random, sys, textwrap, time
 import subprocess
 from pathlib import Path
+import psyche
+psyche.load_config()                 # the wiring room's settings, before anything reads them
 import art, fx, brain
 from agent import Reader
 from cards import build_deck, DECK
@@ -132,12 +134,17 @@ class UI:
         self.text(y, (self.w - len(s)) // 2, s, fg, bold)
 
     def cells(self, y, x, rows, xcrop=None):
+        trip = psyche.active()
+        t = self.now()
         for j, row in enumerate(rows):
             r = row[xcrop[0]:xcrop[1]] if xcrop else row
+            dx = psyche.wave(j, t) if trip else 0          # psilocybin: the art melts and breathes
             for i, (ch, fg, bg) in enumerate(r):
                 if ch == " " and bg == 16:
                     continue
-                self.put(y + j, x + i, ch, self.attr(fg, bg))
+                if trip:
+                    fg = psyche.recolor(fg, i, j, t)
+                self.put(y + j, x + i + dx, ch, self.attr(fg, bg))
 
     def glow(self, y, x, s, phase=None, mood=None):
         p = fx.pal(mood or self.mood)[3:]          # bright half only: always legible
@@ -1183,6 +1190,8 @@ def falling_ritual(scr, reader, plan, domain, concern, start, zodiac_sign=None, 
         if k == 2:
             texts.append(pair_reading(new[0][0], new[0][1], new[1][0], new[1][1], domain, reader.mem,
                                       sign=zodiac_sign, element=element))
+        if psyche.active():
+            texts = [psyche.dissociate(x, new) for x in texts]
         log.append({"question": q, "opener": opener, "feeling": feeling, "passes": passes,
                     "slot": i, "idx": idx,
                     "cards": [list(x) for x in new], "text": " ".join(texts)})
@@ -1430,7 +1439,9 @@ def finish_reading(reader, question, profile, qa, spirit_qs, key, spread, job, p
             channeled.append(msg)
     sess = {"date": time.strftime("%Y-%m-%d %H:%M"), "question": question, "profile": profile, "qa": qa,
             "spirit_qs": spirit_qs, "key": key, "spread": spread, "domain": domain, "reading": text,
-            "plan": plan, "mind": reader.label, "falls": falls, "channeled": channeled}
+            "plan": plan, "mind": reader.label, "falls": falls, "channeled": channeled,
+            "psy": psyche.active(),
+            "interesting": psyche.interesting(text + " " + " ".join(e["text"] for e in (falls or {}).get("log", [])), spread)}
     try:
         import video
         video.save_session(sess)
@@ -1649,6 +1660,11 @@ def main():
         import promo
         path = promo.make(_ask, _note, _progress)
         return share_menu(path) if path else None
+    if arg in ("wires", "config"):                     # python3 tarot.py wires -> the wiring room
+        return curses.wrapper(psyche.wiring_room)
+    if arg == "psy":                                   # python3 tarot.py psy -> psilocybin mode on/off
+        print("Psilocybin mode ON. Psyche engaged: dissociate() is running." if psyche.toggle() else "Psilocybin mode off.")
+        return
     if arg == "share":                                 # python3 tarot.py share [video.mp4]
         import video
         vids = sorted(video.VIDEOS.glob("*.mp4")) if video.VIDEOS.exists() else []
@@ -1670,7 +1686,8 @@ def main():
     else:
         while True:
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
-                   "5) Make a video of your last reading   6) Live Reading   7) Switch local model", "hope", "type")
+                   "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
+                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Wiring room", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1687,6 +1704,13 @@ def main():
                 break
             elif c == "6":
                 live_reading(reader)
+            elif c == "8":
+                if psyche.toggle():
+                    fx.banner("~ psyche engaged · dissociate() online ~", "mystic", 30)
+                else:
+                    fx.say("The colours settle. Psilocybin mode is off.", "calm", "fade")
+            elif c == "9":
+                curses.wrapper(psyche.wiring_room)
             elif c == "7":
                 if _model_mode():
                     break
