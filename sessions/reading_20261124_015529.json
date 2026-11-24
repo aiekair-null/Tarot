@@ -1,0 +1,222 @@
+{
+ "date": "2026-11-24 01:55",
+ "question": "A Live Reading",
+ "profile": "sign: Gemini (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Judgement",
+   true
+  ],
+  [
+   "Six of Cups",
+   true
+  ],
+  [
+   "Four of Swords",
+   false
+  ],
+  [
+   "King of Pentacles",
+   true
+  ],
+  [
+   "The Magician",
+   false
+  ],
+  [
+   "Knight of Cups",
+   false
+  ],
+  [
+   "Ace of Wands",
+   false
+  ],
+  [
+   "Knight of Wands",
+   false
+  ],
+  [
+   "Strength",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    7,
+    8
+   ]
+  ],
+  "questions": [
+   "What is the truest thing about where you stand today?",
+   "What habit keeps pulling you back into the same loop, and how does overcoming past traumas touch it?",
+   "Where are you being guided, if you would only follow?",
+   "What will help most in the days ahead?",
+   "How can you align daily work with what matters most?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "What is the truest thing about where you stand today?",
+    "opener": "The spirits ask through her:",
+    "feeling": "curious",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Judgement",
+      true
+     ],
+     [
+      "Six of Cups",
+      true
+     ]
+    ],
+    "text": "Judgement falls upside down. The first card fell upside down: your concern is tangled in self-judgment, ignoring the call, refusing to forgive. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in self-doubt; reversed, this current turns inward or slows. To \"What is the truest thing about where you stand today?\" it answers: Self-judgment, ignoring the call, refusing to forgive; face that, then answer the call and forgive what needs forgiving. Picture an inner summons, forgiveness, rising to your better self, but stalled or turned inward. It asks you: What is calling you to rise, and what keeps you from answering? The Six of Cups falls upside down. My grimoire says: In the context of a recent stressful work project, the Six of Cups appeared in a reversed position, symbolizing unresolved childhood emotions and nostalgia for simpler times\u2014situations at home that need to be reconciled before moving forward professionally. The first card fell upside down: your concern is tangled in living in the past, idealizing it, refusing to grow. Zodiac lens: Gemini's air element meets the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows. Picture memories, innocence, healing the inner child, but stalled or turned inward. It asks you: What from the past is calling, and is it nourishment or avoidance? Two cards fell together: Judgement (upside down) and the Six of Cups (upside down). They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: self-doubt meets living in the past. Picture it: self-judgment, ignoring the call, refusing to forgive, while living in the past, idealizing it, refusing to grow. Their shared counsel: answer the call and forgive what needs forgiving, and draw on the sweetness of the past without living there. Through the zodiac lens: Gemini's air element grounds this Major Arcana lesson in self-doubt; reversed, this current turns inward or slows. Gemini's air element meets the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows."
+   },
+   {
+    "question": "What habit keeps pulling you back into the same loop, and how does overcoming past traumas touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "turned inward",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     2,
+     3
+    ],
+    "cards": [
+     [
+      "Four of Swords",
+      false
+     ],
+     [
+      "King of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Four of Swords falls. My grimoire says: The team has just completed a grueling project deadline, and amidst the initial relief comes an unsettling feeling of needing to step back from their work before moving on. They've been so focused and intense that they're now craving a period of rest and reflection together. What stands in the way: rest, pushed too far. Much-needed rest, meditation is what pushes back. Zodiac lens: Gemini's air element resonates with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What habit keeps pulling you back into the same loop, and how does overcoming past traumas touch it?\" it answers: Rest before you act again. It asks you: What would real rest look like? The King of Pentacles falls upside down. What stands in the way: greed, stubborn, workaholism, poor business decisions. Zodiac lens: Gemini's air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. Picture earned mastery, but stalled or turned inward. It asks you: What does real security mean to you beyond money? Two cards fell together: the Four of Swords and the King of Pentacles (upside down). They are one answer. Swords and Pentacles are elementally hostile: friction, a tug-of-war between thoughts, words and conflict and work, money and the body. Together: rest meets greed. Picture it: much-needed rest, meditation, while greed, stubborn, workaholism, poor business decisions. Their shared counsel: rest before you act again, and lead with practical wisdom and generosity. Through the zodiac lens: Gemini's air element resonates with the Air (intellect, conflict) current of Swords; upright, this current can move openly. Gemini's air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows."
+   },
+   {
+    "question": "Where are you being guided, if you would only follow?",
+    "opener": "Card, tell us:",
+    "feeling": "held back",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Magician",
+      false
+     ]
+    ],
+    "text": "The Magician falls. What you cannot see yet: realizing you already hold everything needed; will turned into action. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in manifestation; upright, this current can move openly. To \"Where are you being guided, if you would only follow?\" it answers: Use what is already in your hands and say clearly what you want. It asks you: What resources are you overlooking in your own hands?"
+   },
+   {
+    "question": "What will help most in the days ahead?",
+    "opener": "Card, tell us:",
+    "feeling": "blocked",
+    "passes": 7,
+    "slot": 3,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Knight of Cups",
+      false
+     ]
+    ],
+    "text": "The Knight of Cups falls. My grimoire says: In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th. What helps you: romance, charm, following the heart, proposal. Lean on idealism, a dreamy quest. Zodiac lens: Gemini's air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What will help most in the days ahead?\" it answers: Follow your heart, but check that it is real. It asks you: Is it romance you want, or the feeling of being chosen?"
+   },
+   {
+    "question": "How can you align daily work with what matters most?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "blocked",
+    "passes": 8,
+    "slot": 4,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "Ace of Wands",
+      false
+     ]
+    ],
+    "text": "The Ace of Wands falls. My grimoire says: A flame flickers, casting shadows on the path ahead. The reversal suggests a need to reassess or redirect the energy towards healing rather than seeking new beginnings. What to do next: act on the spark now while it is hot. Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"How can you align daily work with what matters most?\" it answers: Act on the spark now while it is hot. A scene comes to me: creative fire, a surge of motivation. It asks you: What are you eager to begin?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "The spirits ask through her:",
+    "feeling": "lighter than before",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     7,
+     8
+    ],
+    "cards": [
+     [
+      "Knight of Wands",
+      false
+     ],
+     [
+      "Strength",
+      false
+     ]
+    ],
+    "text": "The Knight of Wands falls. My grimoire says: Upright: A sudden opportunity presents itself in a competitive job interview, offering the chance to showcase her passion and drive. She feels an urgent need to seize this moment before it slips away. Where it settles: fast, adventurous change. Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What needs healing so this can move?\" it answers: Act boldly but do not burn out. A scene comes to me: restless energy, craving adventure. It asks you: Where are you rushing because you are afraid to stand still? Strength falls. My grimoire says: .. Where it settles: you master it quietly, without force. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in courage; upright, this current can move openly. Picture it: courage that is gentle; taming fear and anger. It asks you: Where would gentleness succeed where force has failed? Two cards fell together: the Knight of Wands and Strength. They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: action meets courage. Picture it: restless energy, craving adventure, while courage that is gentle; taming fear and anger. Their shared counsel: act boldly but do not burn out, and meet it with patience and gentle courage. Through the zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. Gemini's air element grounds this Major Arcana lesson in courage; upright, this current can move openly."
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ],
+   [
+    7,
+    8
+   ]
+  ]
+ }
+}
