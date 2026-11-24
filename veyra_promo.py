@@ -997,7 +997,11 @@ def main():
     ap.add_argument("--length", type=float, default=150, help="target seconds (default 150 = 2:30)")
     ap.add_argument("--fps", type=int, default=60)
     ap.add_argument("--res", type=int, default=1080, choices=[540, 720, 1080], help="output width")
-    ap.add_argument("--out", default="videos")
+    try:
+        from video import VIDEOS as _VIDEOS
+    except Exception:
+        _VIDEOS = "videos"
+    ap.add_argument("--out", default=str(_VIDEOS))
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--preview", action="store_true", help="print the script and stop")
     a = ap.parse_args()
