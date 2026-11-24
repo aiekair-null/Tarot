@@ -9,10 +9,11 @@ if not exist "%PY%" (
   pause & exit /b 1
 )
 cd /d "%~dp0.."
-if /i "%~1"=="promo" (
-  shift
-  "%PY%" veyra_promo.py %1 %2 %3 %4 %5 %6 %7 %8 %9
-) else (
-  "%PY%" tarot.py %*
-)
+if /i "%~1"=="promo" goto promo
+"%PY%" tarot.py %*
+goto done
+:promo
+shift
+"%PY%" veyra_promo.py %1 %2 %3 %4 %5 %6 %7 %8 %9
+:done
 if errorlevel 1 pause
