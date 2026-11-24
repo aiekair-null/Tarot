@@ -10,6 +10,7 @@ import curses, locale, math, os, random, sys, textwrap, time
 import subprocess
 from pathlib import Path
 import psyche
+import sky, fortune
 psyche.load_config()                 # the wiring room's settings, before anything reads them
 import art, fx, brain
 from agent import Reader
@@ -1674,20 +1675,28 @@ def main():
         return share_menu(src)
     fx.banner("✦   V   E   Y   R   A   ✦", "mystic")
     reader = Reader()
+    sky.start(reader)                                  # today's sky, read in the background and kept in memory
     fx.startup_loading(reader)
     if reader.online:
         ok, why = fx.run_with_animation(reader.check, 10, ("~ Veyra wakes ~",)) or (False, "")
     portrait(reader.label)
     offer_model(reader)
+    if sky.CURRENT.get("sky"):
+        fx.say("Today's sky: " + sky.CURRENT["sky"]["summary"], sky.CURRENT.get("mood", "mystic"), "fade")
     if arg == "read":
         reading(reader)
+    elif arg == "fortune":
+        fortune.fortune_reading(reader)
+    elif arg == "chat":
+        fortune.chat_mode(reader)
     elif arg in ("live", "fall"):
         live_reading(reader)
     else:
         while True:
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
-                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Wiring room", "hope", "type")
+                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Wiring room   "
+                   "10) Fortune reading   11) Chat with Veyra", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1704,6 +1713,10 @@ def main():
                 break
             elif c == "6":
                 live_reading(reader)
+            elif c == "10":
+                fortune.fortune_reading(reader)
+            elif c == "11":
+                fortune.chat_mode(reader)
             elif c == "8":
                 if psyche.toggle():
                     fx.banner("~ psyche engaged · dissociate() online ~", "mystic", 30)

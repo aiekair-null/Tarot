@@ -144,7 +144,13 @@ def startup_loading(reader):
         sys.stdout.write(paint("  ✦ Veyra wakes in the pages ✦".center(cols - 1), pal("mystic"), k * 0.05))
         sys.stdout.write("\x1b[J")
 
-        if scene < 24:
+        if rows >= 22 and cols >= 60:
+            try:
+                import fortune
+                sys.stdout.write(fortune.showcase(k, cols, rows))
+            except Exception:
+                pass
+        elif scene < 24:
             jump = abs(scene - 12)
             lane = max(4, 8 + scene)
             x = lane if lane + 12 < cols else max(2, cols - 14)

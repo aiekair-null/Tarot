@@ -14,6 +14,8 @@ from brain import Brain
 import questions as Q
 import psyche
 
+SKY_NOTE = ""          # today's sky, filled in by sky.py at startup
+
 MEMORY_PATH = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
 SYS = random.SystemRandom()
 
@@ -122,7 +124,12 @@ class Reader:
 
     # ---- brain ------------------------------------------------------------------
     def _msgs(self, prompt):
-        return [{"role": "system", "content": PERSONA + self._memory_block()}, {"role": "user", "content": prompt}]
+        extra = ""
+        if SKY_NOTE:
+            extra += f"\n\n{SKY_NOTE}\nLet today's sky colour your mood and your words, and name signs or elements it favours or strains where it helps."
+        if self.mem.get("user_facts"):
+            extra += "\nThings the querent has told you in conversation: " + "; ".join(self.mem["user_facts"][-8:])
+        return [{"role": "system", "content": PERSONA + self._memory_block() + extra}, {"role": "user", "content": prompt}]
 
     def _ask(self, prompt, max_tokens=500, temperature=0.8):
         """Quiet by design: failures never print into the ritual; after 3 in a row she reads from knowledge."""

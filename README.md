@@ -172,3 +172,16 @@ lets a native iPhone/iPad app hand a video to the Facebook app's Reels composer,
 personal profile's Reels. It needs a native iOS app (Xcode, a Facebook App ID, the app published live)
 and only takes 3–60 second videos (up to 1080p, H.264/H.265, under ~50 MB). Today Veyra always renders
 and uploads the full-length reading video instead, so this is parked until there is an App Store version.
+
+## Fortune Reading, Chat, and today's sky
+
+- **Today's sky**: at startup Veyra works out the Sun and Moon herself, then (with a model and internet) searches the web
+  for what astrologers say about today and the next few days. The result is saved in `memory.json` (`sky`) once a day and
+  woven into every reading, cast and chat (signs that gain or take care, elements helped or strained, her mood).
+- **10) Fortune reading**: choose one of four groups of items (Hearth & Home, Wild & Sky, Bones & Stones, Road & Fortune).
+  She picks six pieces she feels are significant (weighted by the sky and your sign, never the same set twice in a row), they
+  fall on a large table, and she reads where they landed, what touches or covers what, and how it meets today's sky.
+  `python3 tarot.py fortune`
+- **11) Chat with Veyra**: she asks you questions, remembers what you tell her, and may search the web for anything she wants.
+  `python3 tarot.py chat`
+- While the model loads you now see the pieces being drawn (`items.py`, 40 hand-coded shaded sprites).
