@@ -45,9 +45,9 @@ if exist "%TAROT%\tarot.py" (
   echo   Updating %TAROT%
   git -C "%TAROT%" pull --rebase --autostash
 ) else (
-  echo   Cloning into %TAROT%  ^(a browser window may ask you to sign in to GitHub^)
+  echo   Cloning into %TAROT%
   git clone https://github.com/aiekair-null/Tarot.git "%TAROT%" || (
-    echo   Clone failed. Check your GitHub sign-in and run this again.
+    echo   Clone failed. Check your internet connection and run this again.
     pause & exit /b 1
   )
 )
@@ -86,4 +86,5 @@ powershell -NoProfile -Command ^
 echo.
 echo   Done. Double-click "Veyra" on your desktop, or run:  %LAUNCH%
 echo   Memory and sessions sync to GitHub after every reading.
+echo   ^(The first push asks you to sign in to GitHub once in a browser.^)
 pause

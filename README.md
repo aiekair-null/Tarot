@@ -6,16 +6,23 @@ a **free AI model running on your own machine**. No Hugging Face bill.
 
 ## Windows 10
 
-Download `windows/install_veyra.bat` and double-click it. It installs Git, Python 3.12, ffmpeg and
-Windows Terminal with winget, clones this repo to `%USERPROFILE%\Tarot` (a browser asks you to sign
-in to GitHub once), builds her engine, downloads Qwen3 8B (or uses Ollama if llama.cpp has no
+Download [install_veyra.bat](https://raw.githubusercontent.com/aiekair-null/Tarot/main/windows/install_veyra.bat)
+(right-click, Save link as) and double-click it, or paste this into PowerShell:
+
+```powershell
+iwr https://raw.githubusercontent.com/aiekair-null/Tarot/main/windows/install_veyra.bat -OutFile $env:TEMP\iv.bat; & $env:TEMP\iv.bat
+```
+
+It installs Git, Python 3.12, ffmpeg and
+Windows Terminal with winget, clones this repo to `%USERPROFILE%\Tarot`, builds her engine, downloads Qwen3 8B (or uses Ollama if llama.cpp has no
 build for that PC) and puts a **Veyra** shortcut on the desktop. Run it again any time to update.
-Memory and sessions sync to GitHub after each reading, same as everywhere else.
+Memory and sessions sync to GitHub after each reading (the first push asks you to sign in to
+GitHub once). Anyone else can install too; without push access their sync just stays local.
 
 ## Arch Linux (installed package)
 
 ```bash
-git clone https://github.com/aiekair-null/Tarot.git ~/Tarot
+git clone https://github.com/aiekair-null/Tarot.git ~/Tarot     # public: no login needed
 cd ~/Tarot/packaging/arch && makepkg -si     # installs the `veyra` command + menu entry
 veyra                                         # first run builds her engine and downloads Qwen3 8B
 ```
