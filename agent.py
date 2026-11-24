@@ -12,6 +12,7 @@ import spirit
 from spirit import new_rng
 from brain import Brain
 import questions as Q
+import psyche
 
 MEMORY_PATH = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
 SYS = random.SystemRandom()
@@ -308,6 +309,9 @@ class Reader:
             "- one paragraph on how the cards interact and the story they tell;\n"
             "- answer each spirit question in a sentence;\n"
             "- one question back to the querent, then a brief grateful closing.\n"
+            f"FACTS YOU MUST NOT CHANGE: reversed cards: {', '.join(c for c, r in spread if r) or 'none'}. "
+            "Every other card is UPRIGHT; never call it reversed. Use the position numbers exactly as listed. "
+            "Mood and fx words go ONLY inside the square-bracket tag, never in the sentences.\n"
             "Start EVERY paragraph with a visual tag such as [mood=dread fx=glitch] "
             f"(moods: {', '.join(MOODS)}; fx: {', '.join(FX)}). Put [CHANNEL] alone on its own line once, "
             f"where the spirits should speak. Separate paragraphs with a blank line. About {words} words.")
@@ -318,16 +322,29 @@ class Reader:
         got = []
         if self.online:
             try:
+                buf, n = "", 0
                 for piece in self.brain.stream(self._msgs(self._prompt(question, profile, qa, spirit_qs, key, spread, channeled, falls)),
-                                               max_tokens={"three": 900, "falling": 1100}.get(key, 1400), temperature=0.8):
-                    got.append(piece)
-                    yield piece
+                                               max_tokens={"three": 900, "falling": 1100}.get(key, 1400),
+                                               temperature=psyche.temperature()):
+                    buf, n = buf + piece, n + 1
+                    if "\n" in buf:                 # fix each finished line before anyone sees it
+                        done, buf = buf.rsplit("\n", 1)
+                        done = _finish_line(done, spread) + "\n"
+                        got.append(done)
+                        yield from _as_tokens(done, n)   # same token count, so the time estimate stays true
+                        n = 0
+                if buf:
+                    buf = _finish_line(buf, spread)
+                    got.append(buf)
+                    yield from _as_tokens(buf, max(n, 1))
                 self.fails = 0
             except Exception as e:
                 self.err, self.fails = str(e)[:200], self.fails + 1
         text = "".join(got)
         if len(re.sub(r"\[[^\]]*\]", "", text).strip()) < 200:
             fallback = compose_reading(question, qa, spirit_qs, key, spread, channeled, SYS, profile, falls)
+            if psyche.active():
+                fallback = "\n".join(psyche.dissociate(l, spread) for l in fallback.split("\n"))
             yield ("\n\n" if text else "") + fallback
             text += fallback
         else:                                   # the model wrote it: close with every card, none skipped
@@ -569,3 +586,47 @@ class ReadingJob:
                 return
             else:
                 time.sleep(0.03)
+
+
+# ---- keep the small model honest about the draw -------------------------------------------
+_FREE_TAG = re.compile(r"^(\s*[*_#]*\s*)(?:Moods?\s*[:=]\s*(\w+))?[\s,;.]*(?:F[Xx]|Effect)\s*[:=]\s*(\w+)[\s,;.]*", re.M)
+_STRAY = re.compile(r"\b(?:Moods?|F[Xx])\s*[:=]\s*\w+[\s,;.]*")
+
+
+def _as_tokens(text, n):
+    """Hand a fixed line back as n small pieces, like the model's own tokens."""
+    n = max(1, n)
+    step = max(1, -(-len(text) // n))
+    return [text[i:i + step] for i in range(0, len(text), step)] or [text]
+
+
+def fix_facts(text, spread):
+    """Turn loose 'Moods: x Fx: y' into a real tag, strip any left over, and force every named
+    card's orientation and position number to match what was actually drawn."""
+    text = _FREE_TAG.sub(lambda m: f"{m.group(1)}[mood={(m.group(2) or 'mystic').lower()} fx={m.group(3).lower()}] ", text)
+    text = "\n".join(ln[:m.end()] + _STRAY.sub("", ln[m.end():]) if (m := re.match(r"\s*\[[^\]]*\]", ln))
+                     else _STRAY.sub("", ln) for ln in text.split("\n"))
+    for pos, (card, rev) in sorted(enumerate(spread, 1), key=lambda x: -len(x[1][0])):
+        base = re.sub(r"^The\s+", "", card)
+        pat = re.compile(r"((?:The\s+)?" + re.escape(base) + r")"
+                         r"(\s*\((?:reversed|rev)\)|,?\s+reversed\b)?"
+                         r"(\s+(?:at|in)\s+(?:position\s+)?)?(\d+)?", re.I)
+
+        def fix(m, pos=pos, rev=rev):
+            out = m.group(1) + (" (reversed)" if rev else "")
+            if m.group(3) and m.group(4):
+                out += m.group(3) + str(pos)
+            elif m.group(3):
+                out += m.group(3)
+            elif m.group(4):
+                out += m.group(4)
+            return out
+        text = pat.sub(fix, text)
+    return text
+
+
+def _finish_line(line, spread):
+    """Facts first, then (in psilocybin mode) the psyche's dissociate() gets its turn."""
+    line = fix_facts(line, spread)
+    return psyche.dissociate(line, spread) if psyche.active() else line
+

@@ -27,6 +27,9 @@ def pause(s):
 
 
 def pal(mood):
+    import psyche
+    if psyche.active():
+        return psyche.palette()
     return MOODS.get(mood, MOODS["mystic"])
 
 

@@ -385,7 +385,11 @@ def plan(scenes, voice, say=print):
             if say and done % 4 == 0:
                 say(f"  voice {done}/{lines}")
         speech = sum(d + 0.35 for _, _, d in sc["audio"])
-        if sc["name"] == "intro":
+        import psyche
+        trip = psyche.scene_time(sc, speech)
+        if trip:
+            dur, lead = trip
+        elif sc["name"] == "intro":
             dur, lead = max(5.0, speech + 1.6), 0.8
         elif sc["name"] == "table":
             dur, lead = (1.4, 0) if not sc["audio"] else (speech + 2.0, 0.6)
@@ -816,12 +820,20 @@ def scene_content(p, sc, t, sess):
     if name in ("intro", "end") or (key in ("celtic", "falling") and (name == "table" or name.startswith("card"))) \
             or name.startswith(("ask", "drop", "read")):
         size = WIDE
-    elif name == "interview":
+    elif name == "interview" or name.startswith(("crowd", "flash")):
         size = LARGE
     else:
         size = SMALL
     scr, ui, ras = p.ui(size)
     scr.clock = t
+    import psyche
+    if name.startswith("flash"):
+        ui._psy_spread = spread
+        psyche.draw_flash(ui, sc, local)
+        return ras.render(scr)
+    if name.startswith("crowd"):
+        psyche.draw_crowd(ui, sc, local)
+        return ras.render(scr)
     if name == "intro":
         ui.mood = ui.plan["intro"]
         ui.intro_frame("", footer="")
@@ -968,7 +980,12 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
     sess["_transcript"] = transcript(sess)
     voice = working_voice(voice_kind, say)
     say(f"Writing her lines and voicing them ({voice.kind or 'captions only'})...")
-    scenes, events, total = plan(build_script(sess), voice, say)
+    import psyche
+    trip = bool(sess.get("psy") or psyche.active())
+    script = build_script(sess)
+    if trip:                                   # psilocybin mode: the fast-cut trip
+        script = psyche.trip_script(script, sess)
+    scenes, events, total = plan(script, voice, say)
     flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -985,17 +1002,24 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
         frames = int(total * FPS)
         ev = sorted(events, key=lambda e: e[0])
         say("Drawing the frames...")
+        psyche.FORCE = trip
+        cuts = {int(sc["start"] * FPS) for sc in scenes if sc["name"].startswith(("flash", "crowd"))}
         for n in range(frames):
+            psyche.CLOCK = n / FPS
             t = n / FPS
             sc = next(s for s in reversed(scenes) if s["start"] <= t) if t >= 0 else scenes[0]
-            cap = next((c for at, c, _, d in ev if at <= t < at + d + 0.25), None)
+            cap = sc["flash"] if "flash" in sc else next((c for at, c, _, d in ev if at <= t < at + d + 0.25), None)
             fade = 1.0 if sc["name"] != "end" else min(1.0, (total - t) / 1.2)
             try:
-                proc.stdin.write(p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess)).tobytes())
+                img = p.frame(scene_content(p, sc, t, sess), cap, fade, held_cards(sc, t, sess))
+                if trip:
+                    img = psyche.trip_frame(img, t, n in cuts and (n // 3) % 2 == 0)
+                proc.stdin.write(img.tobytes())
             except BrokenPipeError:
                 break
             if progress and n % FPS == 0:
                 progress(n / frames)
+        psyche.FORCE, psyche.CLOCK = None, None
         proc.stdin.close()
         err = proc.stderr.read().decode(errors="ignore")
         if proc.wait() != 0:
