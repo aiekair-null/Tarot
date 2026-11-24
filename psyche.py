@@ -341,7 +341,17 @@ def _gauges():
             ("TOKENS", float(max(toks) if toks else 0), 1400.0, f"{int(max(toks)) if toks else 0}"),
             ("WORDS", float(words), 1200.0, str(words)),
             ("TEMP", temperature(), 1.5, f"{temperature():.2f}"),
-            ("PSYCHE", level() if active() else 0.0, 1.0, f"{level():.2f}" if active() else "off")]
+            ("PSYCHE", level() if active() else 0.0, 1.0, f"{level():.2f}" if active() else "off"),
+            ("MOON", *_moon())]
+
+
+def _moon():
+    try:
+        import astro
+        s = astro.today()
+        return float(s["lit"]), 1.0, f"{int(s['lit'] * 100)}% {s['bodies']['Moon']['sign'][:3]}"
+    except Exception:
+        return 0.0, 1.0, "?"
 
 
 def draw_wires(ui, sel, t, top=2, bottom=3):

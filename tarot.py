@@ -1650,6 +1650,56 @@ def _sync_after_session():
     _git_sync("pull", "--rebase", "--autostash")
 
 
+def horoscope_menu(reader, sign=None):
+    """Today's horoscope, from the sky she worked out herself."""
+    import astro
+    sky = astro.today()
+    fx.banner("~ Veyra reads the sky ~", "channel", 20)
+    fx.say("No website and no one else's stars: I work out where every planet is from its orbit, "
+           "and read today's sky myself.", "mystic", "fade")
+    fx.say(astro.summary(sky), "calm", "type")
+    if not sign:
+        fx.say("Which sign? (Aries ... Pisces)", "hope", "fade")
+        sign = fx.prompt()
+    sg = astro.sign_from_text(sign)
+    if not sg:
+        return fx.say("I don't know that sign. Try Aries, Taurus, Gemini...", "grief", "fade")
+    text = fx.run_with_animation(lambda: astro.horoscope(sg, reader), 12,
+                                 (f"~ {astro.GLYPH[sg]} reading {sg}'s sky ~",)) or astro.horoscope(sg)
+    fx.say(f"{astro.GLYPH[sg]}  {sg}, {sky['date']}", "channel", "shimmer")
+    fx.say(text, "mystic", "fade")
+
+
+def star_chart(reader):
+    """A natal chart: the sky at the moment someone was born, worked out by her."""
+    import astro
+    fx.say("Birth date? (YYYY-MM-DD)", "mystic", "fade")
+    d = fx.prompt().strip()
+    fx.say("Birth time, if you know it (HH:MM, 24-hour; Enter for noon)", "mystic", "fade")
+    t = fx.prompt().strip() or "12:00"
+    try:
+        c = astro.natal(d, t)
+    except ValueError:
+        return fx.say("That date didn't read right. Try 1990-05-17 and 14:30.", "grief", "fade")
+    facts = astro.natal_text(c)
+    fx.say("I worked this sky out myself, from the planets' own orbits:", "channel", "shimmer")
+    fx.say(facts, "calm", "type")
+    words = None
+    if reader.online:
+        words = fx.run_with_animation(lambda: reader._ask(
+            "You worked out this birth chart yourself from the planets' real positions: " + facts +
+            " Read it as Veyra in 5 or 6 sentences addressed to 'you': Sun, Moon, and the two most telling planets. "
+            "No square-bracket tags.", 420, 0.8), 12, ("~ the birth sky unfolds ~",))
+    if words:
+        import re as _re
+        fx.say(_re.sub(r"\[[^\]]*\]", "", words).strip(), "mystic", "fade")
+    else:
+        b = c["bodies"]
+        fx.say(f"Sun in {b['Sun']['sign']}: {astro.MEANS['Sun']} lives there. Moon in {b['Moon']['sign']}: "
+               f"{astro.MEANS['Moon']} finds its home there. Mars in {b['Mars']['sign']} is how you fight; "
+               f"Venus in {b['Venus']['sign']} is how you love.", "mystic", "fade")
+
+
 def main():
     locale.setlocale(locale.LC_ALL, "")
     arg = (sys.argv[1:] or [""])[0]
@@ -1671,6 +1721,11 @@ def main():
     if arg in ("wires", "config", "control"):          # python3 tarot.py control -> the control room
         import control
         return curses.wrapper(control.room, "wires" if arg != "control" else "dials")
+    if arg in ("horoscope", "sky"):                     # python3 tarot.py horoscope [sign]
+        r = Reader()
+        return horoscope_menu(r, sys.argv[2] if len(sys.argv) > 2 else None)
+    if arg == "chart":                                 # python3 tarot.py chart -> a natal star chart
+        return star_chart(Reader())
     if arg == "psy":                                   # python3 tarot.py psy -> psilocybin mode on/off
         print("Psilocybin mode ON. Psyche engaged: dissociate() is running." if psyche.toggle() else "Psilocybin mode off.")
         return
@@ -1687,6 +1742,11 @@ def main():
     if reader.online:
         ok, why = fx.run_with_animation(reader.check, 10, ("~ Veyra wakes ~",)) or (False, "")
     portrait(reader.label)
+    try:                                               # she reads the sky herself, once a day
+        import astro
+        fx.say("I read the sky myself tonight: " + astro.summary(short=True) + ".", "channel", "shimmer")
+    except Exception:
+        pass
     offer_model(reader)
     if arg == "read":
         reading(reader)
@@ -1696,7 +1756,8 @@ def main():
         while True:
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
-                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)", "hope", "type")
+                   f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)   "
+                   "10) Today's horoscope   11) Star chart", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1709,6 +1770,10 @@ def main():
                     t = reader.study_async(int(os.environ.get("TAROT_STUDY", "3")))
                     fx.run_with_animation(lambda: t.join(), 20, ("~ Veyra studies in the quiet ~",))
                     fx.say("Her notes are saved to memory.json.", "hope", "fade")
+            elif c == "10":
+                horoscope_menu(reader)
+            elif c == "11":
+                star_chart(reader)
             elif c in ("4", "q", "quit", "exit"):
                 break
             elif c == "6":

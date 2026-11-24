@@ -305,6 +305,8 @@ class Reader:
             f"\n\nSpread: {sp['name']}\nEach card in its position (meaning to build from):\n"
             f"{position_notes(key, spread, dom)}\n\nTable diagnostics:\n{diagnostics(key, spread)}\n"
             f"\nHow this spread's cards interact:\n{sp['guide']}\n\n{notes}\n\n"
+            f"\nToday's sky, which you read yourself from the planets' real positions: {_sky()}\n"
+            "Weave one sentence about today's sky into the reading, saying you read it yourself.\n"
             "Write the reading now, addressed to the querent as 'you':\n"
             "- one paragraph of first impression of the whole table;\n"
             "- one short paragraph for EVERY card in its position (do not skip any), tied to what the querent told you;\n"
@@ -631,4 +633,12 @@ def _finish_line(line, spread):
     """Facts first, then (in psilocybin mode) the psyche's dissociate() gets its turn."""
     line = fix_facts(line, spread)
     return psyche.dissociate(line, spread) if psyche.active() else line
+
+
+def _sky():
+    try:
+        import astro
+        return astro.summary()
+    except Exception:
+        return "(clouded over)"
 
