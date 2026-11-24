@@ -14,7 +14,7 @@
     "Ace of Wands": 2,
     "Justice": 3,
     "Ten of Cups": 2,
-    "Five of Swords": 3,
+    "Five of Swords": 4,
     "Four of Wands": 4,
     "Strength": 3,
     "King of Swords": 4,
@@ -27,7 +27,7 @@
     "Six of Swords": 2,
     "Eight of Pentacles": 1,
     "Five of Wands": 5,
-    "Three of Wands": 2,
+    "Three of Wands": 3,
     "Knight of Pentacles": 3,
     "Ace of Swords": 2,
     "Death": 1,
@@ -56,13 +56,13 @@
     "Queen of Pentacles": 2,
     "Temperance": 2,
     "Seven of Pentacles": 4,
-    "Nine of Wands": 2,
+    "Nine of Wands": 3,
     "King of Pentacles": 2,
     "The Hanged Man": 4,
     "Page of Wands": 3,
     "The Tower": 2,
     "Three of Pentacles": 1,
-    "Two of Wands": 1,
+    "Two of Wands": 2,
     "Nine of Pentacles": 3,
     "The Star": 1,
     "Ten of Pentacles": 1,
@@ -76,8 +76,9 @@
     "Two of Swords": 1,
     "The Devil": 1,
     "Six of Wands": 1,
-    "Ace of Cups": 1,
-    "King of Wands": 1
+    "Ace of Cups": 2,
+    "King of Wands": 1,
+    "The Moon": 1
   },
   "readings": [
     {
@@ -384,6 +385,19 @@
         "Knight of Cups"
       ],
       "summary": "The Four of Cups falls. My grimoire says: A messy office party where Jessica feels left out, struggling to find a place within the team. The first card out of the deck names your concern: apathy, medi"
+    },
+    {
+      "date": "2026-11-24",
+      "question": "A Live Reading",
+      "cards": [
+        "Three of Wands",
+        "Five of Swords",
+        "The Moon",
+        "Two of Wands (reversed)",
+        "Ace of Cups",
+        "Nine of Wands (reversed)"
+      ],
+      "summary": "The Three of Wands falls. The first card out of the deck names your concern: expansion, foresight, overseas opportunities, enterprise. In your life it looks like foresight, patience watching the horiz"
     }
   ],
   "channelings": [
@@ -718,5 +732,6 @@
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
-  ]
+  ],
+  "next_zodiac_index": 1
 }

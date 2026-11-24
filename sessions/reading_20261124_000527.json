@@ -1,0 +1,179 @@
+{
+ "date": "2026-11-24 00:05",
+ "question": "A Live Reading",
+ "profile": "sign: Capricorn (earth)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Three of Wands",
+   false
+  ],
+  [
+   "Five of Swords",
+   false
+  ],
+  [
+   "The Moon",
+   false
+  ],
+  [
+   "Two of Wands",
+   true
+  ],
+  [
+   "Ace of Cups",
+   false
+  ],
+  [
+   "Nine of Wands",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The cards are gathered with gratitude. What they showed is a lantern, not a cage; walk where it lights.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "scripted knowledge (no model)",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Where is love moving in your life, and where has it gone still?",
+   "What old belief about money or worth is still in charge?",
+   "What opportunity is quietly waiting at the edge of your sight?",
+   "What will help most in the days ahead?",
+   "How can you align daily work with what matters most?",
+   "What does recovery look like from here?"
+  ],
+  "log": [
+   {
+    "question": "Where is love moving in your life, and where has it gone still?",
+    "opener": "She whispers to the cards:",
+    "feeling": "on the edge of something",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Three of Wands",
+      false
+     ]
+    ],
+    "text": "The Three of Wands falls. The first card out of the deck names your concern: expansion, foresight, overseas opportunities, enterprise. In your life it looks like foresight, patience watching the horizon. Zodiac lens: Capricorn's earth element meets the Fire (action, passion) current of Wands; upright, this current can move openly. To \"Where is love moving in your life, and where has it gone still?\" it answers: Look further ahead and prepare for growth. It asks you: What are you waiting to see arrive?"
+   },
+   {
+    "question": "What old belief about money or worth is still in charge?",
+    "opener": "She whispers to the cards:",
+    "feeling": "restless",
+    "passes": 5,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Five of Swords",
+      false
+     ]
+    ],
+    "text": "The Five of Swords falls. What stands in the way: conflict, pushed too far. Pride, a bitter victory is what pushes back. Zodiac lens: Capricorn's earth element challenges the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What old belief about money or worth is still in charge?\" it answers: Ask whether winning is worth the cost. It asks you: What is winning costing you?"
+   },
+   {
+    "question": "What opportunity is quietly waiting at the edge of your sight?",
+    "opener": "Card, tell us:",
+    "feeling": "uneasy",
+    "passes": 2,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Moon",
+      false
+     ]
+    ],
+    "text": "The Moon falls. My grimoire says: In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination. What you cannot see yet: fear, dreams, anxiety, intuition mixed with projection. Zodiac lens: Capricorn's earth element grounds this Major Arcana lesson in illusion; upright, this current can move openly. To \"What opportunity is quietly waiting at the edge of your sight?\" it answers: Do not act on fear; get more facts first. It asks you: Which fear is distorting what you see?"
+   },
+   {
+    "question": "What will help most in the days ahead?",
+    "opener": "Let the next card answer:",
+    "feeling": "weighed down",
+    "passes": 2,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Two of Wands",
+      true
+     ]
+    ],
+    "text": "The Two of Wands falls upside down. My grimoire says: Upright: Standing at the edge of her career, she feels a pull to start a new business venture but hesitates due to fear and uncertainty. Help is there but blocked: fear of the unknown, no plan, playing small. Clear the way and it reaches you. Zodiac lens: Capricorn's earth element meets the Fire (action, passion) current of Wands; reversed, this current turns inward or slows. To \"What will help most in the days ahead?\" it answers: Fear of the unknown, no plan, playing small; face that, then make the plan and choose your direction. Picture standing at the edge of the comfort zone, but stalled or turned inward. It asks you: What does leaving your comfort zone cost and gain?"
+   },
+   {
+    "question": "How can you align daily work with what matters most?",
+    "opener": "The spirits ask through her:",
+    "feeling": "uneasy",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Ace of Cups",
+      false
+     ]
+    ],
+    "text": "The Ace of Cups falls. My grimoire says: A Leo's heart is guarded by hidden fears that prevent them from fully embracing their yearnings for true connection and intimacy. What to do next: open your heart and let the feeling in. Zodiac lens: Capricorn's earth element harmonizes with the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"How can you align daily work with what matters most?\" it answers: Open your heart and let the feeling in. Here is how it might look this month: an overflowing heart, compassion beginning. It asks you: What feeling are you ready to receive?"
+   },
+   {
+    "question": "What does recovery look like from here?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "uneasy",
+    "passes": 2,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Nine of Wands",
+      true
+     ]
+    ],
+    "text": "The Nine of Wands falls upside down. Where it settles if nothing shifts: paranoia, exhaustion, defensive posture, burnout. Steer it: keep going; you are nearly there. Zodiac lens: Capricorn's earth element meets the Fire (action, passion) current of Wands; reversed, this current turns inward or slows. To \"What does recovery look like from here?\" it answers: Paranoia, burnout, quitting at the last step; face that, then keep going; you are nearly there. Picture resilience, battle fatigue, hypervigilance, but stalled or turned inward. It asks you: Where are you armoring against something that is not attacking?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ }
+}
