@@ -35,7 +35,7 @@ def status():
     try:
         import llama_cpp  # noqa
         print("  llama-cpp-python: installed")
-    except ImportError:
+    except Exception:                     # missing, or installed but its DLL will not load
         print("  llama-cpp-python: NOT installed  ->  bash setup_local.sh")
     om = brain.ollama_models()
     print("Ollama:", ", ".join(om) if om else "not running (optional)")

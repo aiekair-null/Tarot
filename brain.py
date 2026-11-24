@@ -65,7 +65,7 @@ def download(key=DEFAULT, log=print):
         try:
             from huggingface_hub import hf_hub_download
             hf_hub_download(repo, fname, local_dir=str(MODELS_DIR))
-        except ImportError:
+        except Exception:                     # missing, or installed but its DLL will not load
             url = f"https://huggingface.co/{repo}/resolve/main/{fname}"
             tmp = dest.with_suffix(".part")
             with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Veyra/2"})) as r, \
@@ -144,7 +144,7 @@ class Brain:
         self.progress, self.load_stage = 25, "finding the familiar pages"
         try:
             from llama_cpp import Llama
-        except ImportError:
+        except Exception:                     # missing, or installed but its DLL will not load
             raise RuntimeError("llama-cpp-python not installed (run: bash setup_local.sh)")
         self.progress, self.load_stage = 45, "warming the candle"
         self.llm = Llama(model_path=str(path), n_ctx=int(os.environ.get("TAROT_CTX", "8192")),

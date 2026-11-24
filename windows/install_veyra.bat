@@ -20,6 +20,8 @@ echo == Python 3.12
 if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" %WG% --id Python.Python.3.12 --scope user
 echo == ffmpeg (for reading videos and her voice)
 where ffmpeg >nul 2>nul || %WG% --id Gyan.FFmpeg
+echo == Microsoft C++ runtime (her AI engine needs it)
+%WG% --id Microsoft.VCRedist.2015+.x64
 echo == Windows Terminal (for the 8-bit colors)
 where wt >nul 2>nul || %WG% --id Microsoft.WindowsTerminal
 
@@ -61,6 +63,7 @@ if not exist "%PY%" "%PYBASE%" -m venv "%VENV%"
 "%PY%" -m pip install -q -r "%TAROT%\requirements.txt" windows-curses
 echo   Installing llama.cpp (the built-in AI)...
 "%PY%" -m pip install -q llama-cpp-python --only-binary=:all: --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+if not errorlevel 1 "%PY%" -c "import llama_cpp" 2>nul
 if errorlevel 1 (
   echo   The built-in engine has no ready-made build for this PC.
   echo   Installing Ollama instead - she finds it automatically.

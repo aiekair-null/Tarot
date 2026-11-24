@@ -1311,7 +1311,7 @@ def offer_model(reader):
     try:
         import llama_cpp  # noqa
         has_engine = True
-    except ImportError:
+    except Exception:                     # missing, or installed but its DLL will not load
         has_engine = False
     if has_engine and not brain.find_gguf():
         size = brain.CATALOG[brain.DEFAULT][2]
