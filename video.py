@@ -765,6 +765,13 @@ class Painter:
     def card_image(self, card, rev):
         key = (card, bool(rev))
         if key not in self.cards:
+            try:                                           # Visual Bible: the detailed painted card
+                import cards_hd
+                im = cards_hd.card_art(card, bool(rev))
+                self.cards[key] = im.resize((im.width * 4, im.height * 4), self.Image.NEAREST)
+                return self.cards[key]
+            except Exception:
+                pass
             import tarot, art
             scr = self.canvas.VirtualScreen(15, 22)
             ui = tarot.UI(scr, self.sess.get("plan"))

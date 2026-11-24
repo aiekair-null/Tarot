@@ -285,8 +285,10 @@ def xterm(c):
     d = (2 + rm / 256) * (_XT[:, 0] - c[0]) ** 2 + 4 * (_XT[:, 1] - c[1]) ** 2 + (2 + (255 - rm) / 256) * (_XT[:, 2] - c[2]) ** 2
     return _XI[int(np.argmin(d))]
 
-def _quadrants(img):
-    """RGBA image (w even, h even) -> rows of (ch, fg, bg) cells, 2x2 pixels per cell, 16 = transparent."""
+def _quadrants(img, clear=16, dark=None):
+    """RGBA image (w even, h even) -> rows of (ch, fg, bg) cells, 2x2 pixels per cell.
+    clear: colour index for transparent pixels (16 = see-through); dark: index for outlines (default violet 53)."""
+    X = (lambda c: dark if dark is not None and max(c) < 72 else xterm(c))
     a = np.asarray(img)
     rows = []
     for y in range(0, a.shape[0], 2):
@@ -296,7 +298,7 @@ def _quadrants(img):
             cols = [None if p[3] < 128 else (int(p[0]) // 8 * 8, int(p[1]) // 8 * 8, int(p[2]) // 8 * 8) for p in px]
             solid = [c for c in cols if c is not None]
             if not solid:
-                row.append((" ", 16, 16)); continue
+                row.append((" ", clear, clear)); continue
             # the two most different colours (transparent counts as one), then each pixel picks the nearer
             cand = list(dict.fromkeys(cols))
             best, pair = -1, (cand[0], cand[0])
@@ -318,7 +320,7 @@ def _quadrants(img):
                 else:
                     on = near(c, fg) <= near(c, bg)
                 if on: bits |= 1 << k
-            row.append((QUAD[bits], xterm(fg), 16 if bg is None else xterm(bg)))
+            row.append((QUAD[bits], X(fg), clear if bg is None else X(bg)))
         rows.append(row)
     return rows
 

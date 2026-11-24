@@ -58,9 +58,16 @@ Rule of thumb: purple for the world, gold for meaning, cyan for life and thinkin
 - If the terminal allows it, the background becomes the bible's night violet `#0d0520`. Default text is pale lavender (189), the VEYRA title is gold, and the calm glow runs violet to lilac.
 
 ## 5. Cards
-- Small card: 20×32 px. Cream border `#f3e6c4`, brown edge `#8a6a2a`, a coloured panel (deep blue, plum, teal, wine or indigo) with one gold symbol (sun, moon, star or eye).
-- Card back: violet `#2b0f55` with gold border, inner lilac frame and a gold diamond with a cyan dot.
-- Flips are done by squeezing the width (|cos t|); cards thinner than 4 px are not drawn.
+- **Painted cards** (`cards_hd.py`): all 78 cards and the back as 96×160 pixel paintings in tarot 3:5 proportions. Videos show them at ×4.
+  - **Frame:** dark ink edge, cream card stock, a frame in the suit colour (Majors gold, Wands amber, Cups cyan, Swords silver, Pentacles green), and corner jewels.
+  - **Text:** the numeral or rank on top, and a two-line name plate at the bottom in pixel text.
+  - **Art window (80×104):** a dithered sky themed to the card. Wands get fire, Cups water, Swords a steel night, Pentacles earth. Majors get dawn rays for light cards, a red moon for heavy ones, and a starry night otherwise. Every window has a horizon strip.
+  - **Figures:** the original `art.py` figures (Majors, Aces, courts) are kept and never redesigned. Each gets one Scale2x pass, then ×2, so diagonals are smoother but the pixels stay chunky.
+  - **8-bit shading:** flat fills, a hard highlight on top and left edges, a hard shadow on bottom and right edges, line art between colours, a dark outline and a few gold glints. No dither inside figures.
+  - **Pips:** new 18×18 icons for wand, chalice, sword and pentacle, laid out by `art.LAYOUT`, each with a soft suit-coloured glow.
+- **Terminal cards:** the same 8-bit figure (outlined and shaded) in quarter blocks on the navy card, twice as much detail across as before. Frames, tags and names stay text. The card back stays the crisp original pattern.
+- **Promo decoration cards:** 20×32 sprites (cream border, coloured panel, one gold symbol). Flips squeeze the width, and cards thinner than 4 px are not drawn.
+- `python3 cards_hd.py videos/all_cards.png` saves a contact sheet of the whole deck.
 
 ## 6. Light
 - **Bloom on every frame:** take pixels brighter than about 165, blur by about 3 px, and add them back at 0.6 strength.

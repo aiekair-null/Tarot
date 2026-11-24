@@ -390,10 +390,15 @@ def card_cells(card, reversed_=False, w=22, h=15):
     rows = frame(w, h, border)
     _text_row(rows[1], 2, tag, border, CARD_BG)
     _text_row(rows[1], w - 2 - len(tag), tag, border, CARD_BG)
-    px = card_pixels(card, w - 4, (h - 5) * 2)
-    if reversed_:
-        px = rotate180(px)
-    for j, r in enumerate(halfblock(px, CARD_BG)):
+    try:                                   # Visual Bible: the detailed painting, in quarter blocks
+        import cards_hd
+        pic = cards_hd.picture_cells(card, bool(reversed_), w - 4, h - 5)
+    except Exception:
+        px = card_pixels(card, w - 4, (h - 5) * 2)
+        if reversed_:
+            px = rotate180(px)
+        pic = halfblock(px, CARD_BG)
+    for j, r in enumerate(pic):
         rows[2 + j][2:2 + len(r)] = r
     name = card if len(card) <= w - 2 else card.replace("The ", "")
     _text_row(rows[h - 3], (w - len(name)) // 2, name, 231 if split(card)[1] else 220, CARD_BG)
