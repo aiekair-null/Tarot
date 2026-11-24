@@ -1514,7 +1514,8 @@ def make_and_share(sess):
 def share_menu(path):
     import share
     while True:
-        fx.say("1) Save it to your device   2) Share to Facebook   3) Done", "hope", "type")
+        first = "Save it to your device" if share.in_codespace() else "Open the video folder"
+        fx.say(f"1) {first}   2) Share to Facebook   3) Done", "hope", "type")
         c = fx.prompt()
         if c == "1":
             offer_download(path)
@@ -1526,6 +1527,17 @@ def share_menu(path):
 
 def offer_download(path):
     import share
+    if not share.in_codespace():                       # on your own machine it is already saved here
+        folder = Path(path).resolve().parent
+        fx.say(f"Saved on this machine: {Path(path).resolve()}", "hope", "fade")
+        try:
+            if os.name == "nt":
+                os.startfile(folder)
+            elif shutil.which("xdg-open"):
+                subprocess.Popen(["xdg-open", str(folder)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        return
 
     def wait(link, port):
         fx.say("Open this link to download your video:", "hope", "fade")
