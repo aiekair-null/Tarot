@@ -348,8 +348,21 @@ def find_ffmpeg():
     except Exception:
         sys.exit("ffmpeg not found. Install it (sudo apt-get install -y ffmpeg) or: pip install imageio-ffmpeg")
 
+_VV = None
+
 def pick_voice(a):
+    """Same voice as her reading videos (deps.ensure_voice: Piper / flite, offered and set up on first use),
+    then the older piper-CLI / espeak / pyttsx3 options."""
+    global _VV
     if a.voice == "none": return None
+    if a.voice == "auto":
+        try:
+            import deps, video
+            kind = deps.ensure_voice()
+            if kind:
+                _VV = video.Voice(kind); return "veyra-" + kind
+        except Exception as e:
+            print(f"  (her usual voice is not available: {e})")
     if a.voice in ("auto", "piper") and a.piper_model and shutil.which("piper"): return "piper"
     for b in ("espeak-ng", "espeak"):
         if a.voice in ("auto", "espeak") and shutil.which(b): return b
@@ -361,7 +374,11 @@ def pick_voice(a):
 
 def speak(engine, text, path, a):
     try:
-        if engine == "piper":
+        if engine.startswith("veyra-"):
+            import video
+            from pathlib import Path
+            getattr(_VV, "_" + _VV.kind)(video.tts_text(text), Path(path), Path(path).parent)
+        elif engine == "piper":
             subprocess.run(["piper", "--model", a.piper_model, "--output_file", path], input=text.encode(), check=True, capture_output=True)
         elif engine.startswith("espeak"):
             subprocess.run([engine, "-v", "en-us+f3", "-s", "158", "-p", "62", "-w", path, text], check=True, capture_output=True)
