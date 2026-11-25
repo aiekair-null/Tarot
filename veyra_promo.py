@@ -586,6 +586,23 @@ def veyra_frame(base, has_face, t, env, blink):
         d.polygon([(50, 34), (52, 37), (50, 40), (48, 37)], fill=gem)
     return s
 
+_ART_V = {}
+
+def art_veyra(frame=0, blink=False, px=4):
+    """The original Veyra sprite from art.py (26x28), with her animated orb and blink, scaled up."""
+    key = (frame % 48, blink, px)
+    if key not in _ART_V:
+        import art
+        from pixelstyle import _xterm
+        rows = art.veyra_pixels(frame, blink)
+        im = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0))
+        for y, row in enumerate(rows):
+            for x, c in enumerate(row):
+                if c is not None:
+                    im.putpixel((x, y), _xterm(c) + (255,))
+        _ART_V[key] = im.resize((im.width * px, im.height * px), Image.NEAREST)
+    return _ART_V[key]
+
 def load_portrait(path):
     im = Image.open(path).convert("RGBA")
     tw, th = 100, 120
@@ -665,8 +682,8 @@ class Renderer:
         self.bg_img = {k: Image.fromarray(v) for k, v in self.bg.items()}
         if portrait:
             self.vbase, self.has_face = load_portrait(portrait), False
-        else:
-            self.vbase, self.has_face = build_veyra(), True
+        else:                                     # the original sprite from the terminal app
+            self.vbase, self.has_face, self.art = art_veyra(), False, True
         self.moon = moon_sprite()
         self.aura = glow_sprite(120, "#7b3cff")
         self.cyan_glow = glow_sprite(26, "#4ff0ff")
@@ -718,7 +735,16 @@ class Renderer:
 
     def draw_veyra(self, f, t, env, cx, top, scale=2, aura=True):
         blink = (t % self.blink_period) < 0.11
-        spr = veyra_frame(self.vbase, self.has_face, t, env, blink)
+        if getattr(self, "art", False):                 # the original sprite, at whole-pixel sizes only
+            spr = art_veyra(int(t * 6), blink, px=max(1, round(4 * scale * 0.62)))
+            top += max(0, (int(120 * scale) - spr.height) // 2)
+            bob = round(math.sin(t * 1.7) * 2)
+            if aura:
+                paste_glow(f, self.aura, cx, top + spr.height * 0.45, 0.45 + 0.25 * math.sin(t * 1.3) + 0.3 * env)
+            f.paste(spr, (int(cx - spr.width / 2), int(top + bob)), spr)
+            return
+        else:
+            spr = veyra_frame(self.vbase, self.has_face, t, env, blink)
         spr = spr.resize((int(spr.width * scale), int(spr.height * scale)), Image.NEAREST)
         bob = round(math.sin(t * 1.7) * 2)
         if aura:

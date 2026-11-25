@@ -1171,6 +1171,10 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
         wav = Path(d) / "audio.wav"
         say("Composing the music...")
         mix_audio(events, flips, total, wav, sfx)
+        import pixelstyle
+        if pixelstyle.wanted(trip):                        # the promo's 8-bit look (TAROT_VIDEO_STYLE=classic for the old one)
+            say("Drawing the frames (8-bit)...")
+            return pixelstyle.encode(scenes, events, total, wav, out_path, sess, FPS, progress)
         p = Painter(sess)
         titles = edit.Titles(p, 1029, BOX)
         pop = edit.WordPop(p)

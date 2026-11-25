@@ -16,4 +16,6 @@ goto done
 shift
 "%PY%" veyra_promo.py %1 %2 %3 %4 %5 %6 %7 %8 %9
 :done
-if errorlevel 1 pause
+echo.
+echo   Veyra has finished. This window stays open until you press a key.
+pause >nul
