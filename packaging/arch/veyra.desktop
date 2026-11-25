@@ -2,7 +2,7 @@
 Type=Application
 Name=Veyra
 Comment=8-bit terminal tarot with a local AI reader
-Exec=veyra
+Exec=sh -c 'veyra; echo; read -r -p "Veyra has finished. Press Enter to close." _'
 Terminal=true
 Icon=applications-games
 Categories=Game;

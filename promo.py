@@ -153,6 +153,10 @@ def render(out_path, voice_kind, say=print, progress=None):
         wav = Path(d) / "audio.wav"
         say("Composing the music...")
         video.mix_audio(events, flips, total, wav)
+        import pixelstyle
+        if pixelstyle.wanted():
+            say("Drawing the frames (8-bit)...")
+            return pixelstyle.encode(scenes, events, total, wav, out_path, sess, FPS, progress)
         p = video.Painter(sess)
         extra = {"logo": brand_pixels(BRAND)}
         tmp = out_path.with_name(out_path.stem + ".part.mp4")
