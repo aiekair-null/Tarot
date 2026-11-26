@@ -596,6 +596,7 @@ TITLE_FRAGMENTS = {
 _LAST_TITLE_DESIGN = None
 
 
+SIGN_NAMES = r"\b(aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)(?=s?\b|'s\b)"
 SIGN_ELEMENT = {"aries": "fire", "leo": "fire", "sagittarius": "fire", "taurus": "earth", "virgo": "earth",
                 "capricorn": "earth", "gemini": "air", "libra": "air", "aquarius": "air",
                 "cancer": "water", "scorpio": "water", "pisces": "water"}
@@ -669,8 +670,8 @@ class Painter:
 
     # ---------- static layers
     def _icon(self, name, px=6):
-        if name in ZODIAC:                                 # astrological emoji: white sign on a purple tile
-            return self._zodiac_tile(name, px)
+        if name and name[0] in ZODIAC:                     # a zodiac sign; "♏|3" picks one of its designs
+            return self._zodiac_tile(name[0], px, int(name[2:]) if name[1:2] == "|" else 0)
         if name not in ICONS:                              # a star glyph, pixelated to match
             return self._glyph_icon(name, px)
         rows = ICONS[name]
@@ -682,16 +683,71 @@ class Painter:
                     d.rectangle([i * px, j * px, i * px + px - 1, j * px + px - 1], fill=ICON_RGB[ch] + (255,))
         return img
 
-    def _zodiac_tile(self, ch, px=6):
-        """A zodiac sign on its own, drawn in the 8-bit style: a crisp purple symbol on an 18-cell grid."""
+    def _zodiac_tile(self, ch, px=6, style=0):
+        """A zodiac sign drawn in the 8-bit style on an 18-cell grid. style 0 is the plain purple sign; the
+        others are the designs used when the title names a sign: gold, element gradient, hollow, sparkles,
+        drop shadow, dithered, rainbow and neon."""
         np, G, hi = self.np, 18, 18 * 8
         img = self.Image.new("RGBA", (hi, hi), (0, 0, 0, 0))
-        self.ImageDraw.Draw(img).text((hi / 2, hi / 2 + 2), ch, fill=(120, 60, 200, 255),
-                                      font=self.canvas.font(int(hi * 0.9), "DejaVuSans-Bold.ttf"),
-                                      anchor="mm", stroke_width=4, stroke_fill=(120, 60, 200, 255))
-        small = np.asarray(img.resize((G, G), self.Image.BOX)).copy()
-        small[..., 3] = np.where(small[..., 3] > 90, 255, 0)
-        small[..., :3] = (120, 60, 200)
+        self.ImageDraw.Draw(img).text((hi / 2, hi / 2 + 2), ch, fill=(255, 255, 255, 255),
+                                      font=self.canvas.font(int(hi * (0.9 if style in (0, 3, 6, 7) else 0.78)),
+                                                            "DejaVuSans-Bold.ttf"),
+                                      anchor="mm", stroke_width=4, stroke_fill=(255, 255, 255, 255))
+        m = np.asarray(img.resize((G, G), self.Image.BOX))[..., 3] > 90
+
+        def shift(a, dy, dx):
+            out = np.zeros_like(a)
+            out[max(0, dy):G + min(0, dy), max(0, dx):G + min(0, dx)] = a[max(0, -dy):G - max(0, dy), max(0, -dx):G - max(0, dx)]
+            return out
+        ring = (shift(m, 1, 0) | shift(m, -1, 0) | shift(m, 0, 1) | shift(m, 0, -1)) & ~m
+        inner = m & shift(m, 1, 0) & shift(m, -1, 0) & shift(m, 0, 1) & shift(m, 0, -1)
+        el = SIGN_ELEMENT[[n for n, g in SIGN_SYMBOLS.items() if g == ch][0]]
+        c1, c2 = {"fire": ((214, 48, 32), (255, 176, 40)), "water": ((24, 84, 210), (60, 214, 240)),
+                  "air": ((70, 120, 230), (150, 205, 255)), "earth": ((34, 130, 56), (150, 104, 44))}[el]
+        rgb = np.zeros((G, G, 3), np.uint8)
+        a = np.zeros((G, G), bool)
+        ys = np.arange(G)[:, None] / (G - 1)
+
+        def paint(where, color):
+            rgb[where] = color
+            a[where] = True
+
+        def grad(where, top, bottom):
+            col = (np.array(top) * (1 - ys) + np.array(bottom) * ys).astype(np.uint8)
+            full = np.broadcast_to(col[:, None, :] if col.ndim == 2 else col, (G, G, 3))
+            rgb[where] = full[where]
+            a[where] = True
+        if style == 1:                                     # gold, dark outline
+            paint(ring, (90, 52, 6))
+            grad(m, (255, 226, 110), (200, 136, 18))
+        elif style == 2:                                   # element gradient, dark outline
+            paint(ring, (30, 16, 44))
+            grad(m, c2, c1)
+        elif style == 3:                                   # hollow: just the edge, in its element
+            paint(m & ~inner, c1)
+        elif style == 4:                                   # sparkles around the sign
+            paint(m, (120, 60, 200))
+            for cy, cx in ((2, 2), (G - 4, G - 3), (2, G - 4)):
+                paint(np.zeros((G, G), bool) | (np.indices((G, G))[0] == cy) & (abs(np.indices((G, G))[1] - cx) <= 1)
+                      | (np.indices((G, G))[1] == cx) & (abs(np.indices((G, G))[0] - cy) <= 1), (240, 180, 30))
+        elif style == 5:                                   # pink with a drop shadow
+            paint(shift(m, 2, 2) & ~m, (50, 14, 70))
+            paint(m, (232, 70, 150))
+        elif style == 6:                                   # dithered two-tone
+            yy, xx = np.indices((G, G))
+            paint(m & ((yy + xx) % 2 == 0), c1)
+            paint(m & ((yy + xx) % 2 == 1), c2)
+        elif style == 7:                                   # rainbow bands
+            bands = ((228, 40, 40), (250, 140, 20), (240, 200, 20), (40, 170, 70), (40, 110, 230), (140, 60, 210))
+            yy = np.indices((G, G))[0]
+            for i, c in enumerate(bands):
+                paint(m & (yy * len(bands) // G == i), c)
+        elif style == 8:                                   # neon: light glow around a deep core
+            paint(ring | shift(ring, 1, 0) & ~m, c2)
+            paint(m, c1)
+        else:                                              # the plain purple sign
+            paint(m, (120, 60, 200))
+        small = np.dstack([rgb, np.where(a, 255, 0).astype(np.uint8)])
         k = max(2, round(px * 9 / G))
         return self.Image.fromarray(small, "RGBA").resize((G * k, G * k), self.Image.NEAREST)
 
@@ -837,9 +893,18 @@ class Painter:
             if len(hook_lines) <= 2:
                 break
         hook_lines = hook_lines[:3]
-        rest = [g for g in SIGN_SYMBOLS.values() if g not in left + right] + [g for g in left + right if g in ZODIAC]
-        pairs = [((rest[(2 * k) % len(rest)],), (rest[(2 * k + 1) % len(rest)],))
-                 for k in range(len(title_lines) + len(hook_lines) - 1)]
+        named = [SIGN_SYMBOLS[n.lower()] for n in re.findall(SIGN_NAMES, title, re.I)]
+        named = list(dict.fromkeys(named))
+        if named:                                     # the title names a sign: draw it in many designs
+            styles = list(range(1, 9))
+            random.Random(title).shuffle(styles)
+            seq = [f"{named[i % len(named)]}|{styles[i % len(styles)]}" for i in range(6 + 2 * 6)]
+            left, right = tuple(seq[0:3]), tuple(seq[3:6])
+            pairs = [((seq[6 + 2 * k],), (seq[7 + 2 * k],)) for k in range(len(title_lines) + len(hook_lines) - 1)]
+        else:
+            rest = [g for g in SIGN_SYMBOLS.values() if g not in left + right] + [g for g in left + right if g in ZODIAC]
+            pairs = [((rest[(2 * k) % len(rest)],), (rest[(2 * k + 1) % len(rest)],))
+                     for k in range(len(title_lines) + len(hook_lines) - 1)]
         icons = [(left, right)] + pairs
         anim = hook_anim = None
         if t is not None:
