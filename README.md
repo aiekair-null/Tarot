@@ -27,6 +27,14 @@ cd ~/Tarot/packaging/arch && makepkg -si     # installs the `veyra` command + me
 veyra                                         # first run builds her engine and downloads Qwen3 8B
 ```
 
+No pacman? Skip `makepkg` and run the launcher straight from the clone (it needs only git and python3;
+ffmpeg comes through pip):
+
+```bash
+mkdir -p ~/.local/bin && ln -sf ~/Tarot/packaging/arch/veyra ~/.local/bin/veyra
+veyra
+```
+
 `veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
 goes to tarot.py (`veyra model`, `veyra video`...). Promos are also menu option 12. GPU: `VEYRA_GPU=vulkan veyra setup`
 (or `cuda` / `rocm`). Her Python engine lives in `~/.local/share/veyra/venv`; the clone in `~/Tarot`

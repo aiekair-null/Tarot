@@ -56,12 +56,25 @@ def ensure_python(pkgs, ask=default_ask, say=default_say, why="this"):
 
 
 def ffmpeg():
-    return shutil.which("ffmpeg")
+    """System ffmpeg, else the one bundled with the imageio-ffmpeg Python package (no system install needed)."""
+    f = shutil.which("ffmpeg")
+    if f:
+        return f
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
 
 
 def ensure_ffmpeg(ask=default_ask, say=default_say):
     if ffmpeg():
         return True
+    if not shutil.which("apt-get"):                       # Arch, Windows...: a private copy through pip
+        if ensure_python({"imageio_ffmpeg": "imageio-ffmpeg"}, ask, say, "Videos need ffmpeg"):
+            importlib.invalidate_caches()
+            if ffmpeg():
+                return True
     apt = shutil.which("apt-get")
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         sudo = ""
