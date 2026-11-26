@@ -105,7 +105,7 @@ class Look:
     def _chunks(self):
         out = []
         for at, cap, audio, dur in self.events:
-            sents = [s for s in VP.re.split(r"(?<=[.!?])\s+", str(cap)) if s]
+            sents = [s for s in VP.re.split(r"(?<=[.!?])\s+", VP.latin1(cap)) if s]
             parts, cur = [], ""
             for s in sents:
                 if len(cur) + len(s) + 1 > 118 and cur:

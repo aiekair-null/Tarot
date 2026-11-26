@@ -61,9 +61,25 @@ FONT = ImageFont.load_default_imagefont() if hasattr(ImageFont, "load_default_im
 CW = max(1, int(FONT.getlength("M")))     # 6 px
 CH = 11
 
+# The bitmap font only has Latin-1 letters: one curly quote from the model used to crash the whole video
+# ("'latin-1' codec can't encode character '\u2019'"). Smart punctuation becomes plain, the rest is dropped.
+_PLAIN = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201a": ",", "\u201c": '"', "\u201d": '"', "\u2013": "-",
+                        "\u2014": "-", "\u2026": "...", "\u2022": "*", "\u2726": "*", "\u2727": "*", "\u2605": "*",
+                        "\u2192": "->", "\u203a": ">", "\u2039": "<", "\u00a0": " ", "\u2009": " ", "\u200b": ""})
+
+
+def latin1(s):
+    """Text the bitmap font can draw."""
+    return str(s).translate(_PLAIN).encode("latin-1", "ignore").decode("latin-1")
+
+
+def text_len(s):
+    return FONT.getlength(latin1(s))
+
 @lru_cache(maxsize=4096)
 def text_mask(s, scale=1):
-    w = max(1, int(FONT.getlength(s)) + 1)
+    s = latin1(s)
+    w = max(1, int(text_len(s)) + 1)
     m = Image.new("L", (w, CH + 1), 0)
     d = ImageDraw.Draw(m); d.fontmode = "1"
     d.text((0, 0), s, fill=255, font=FONT)
@@ -761,7 +777,7 @@ class Renderer:
         put_text(f, 6, 5, "VEYRA", hexrgb("#ffd36b"))
         put_text(f, 40, 5, "// " + BRAND, hexrgb("#b9a6e8"))
         tag = label
-        x = W - 6 - int(FONT.getlength(tag))
+        x = W - 6 - int(text_len(tag))
         put_text(f, x, 5, tag, hexrgb("#4ff0ff"))
         if int(t * 2) % 2 == 0:
             d.rectangle((x - 8, 8, x - 5, 11), fill=(255, 70, 90))
@@ -806,7 +822,7 @@ class Renderer:
             part = line[:max(0, left)]
             put_text(f, x0 + 9, yy, part, (240, 232, 255))
             if 0 < left < len(line) and int(t * 6) % 2 == 0:
-                cx = x0 + 9 + int(FONT.getlength(part))
+                cx = x0 + 9 + int(text_len(part))
                 d.rectangle((cx + 1, yy + 1, cx + 5, yy + 9), fill=hexrgb("#4ff0ff"))
             left -= len(line) + 1; yy += 13
 
@@ -898,7 +914,7 @@ class Renderer:
             part = line[:left]
             put_text(f, bx0 + 12, yy, part, ink, shadow=None)
             if left < len(line) and int(t * 6) % 2 == 0:
-                x = bx0 + 12 + int(FONT.getlength(part))
+                x = bx0 + 12 + int(text_len(part))
                 d.rectangle((x + 1, yy + 1, x + 5, yy + 9), fill=ink)
             left -= len(line) + 1; yy += 13
         # picture-in-picture Veyra, still talking
