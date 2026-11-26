@@ -92,14 +92,17 @@ def segment(k, message, rng, used):
             {"name": f"living{k}", "title": t_out, "anim": a_out, "lines": [LIVING_SPOKEN[t_out]]}]
 
 
+PADDED = {"three": 2, "falling": 2}       # spread -> spirit transmissions woven in (others get none)
+
+
 def weave_in(scenes, sess):
-    """Insert two or three transmission segments into the reading at natural breaks."""
+    """Spirit transmissions pad the short spreads (3-card and the 6-card fall: two messages between
+    the cards). The 10-card Celtic Cross is long enough already, so it stays streamlined: none."""
     rng = video_rng(sess)
     reads = [i for i, s in enumerate(scenes) if s["name"].startswith(("read", "card"))]
-    if not reads:
+    if not reads or sess.get("key") not in PADDED:
         return scenes
-    n = 1 if sess.get("key") == "falling" else (3 if len(reads) >= 6 or len(sess.get("channeled") or []) >= 3 else 2)   # six-card falls: one spirit message
-    n = min(n, max(1, len(reads) - 1))
+    n = min(PADDED[sess["key"]], max(1, len(reads) - 1))
     msgs = transmissions(sess, n, rng)
     # after these reading scenes (evenly spread, never after the last one)
     picks = sorted({reads[max(0, min(len(reads) - 2, round((j + 1) * len(reads) / (n + 1)) - 1))] for j in range(n)})
@@ -123,7 +126,8 @@ KEYWORDS = [
     (r"\b(table|cloth|position|spread)\b", "table"),
 ]
 QUIET = ["veyra", "stars", "table", "veil"]
-INSERT_LEN, MIN_GAP, MAX_STILL = 1.5, 2.3, 4.6
+INSERT_LEN, MIN_GAP, MAX_STILL = 1.5, 4.0, 9.0       # calm pacing: one word-cut per card, a quiet cut only after ~9s still
+TRIP_GAP, TRIP_STILL = 2.3, 4.6                       # psilocybin mode keeps the old fast cutting
 
 
 def _hold_window(sc):
@@ -133,10 +137,15 @@ def _hold_window(sc):
     return (0.6 if sc["name"].startswith("card") else 0) + hold_end + 0.5
 
 
-def plan_cuts(scenes, events, sess):
+def plan_cuts(scenes, events, sess, calm=True):
     """[(start, end, shot, word or None, scene name)] for every cutaway in the reading.
-    First the cuts that land on a spoken keyword; then quiet cutaways fill any stretch that sits still too long."""
+    First the cuts that land on a spoken keyword; then quiet cutaways fill any stretch that sits still too long.
+    calm (every mode but psilocybin): at most one word-cut per card, quiet cuts only after a long still
+    stretch, and none at all in the streamlined 10-card Celtic Cross."""
     rng = video_rng(sess)
+    MIN_GAP, MAX_STILL = (globals()["MIN_GAP"], globals()["MAX_STILL"]) if calm else (TRIP_GAP, TRIP_STILL)
+    per_scene = 1 if calm else 99
+    fill = not (calm and sess.get("key") == "celtic")
     cuts = []
     for sc in scenes:
         if not sc["name"].startswith(("read", "card")):
@@ -162,11 +171,13 @@ def plan_cuts(scenes, events, sess):
             if mine and mine[-1][2] == shot and c0 - mine[-1][1] < 6:
                 continue                                    # don't show the same cutaway twice in a row
             mine.append((c0, c0 + INSERT_LEN, shot, word, sc["name"]))
+            if len(mine) >= per_scene:
+                break
         # pass 2: fill long still stretches with quiet cutaways
         qi = rng.randrange(len(QUIET))
         filled, prev = [], free - MIN_GAP
         for nxt in mine + [(end + MIN_GAP, None, None, None, None)]:
-            while nxt[0] - prev > MAX_STILL + INSERT_LEN + MIN_GAP:
+            while fill and nxt[0] - prev > MAX_STILL + INSERT_LEN + MIN_GAP:
                 q0 = prev + MAX_STILL if filled or prev > free - MIN_GAP else max(free, prev + MAX_STILL)
                 q0 = max(q0, free)
                 if q0 + INSERT_LEN > min(end, nxt[0] - MIN_GAP):

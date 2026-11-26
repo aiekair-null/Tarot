@@ -1176,7 +1176,7 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
         script = psyche.trip_script(script, sess)
     scenes, events, total = plan(script, voice, say)
     flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
-    cuts = edit.plan_cuts(scenes, events, sess)
+    cuts = edit.plan_cuts(scenes, events, sess, calm=not trip)
     sfx = []
     for sc in scenes:
         if sc["name"].startswith("txin"):
