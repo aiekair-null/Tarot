@@ -68,8 +68,19 @@ def latest_session():
     return files[-1] if files else None
 
 
+def _no_think(o):
+    """Readings saved while Qwen3 was thinking out loud: drop the <think> blocks (and a dangling one)."""
+    if isinstance(o, str):
+        return re.sub(r"<think>.*?(</think>|$)\s*", "", o, flags=re.S).replace("</think>", "") if "think>" in o else o
+    if isinstance(o, list):
+        return [_no_think(x) for x in o]
+    if isinstance(o, dict):
+        return {k: _no_think(v) for k, v in o.items()}
+    return o
+
+
 def load_session(path):
-    s = json.loads(Path(path).read_text(encoding="utf-8"))
+    s = _no_think(json.loads(Path(path).read_text(encoding="utf-8")))
     s["spread"] = [(c, bool(r)) for c, r in s["spread"]]
     s["qa"] = [tuple(x) for x in s.get("qa", [])]
     if s.get("falls"):

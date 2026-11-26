@@ -1018,7 +1018,7 @@ class FitScreen:
                 while j < len(line) and line[j][1] == a:
                     j += 1
                 try:
-                    self.real.addstr(ry, x, "".join(c for c, _ in line[x:j]), a)
+                    self.real.addstr(ry, x, art.plain("".join(c for c, _ in line[x:j])), a)
                 except curses.error:
                     pass
                 x = j
@@ -1777,28 +1777,84 @@ def star_chart(reader):
                f"Venus in {b['Venus']['sign']} is how you love.", "mystic", "fade")
 
 
+class _PlainOut:
+    """sys.stdout for a terminal that isn't decoding UTF-8: everything printed goes out as ASCII."""
+    def __init__(self, stream):
+        self._s = stream
+
+    def write(self, text):
+        return self._s.write(art.plain(text))
+
+    def __getattr__(self, name):
+        return getattr(self._s, name)
+
+
+def _terminal_decodes_utf8():
+    """Ask the terminal itself: print one two-byte UTF-8 letter and see whether the cursor moved one cell
+    (it decodes UTF-8) or two (a Latin-1 window, where every symbol turns into 'â' junk). None: no answer."""
+    try:
+        import select, termios, tty
+        fd, out = sys.stdin.fileno(), sys.stdout.fileno()
+        if not (os.isatty(fd) and os.isatty(out)):
+            return None
+        sys.stdout.flush()
+        old = termios.tcgetattr(fd)
+    except Exception:
+        return None
+    resp = b""
+    try:
+        tty.setcbreak(fd)
+        os.write(out, "\r\u00e9\x1b[6n".encode("utf-8"))
+        end = time.time() + 0.4
+        while time.time() < end and not resp.endswith(b"R"):
+            ready, _, _ = select.select([fd], [], [], max(0.0, end - time.time()))
+            if not ready:
+                break
+            resp += os.read(fd, 64)
+    except Exception:
+        pass
+    finally:
+        try:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            termios.tcflush(fd, termios.TCIFLUSH)            # a late answer must not end up as typed input
+            os.write(out, b"\r\x1b[2K")
+        except Exception:
+            pass
+    import re
+    m = re.search(rb"\x1b\[\d+;(\d+)R", resp)
+    return None if not m else int(m.group(1)) == 2
+
+
 def _check_utf8():
-    """Veyra's glyphs need a UTF-8 terminal. On anything else (a Latin-1 locale shows them as rows of
-    'â'), the pixel art switches to plain coloured cells and she says how to fix the system."""
+    """Veyra's symbols need a terminal that decodes UTF-8. When the locale or the terminal window isn't
+    (an xterm started in Latin-1 shows them as rows of 'â'), she draws in plain ASCII instead and says how
+    to get her full art back. TAROT_ASCII=1 forces plain ASCII, TAROT_ASCII=0 never uses it."""
     for st in (sys.stdout, sys.stderr):
         try:
             st.reconfigure(errors="replace")             # an odd character must never crash a reading
         except Exception:
             pass
-    if os.name == "nt":
+    force = os.environ.get("TAROT_ASCII")
+    if os.name == "nt" or force == "0":
         return
-    try:
-        cs = locale.nl_langinfo(locale.CODESET)
-    except Exception:
+    why = "TAROT_ASCII=1" if force == "1" else ""
+    if not why:
+        try:
+            cs = locale.nl_langinfo(locale.CODESET)
+        except Exception:
+            cs = "UTF-8"
+        if "utf" not in cs.lower().replace("-", ""):
+            why = f"the locale is {cs}"
+        elif _terminal_decodes_utf8() is False:
+            why = "this terminal window is decoding Latin-1, not UTF-8"
+    if not why:
         return
-    if "utf" in cs.lower().replace("-", ""):
-        return
-    art.BLOCKS = False
-    if os.environ.get("TAROT_QUIET_LOCALE") != "1":
-        print(f"  ! This terminal is not UTF-8 (it is {cs}), so Veyra's symbols will show as junk.\n"
-              "    Fix it once (Arch):  sudo sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && sudo locale-gen\n"
-              "                         echo LANG=en_US.UTF-8 | sudo tee /etc/locale.conf   then log out and back in.\n"
-              "    (TAROT_QUIET_LOCALE=1 hides this.)\n")
+    art.BLOCKS, art.ASCII = False, True
+    sys.stdout, sys.stderr = _PlainOut(sys.stdout), _PlainOut(sys.stderr)
+    if os.environ.get("TAROT_QUIET_LOCALE") != "1" and force != "1":
+        print(f"  ! Veyra is drawing in plain ASCII because {why}.\n"
+              "    For her full art, run her in a UTF-8 terminal: uxterm (or xterm -u8), or set\n"
+              "    LANG=en_US.UTF-8 in /etc/locale.conf and log in again.  (TAROT_QUIET_LOCALE=1 hides this.)\n")
         time.sleep(2.5)
 
 
