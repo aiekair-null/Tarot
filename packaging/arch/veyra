@@ -31,7 +31,7 @@ clone() {
 setup() {
   clone
   say "Building her engine in $VENV"
-  python3 -m venv "$VENV"
+  [ -x "$PY" ] || "${VEYRA_PYTHON:-python3}" -m venv "$VENV"   # keeps a venv you made yourself (e.g. with uv)
   "$PY" -m pip install -q --upgrade pip
   "$PY" -m pip install -q ddgs || say "(ddgs skipped: web research while studying is off)"
   "$PY" -m pip install -q numpy pillow huggingface_hub imageio-ffmpeg   # no system packages needed
