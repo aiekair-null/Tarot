@@ -97,7 +97,7 @@ def weave_in(scenes, sess):
     reads = [i for i, s in enumerate(scenes) if s["name"].startswith(("read", "card"))]
     if not reads:
         return scenes
-    n = 3 if len(reads) >= 6 or len(sess.get("channeled") or []) >= 3 else 2
+    n = 1 if sess.get("key") == "falling" else (3 if len(reads) >= 6 or len(sess.get("channeled") or []) >= 3 else 2)   # six-card falls: one spirit message
     n = min(n, max(1, len(reads) - 1))
     msgs = transmissions(sess, n, rng)
     # after these reading scenes (evenly spread, never after the last one)
