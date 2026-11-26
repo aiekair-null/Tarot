@@ -1036,7 +1036,7 @@
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
   ],
-  "next_zodiac_index": 0,
+  "next_zodiac_index": 1,
   "about_you": {
     "age": "older",
     "sex/gender": "any"
@@ -1047,14 +1047,14 @@
     "What's one small thing you could do for your luck tomorrow?"
   ],
   "last_cast": {
-    "group": 2,
+    "group": 4,
     "items": [
-      "moth",
-      "thorn",
-      "mushroom",
-      "feather",
-      "flame",
-      "egg"
+      "horseshoe",
+      "lantern",
+      "clover",
+      "anchor",
+      "compass",
+      "ticket"
     ]
   }
 }

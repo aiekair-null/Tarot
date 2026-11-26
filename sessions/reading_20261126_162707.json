@@ -1,0 +1,64 @@
+{
+ "date": "2026-11-26 16:27",
+ "question": "A fortune cast from Road & Fortune",
+ "profile": "sign: Capricorn (earth)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "fortune",
+ "spread": [],
+ "domain": "inner",
+ "reading": "The heart of the cast is held by the lantern, its light steady and guiding, resting beneath the anchor. Together they form a quiet alliance between stability and direction\u2014what holds you and what shows the way. The anchor, upright, anchors your roots in place, while the lantern offers clarity through uncertainty. This pairing suggests that as you move forward, you are grounded enough to trust the path ahead. Yet, the compass, turned over at the edge of the table, whispers of a lost direction, hinting that something foundational is still unsettled or unclaimed.\n\nWhat is leaving is marked by the horseshoe and the clover\u2014both flipped, both in the zone of what is behind you. The horseshoe's shadow speaks of luck drained out, while the clover\u2019s reversal suggests a missed opportunity. These are signs that old patterns or energies are dissolving. Meanwhile, the ticket stands upright, pointing toward what is coming\u2014a journey, an admission, a new place in your life.\n\nToday\u2019s sky shows a waning gibbous in Cancer, with fire and air elements strong. Sagittarius, Aries, and Leo are favored signs, while Pisces and Virgo should be cautious. Capricorn, grounded in earth, may feel the pull of change but has the strength to navigate it. The pieces\u2019 elements align with today\u2019s sky\u2014fire and air support movement and clarity, while earth is challenged.\n\nThis week, listen closely to what you are letting go of. Let the light of the lantern guide your steps as you release what no longer serves you.",
+ "plan": null,
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": null,
+ "channeled": [],
+ "psy": false,
+ "interesting": [],
+ "fortune": {
+  "group": 4,
+  "group_name": "Road & Fortune",
+  "W": 168,
+  "H": 40,
+  "pieces": [
+   {
+    "name": "horseshoe",
+    "x": 10,
+    "y": 11,
+    "turned": true
+   },
+   {
+    "name": "lantern",
+    "x": 79,
+    "y": 19,
+    "turned": false
+   },
+   {
+    "name": "clover",
+    "x": 37,
+    "y": 18,
+    "turned": true
+   },
+   {
+    "name": "anchor",
+    "x": 87,
+    "y": 16,
+    "turned": false
+   },
+   {
+    "name": "compass",
+    "x": 85,
+    "y": 30,
+    "turned": true
+   },
+   {
+    "name": "ticket",
+    "x": 124,
+    "y": 16,
+    "turned": false
+   }
+  ],
+  "heart": "lantern",
+  "loner": "horseshoe",
+  "sky": "the Moon is a waning gibbous in Cancer, and the Sun is in Sagittarius. Favoured today: Sagittarius, Aries, Leo."
+ }
+}
