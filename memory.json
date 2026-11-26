@@ -1045,5 +1045,16 @@
     "Is your motivation asking for more structure or less?",
     "What's one small thing you could do for your focus tomorrow?",
     "What's one small thing you could do for your luck tomorrow?"
-  ]
+  ],
+  "last_cast": {
+    "group": 2,
+    "items": [
+      "moth",
+      "thorn",
+      "mushroom",
+      "feather",
+      "flame",
+      "egg"
+    ]
+  }
 }
