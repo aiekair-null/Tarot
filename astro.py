@@ -266,6 +266,17 @@ def natal_text(c):
             + f". Born under a {c['phase']}.")
 
 
+def touches(natal_chart, sky=None, limit=5):
+    """Where today's planets sit on a birth chart: each of today's bodies sharing a sign with a natal one."""
+    sky = sky or today()
+    out = []
+    for k, v in sky["bodies"].items():
+        for n, w in natal_chart["bodies"].items():
+            if v["sign"] == w["sign"]:
+                out.append(f"today's {k} crosses your natal {n} in {v['sign']}")
+    return out[:limit]
+
+
 def sign_from_text(s):
     s = (s or "").strip().lower()
     for sg in SIGNS:
