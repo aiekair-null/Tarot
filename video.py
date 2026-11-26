@@ -683,18 +683,15 @@ class Painter:
         return img
 
     def _zodiac_tile(self, ch, px=6):
-        """A zodiac emoji in the 8-bit style: rounded purple tile, white sign, on an 18-cell grid."""
+        """A zodiac sign on its own, drawn in the 8-bit style: a crisp purple symbol on an 18-cell grid."""
         np, G, hi = self.np, 18, 18 * 8
         img = self.Image.new("RGBA", (hi, hi), (0, 0, 0, 0))
-        d = self.ImageDraw.Draw(img)
-        d.rounded_rectangle([0, 0, hi - 1, hi - 1], hi // 5, fill=(140, 82, 214, 255))
-        d.rounded_rectangle([6, 6, hi - 7, hi // 2], hi // 6, fill=(162, 108, 230, 255))     # top sheen
-        d.text((hi / 2, hi / 2 + 2), ch, fill=(255, 255, 255, 255), font=self.canvas.font(int(hi * 0.62), "DejaVuSans-Bold.ttf"),
-               anchor="mm", stroke_width=3, stroke_fill=(255, 255, 255, 255))
+        self.ImageDraw.Draw(img).text((hi / 2, hi / 2 + 2), ch, fill=(120, 60, 200, 255),
+                                      font=self.canvas.font(int(hi * 0.9), "DejaVuSans-Bold.ttf"),
+                                      anchor="mm", stroke_width=4, stroke_fill=(120, 60, 200, 255))
         small = np.asarray(img.resize((G, G), self.Image.BOX)).copy()
-        small[..., 3] = np.where(small[..., 3] > 110, 255, 0)
-        lum = small[..., :3].mean(axis=2)
-        small[..., :3] = np.where((lum > 200)[..., None], 255, small[..., :3])            # crisp white sign
+        small[..., 3] = np.where(small[..., 3] > 90, 255, 0)
+        small[..., :3] = (120, 60, 200)
         k = max(2, round(px * 9 / G))
         return self.Image.fromarray(small, "RGBA").resize((G * k, G * k), self.Image.NEAREST)
 
