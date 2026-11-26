@@ -1777,6 +1777,31 @@ def star_chart(reader):
                f"Venus in {b['Venus']['sign']} is how you love.", "mystic", "fade")
 
 
+def _check_utf8():
+    """Veyra's glyphs need a UTF-8 terminal. On anything else (a Latin-1 locale shows them as rows of
+    'â'), the pixel art switches to plain coloured cells and she says how to fix the system."""
+    for st in (sys.stdout, sys.stderr):
+        try:
+            st.reconfigure(errors="replace")             # an odd character must never crash a reading
+        except Exception:
+            pass
+    if os.name == "nt":
+        return
+    try:
+        cs = locale.nl_langinfo(locale.CODESET)
+    except Exception:
+        return
+    if "utf" in cs.lower().replace("-", ""):
+        return
+    art.BLOCKS = False
+    if os.environ.get("TAROT_QUIET_LOCALE") != "1":
+        print(f"  ! This terminal is not UTF-8 (it is {cs}), so Veyra's symbols will show as junk.\n"
+              "    Fix it once (Arch):  sudo sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && sudo locale-gen\n"
+              "                         echo LANG=en_US.UTF-8 | sudo tee /etc/locale.conf   then log out and back in.\n"
+              "    (TAROT_QUIET_LOCALE=1 hides this.)\n")
+        time.sleep(2.5)
+
+
 def main():
     try:
         locale.setlocale(locale.LC_ALL, "")
@@ -1787,6 +1812,7 @@ def main():
             locale.setlocale(locale.LC_ALL, "")
         except locale.Error:
             pass
+    _check_utf8()
     arg = (sys.argv[1:] or [""])[0]
     if arg == "model":
         _model_mode()

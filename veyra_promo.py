@@ -174,7 +174,7 @@ def repo_snippets(rng, exclude):
     except Exception:
         pass
     try:
-        m = json.load(open("memory.json"))
+        m = json.load(open("memory.json", encoding="utf-8"))
         for c in m.get("channelings", []): add("memory", c, "channelings")
         for card, imgs in m.get("learned", {}).items():
             for im in imgs: add("memory", f"What I learned about {card}: {im}", "learned")
@@ -1083,7 +1083,7 @@ def main():
 
     # pick 3 passages, favouring ones not used in earlier videos, mixing lore and memory
     hist_path = os.path.join(a.out, ".veyra_promo_history.json")
-    try: used = set(json.load(open(hist_path)))
+    try: used = set(json.load(open(hist_path, encoding="utf-8")))
     except Exception: used = set()
     hid = lambda s: hashlib.sha1(s["text"].encode()).hexdigest()[:12]
     fresh = [s for s in snippets if hid(s) not in used] or snippets
@@ -1175,11 +1175,11 @@ def main():
     if proc.returncode != 0: sys.exit("ffmpeg failed")
 
     txt = out[:-4] + ".txt"
-    with open(txt, "w") as fh:
+    with open(txt, "w", encoding="utf-8") as fh:
         fh.write(f"Veyra promo  |  seed {seed}  |  {time.strftime('%Y-%m-%d %H:%M')}\n\n{script_txt}\n\n"
                  f"--- suggested post caption ---\nVeyra is growing: now running {MODEL_LABEL}, locally. "
                  f"Questions or want a live reading? Contact {CONTACT_NAME}. #tarot #AI #8bit\n")
-    json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w"))
+    json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w", encoding="utf-8"))
     shutil.rmtree(tmp, ignore_errors=True)
     print(f"\nDone: {out}\n      {txt}")
     return out

@@ -45,12 +45,21 @@ SMALL = (30, 72, 15, 30)                          # rows, cols, cell w, cell h  
 WIDE = (30, 80, 13, 26)                           # the Celtic Cross table and the intro need 80 columns
 LARGE = (23, 54, 20, 40)                          # big, phone-readable text for the interview
 
+_SPEAK = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u2013": "-", "\u2014": " - ",
+                        "\u2026": "...", "\u00a0": " "})
+
+
+def speakable(text):
+    """Her lines as plain ASCII for the voice programs (flite and espeak choke on curly quotes on a
+    non-UTF-8 system): smart punctuation becomes plain, anything else unspeakable is dropped."""
+    return text.translate(_SPEAK).encode("ascii", "ignore").decode()
+
 
 # ================================================================ sessions
 def save_session(sess):
     SESSIONS.mkdir(parents=True, exist_ok=True)
     p = SESSIONS / f"reading_{time.strftime('%Y%m%d_%H%M%S')}.json"
-    p.write_text(json.dumps(sess, indent=1))
+    p.write_text(json.dumps(sess, indent=1), encoding="utf-8")
     return p
 
 
@@ -60,7 +69,7 @@ def latest_session():
 
 
 def load_session(path):
-    s = json.loads(Path(path).read_text())
+    s = json.loads(Path(path).read_text(encoding="utf-8"))
     s["spread"] = [(c, bool(r)) for c, r in s["spread"]]
     s["qa"] = [tuple(x) for x in s.get("qa", [])]
     if s.get("falls"):
@@ -239,13 +248,13 @@ class Voice:
         except Exception:
             import sys
             subprocess.run([sys.executable, "-m", "piper", "-m", str(model), "-f", str(out)], input=text,
-                           text=True, capture_output=True, timeout=120)
+                           text=True, encoding="utf-8", capture_output=True, timeout=120)
 
     @staticmethod
     def _flite(text, out, d):
         """The voice from the first videos: flite's 'slt' voice (through ffmpeg, or the flite program)."""
         import deps, shutil
-        (d / "t.txt").write_text(text)
+        (d / "t.txt").write_text(speakable(text), encoding="utf-8")
         if deps.ffmpeg_has_flite():
             subprocess.run([deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
                             f"flite=textfile={d / 't.txt'}:voice=slt", str(out)], capture_output=True, timeout=120)
@@ -257,7 +266,7 @@ class Voice:
     def _espeak(text, out, d):
         import shutil
         exe = shutil.which("espeak-ng") or shutil.which("espeak")
-        subprocess.run([exe, "-v", "en-us+f3", "-s", "150", "-w", str(out), text], capture_output=True, timeout=120)
+        subprocess.run([exe, "-v", "en-us+f3", "-s", "150", "-w", str(out), speakable(text)], capture_output=True, timeout=120)
 
 
 def working_voice(kind, say=print):

@@ -50,7 +50,7 @@ def transmissions(sess, n, rng):
     try:
         import json, spirit
         from pathlib import Path
-        mem = json.loads(Path("memory.json").read_text()) if Path("memory.json").exists() else {}
+        mem = json.loads(Path("memory.json").read_text(encoding="utf-8")) if Path("memory.json").exists() else {}
         cards = ", ".join(c + (" (reversed)" if r else "") for c, r in sess.get("spread", []))
         ctx = f"Question: {sess.get('question', '')}. Cards: {cards}"
         tries = 0
