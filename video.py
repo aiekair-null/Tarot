@@ -40,6 +40,8 @@ BOX_TOP, BOX = 650, 930                           # the terminal table on the cl
 CAP_TOP, CAP_H = 1590, 190                        # spoken captions (kept above Facebook's bottom overlay)
 CLOTH = (10, 14, 40)
 FPS = 15
+TITLE_WRITE = 1.4                                    # seconds for the title's letters to write on
+TITLE_DONE = TITLE_WRITE + 0.15 + 0.12 * 6 + 0.2    # then its white boxes, then six zodiac emoji
 SR = 44100
 SMALL = (30, 72, 15, 30)                          # rows, cols, cell w, cell h  (fills 1080 px wide)
 WIDE = (30, 80, 13, 26)                           # the Celtic Cross table and the intro need 80 columns
@@ -593,25 +595,33 @@ TITLE_FRAGMENTS = {
 _LAST_TITLE_DESIGN = None
 
 
+SIGN_ELEMENT = {"aries": "fire", "leo": "fire", "sagittarius": "fire", "taurus": "earth", "virgo": "earth",
+                "capricorn": "earth", "gemini": "air", "libra": "air", "aquarius": "air",
+                "cancer": "water", "scorpio": "water", "pisces": "water"}
+
+
 def _title_symbols(sess, theme, rng):
+    """Zodiac emoji either side of the title: the sitter's sign leads with its element-mates beside it;
+    with no sign known, six signs from across the wheel."""
     global _LAST_TITLE_DESIGN
     profile = dict(part.split(": ", 1) for part in sess.get("profile", "").split(", ") if ": " in part)
     from knowledge import parse_sign
     sign, element = parse_sign(profile.get("sign", ""))
-    key = "astrology" if sign else (element if element in TITLE_DESIGNS else THEME_DESIGN[theme])
-    designs = TITLE_DESIGNS[key]
-    design = rng.choice(designs)
-    for _ in range(8):
-        if design != _LAST_TITLE_DESIGN:
-            break
-        design = rng.choice(designs)
-    _LAST_TITLE_DESIGN = design
-    left, right = map(list, design)
+    names = list(SIGN_SYMBOLS)
     if sign:
-        left[0] = SIGN_SYMBOLS[sign.lower()]
-    if element:
-        right[-1] = element
-    return tuple(left), tuple(right)
+        me = sign.lower()
+        mates = [n for n in names if SIGN_ELEMENT[n] == SIGN_ELEMENT[me] and n != me]
+        rest = [n for n in names if n != me and n not in mates]
+        rng.shuffle(rest)
+        left, right = [me] + mates, rest[:3]
+    else:
+        for _ in range(8):
+            pick = rng.sample(names, 6)
+            if pick != _LAST_TITLE_DESIGN:
+                break
+        _LAST_TITLE_DESIGN = pick
+        left, right = pick[:3], pick[3:]
+    return tuple(SIGN_SYMBOLS[n] for n in left), tuple(SIGN_SYMBOLS[n] for n in right)
 
 
 def make_hook(sess):
@@ -651,11 +661,16 @@ class Painter:
         self.cap_font = canvas.font(40, "DejaVuSans-Bold.ttf")
         self.caps, self.screens, self.cards, self.rot = {}, {}, {}, {}
         self.hook = make_hook(sess)
+        self.clock = 1e9                                  # compose() sets the frame time; promos stay static
+        self.plain = None
         self.base = np.asarray(self._backdrop()).copy()
+        self.intros = {}
 
     # ---------- static layers
     def _icon(self, name, px=6):
-        if name not in ICONS:                              # a zodiac or star glyph, pixelated to match
+        if name in ZODIAC:                                 # astrological emoji: white sign on a purple tile
+            return self._zodiac_tile(name, px)
+        if name not in ICONS:                              # a star glyph, pixelated to match
             return self._glyph_icon(name, px)
         rows = ICONS[name]
         img = self.Image.new("RGBA", (len(rows[0]) * px, len(rows) * px), (0, 0, 0, 0))
@@ -665,6 +680,22 @@ class Painter:
                 if ch != ".":
                     d.rectangle([i * px, j * px, i * px + px - 1, j * px + px - 1], fill=ICON_RGB[ch] + (255,))
         return img
+
+    def _zodiac_tile(self, ch, px=6):
+        """A zodiac emoji in the 8-bit style: rounded purple tile, white sign, on an 18-cell grid."""
+        np, G, hi = self.np, 18, 18 * 8
+        img = self.Image.new("RGBA", (hi, hi), (0, 0, 0, 0))
+        d = self.ImageDraw.Draw(img)
+        d.rounded_rectangle([0, 0, hi - 1, hi - 1], hi // 5, fill=(140, 82, 214, 255))
+        d.rounded_rectangle([6, 6, hi - 7, hi // 2], hi // 6, fill=(162, 108, 230, 255))     # top sheen
+        d.text((hi / 2, hi / 2 + 2), ch, fill=(255, 255, 255, 255), font=self.canvas.font(int(hi * 0.62), "DejaVuSans-Bold.ttf"),
+               anchor="mm", stroke_width=3, stroke_fill=(255, 255, 255, 255))
+        small = np.asarray(img.resize((G, G), self.Image.BOX)).copy()
+        small[..., 3] = np.where(small[..., 3] > 110, 255, 0)
+        lum = small[..., :3].mean(axis=2)
+        small[..., :3] = np.where((lum > 200)[..., None], 255, small[..., :3])            # crisp white sign
+        k = max(2, round(px * 9 / G))
+        return self.Image.fromarray(small, "RGBA").resize((G * k, G * k), self.Image.NEAREST)
 
     def _glyph_icon(self, ch, px=6):
         np = self.np
@@ -721,11 +752,26 @@ class Painter:
         d = self.ImageDraw.Draw(full)
         d.rounded_rectangle([22, BOX_TOP - 2, OW - 22, BOX_TOP + BOX + 2], 18, outline=(120, 124, 150), width=3)
         d.text((OW / 2, 1840), "VEYRA  ✦  8-bit AI tarot", fill=(150, 130, 200), font=self.canvas.font(28), anchor="mm")
+        self.plain = np.asarray(full).copy()              # the backdrop before the title is drawn on
         self._pinned(full)
         return full
 
-    def _boxes(self, img, lines, y, f, size, icon=None):
+    def _title_at(self, t):
+        """The pinned headline while it is being drawn: letters write on, then the white boxes and the
+        zodiac emoji pop in one by one."""
+        n = int(t * FPS)
+        if n not in self.intros:
+            img = self.Image.fromarray(self.plain.copy())
+            self._pinned(img, t)
+            self.intros = {n: self.np.asarray(img)}
+        return self.intros[n]
+
+    def _boxes(self, img, lines, y, f, size, icon=None, anim=None):
+        """anim (title draw-on): (letters shown, box on, icons shown); None draws everything."""
         d = self.ImageDraw.Draw(img)
+        left_chars = anim[0] if anim else 10 ** 6
+        box_on = anim[1] if anim else True
+        icons_left = anim[2] if anim else 10 ** 6
         for n, ln in enumerate(lines):
             w = d.textlength(ln, font=f)
             pair = icon if isinstance(icon, (tuple, list)) else (icon, icon)
@@ -740,15 +786,26 @@ class Painter:
             wr = sum(ic.width + 6 for ic in right_icons)
             total = w + wl + wr
             x0 = (OW - total) / 2
-            d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
+            if box_on:
+                d.rounded_rectangle([x0 - 18, y - 6, x0 + total + 18, y + size + 14], 14, fill=(255, 255, 255))
+            order = left_icons[::-1] + right_icons          # emoji pop in from the title outward
+            shown = {id(ic) for ic in order[:max(0, icons_left)]}
+            icons_left -= len(order)
             ix = x0
             for ic in left_icons:
-                img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
+                if id(ic) in shown:
+                    img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
                 ix += ic.width + 6
-            d.text((x0 + wl, y), ln, fill=(0, 0, 0), font=f)
+            part = ln[:max(0, left_chars)]
+            left_chars -= len(ln)
+            if box_on:
+                d.text((x0 + wl, y), part, fill=(0, 0, 0), font=f)
+            elif part:
+                d.text((x0 + wl, y), part, fill=(255, 255, 255), font=f, stroke_width=3, stroke_fill=(40, 6, 20))
             ix = x0 + wl + w + 6
             for ic in right_icons:
-                img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
+                if id(ic) in shown:
+                    img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
                 ix += ic.width + 6
             y += size + 20
         return y
@@ -765,16 +822,24 @@ class Painter:
                 cur = w
         return lines + [cur]
 
-    def _pinned(self, img):
+    def _pinned(self, img, t=None):
+        """The headline: title in white boxes between zodiac emoji, the hook line under it.
+        t (seconds into the video) draws it on: letters first, then the boxes, then the emoji."""
         left, right, title, line = self.hook
         for size in (54, 48, 42, 38, 34):              # shrink until the whole title fits: never drop words
             f = self.canvas.font(size, "DejaVuSans-Bold.ttf")
             title_lines = self._wrap(title, f, OW - 450)
             if len(title_lines) <= 2:
                 break
-        y = self._boxes(img, title_lines[:3], 270, f, size, (left, right))
-        f = self.canvas.font(54 if size >= 48 else 48, "DejaVuSans-Bold.ttf")
-        self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, f.size)
+        anim = None
+        if t is not None:
+            letters = sum(len(ln) for ln in title_lines[:3])
+            anim = (int(letters * min(1.0, t / TITLE_WRITE)), t >= TITLE_WRITE,
+                    int(max(0.0, t - TITLE_WRITE - 0.15) / 0.12))
+        y = self._boxes(img, title_lines[:3], 270, f, size, (left, right), anim)
+        if t is None or t >= TITLE_WRITE:
+            f = self.canvas.font(54 if size >= 48 else 48, "DejaVuSans-Bold.ttf")
+            self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, f.size)
 
     # ---------- per-frame layers
     def ui(self, size):
@@ -828,7 +893,7 @@ class Painter:
 
     def frame(self, content, cap=None, fade=1.0, held=None):
         np = self.np
-        out = self.base.copy()
+        out = (self._title_at(self.clock) if self.clock < TITLE_DONE else self.base).copy()
         h, w = content.shape[:2]
         if h > BOX:
             content, h = content[:BOX], BOX
@@ -1137,6 +1202,7 @@ def transcript(sess):
 def compose(p, titles, pop, scenes, sc, t, sess, cuts, cap, fade):
     """One finished frame: the scene or a cutaway, title cards, word pops and the cuts between them."""
     import edit
+    p.clock = t                                    # the headline draws itself on over the first seconds
     name, local = sc["name"], t - sc["start"]
     cut = next((c for c in cuts if c[0] <= t < c[1]), None)
     if name.startswith(("txin", "living")):
