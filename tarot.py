@@ -995,7 +995,14 @@ class FitScreen:
         self._size()
         self.buf = [[(" ", 0)] * self.LW for _ in range(self.LH)]
 
-    clear = erase
+    def clear(self):
+        """Wipe the whole terminal on the next refresh, not just the canvas, so nothing drawn before
+        (an old draw, stray output, a mis-sized glyph) can linger in a cell curses thinks is blank."""
+        try:
+            self.real.clear()
+        except curses.error:
+            pass
+        self.erase()
 
     def addstr(self, y, x, s, a=0):
         if not 0 <= y < len(self.buf):
@@ -1058,11 +1065,17 @@ def _sized(scr):
     return scr if isinstance(scr, FitScreen) or getattr(scr, "virtual", False) else FitScreen(scr)
 
 
+def _fresh(scr):
+    """A new reading starts on a wiped screen: no card from the last draw survives into this one."""
+    (getattr(scr, "clear", None) or scr.erase)()
+    return scr
+
+
 WAIT_LIMIT = int(os.environ.get("TAROT_WAIT_LIMIT", "20"))   # seconds of writing left before the waiting room
 
 
 def ritual(scr, key, spirit_qs, reader, ctx, plan, domain, start):
-    scr = _sized(scr)
+    scr = _fresh(_sized(scr))
     ui = UI(scr, plan)
     channeled = []
 
@@ -1160,7 +1173,7 @@ def falling_ritual(scr, reader, plan, domain, concern, start, zodiac_sign=None, 
     answering the question asked just before it. Every step is logged so a video can replay it."""
     import live
     from knowledge import fall_reading, pair_reading
-    scr = _sized(scr)
+    scr = _fresh(_sized(scr))
     ui = UI(scr, plan)
     ui.mood = plan["wash"]
     domain = domain or "inner"
