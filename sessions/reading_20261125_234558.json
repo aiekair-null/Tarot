@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-25 23:45",
+ "question": "A Live Reading",
+ "profile": "sign: Taurus (earth)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Hanged Man",
+   true
+  ],
+  [
+   "Ace of Pentacles",
+   false
+  ],
+  [
+   "Queen of Swords",
+   false
+  ],
+  [
+   "Ten of Swords",
+   false
+  ],
+  [
+   "Strength",
+   true
+  ],
+  [
+   "Knight of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The spirits have said their piece. Carry what helps; leave the rest on the cloth.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "Ollama qwen2.5:1.5b",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What is the truest thing about where you stand today?",
+   "What is draining your energy without you noticing?",
+   "What gift is hidden inside the difficulty?",
+   "What have you survived that proves you can handle this?",
+   "What one small action would change the most?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "What is the truest thing about where you stand today?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "on the edge of something",
+    "passes": 3,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "The Hanged Man",
+      true
+     ]
+    ],
+    "text": "The Hanged Man falls upside down. My grimoire says: A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward. The first card fell upside down: your concern is tangled in stalling, martyrdom, sacrificing for nothing. Zodiac lens: Taurus' earth element grounds this Major Arcana lesson in stalling; reversed, this current turns inward or slows. To \"What is the truest thing about where you stand today?\" it answers: Stalling, martyrdom, sacrificing for nothing; face that, then pause, let go of control, look from a new angle. Picture surrender, suspended animation before insight, but stalled or turned inward. It asks you: What shifts if you looked at this upside down?"
+   },
+   {
+    "question": "What is draining your energy without you noticing?",
+    "opener": "She whispers to the cards:",
+    "feeling": "pulled by fate",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Ace of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Ace of Pentacles falls. My grimoire says: The Ace of Pentacles, upright: A new client approaches you with an opportunity to start a small business incubator program in your community. This initiative aligns perfectly with your recent focus on manifesting stability and prosperity through grounded action. What stands in the way: new financial opportunity, pushed too far. A grounded start is what pushes back. Zodiac lens: Taurus' earth element resonates with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What is draining your energy without you noticing?\" it answers: Plant the seed; take the practical opportunity. It asks you: What opportunity could you actually hold in your hands?"
+   },
+   {
+    "question": "What gift is hidden inside the difficulty?",
+    "opener": "The spirits ask through her:",
+    "feeling": "quietly happy",
+    "passes": 4,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Queen of Swords",
+      false
+     ]
+    ],
+    "text": "The Queen of Swords falls. What you cannot see yet: clarity with a scar behind it. Zodiac lens: Taurus' earth element challenges the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What gift is hidden inside the difficulty?\" it answers: Set clear boundaries and speak directly. It asks you: What boundary are you willing to hold with honesty?"
+   },
+   {
+    "question": "What have you survived that proves you can handle this?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "lighter than before",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Ten of Swords",
+      false
+     ]
+    ],
+    "text": "The Ten of Swords falls. My grimoire says: Reversed: After years of internal turmoil and public criticism, the artist finally reached a point where they could let go of past hurts and focus on rebuilding their career from scratch. The Ten of Swords stood as a symbol that while difficult times were far behind, every chapter in their life now. What helps you: rock bottom, betrayal, painful ending, defeat. Lean on the end of a story. Zodiac lens: Taurus' earth element challenges the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What have you survived that proves you can handle this?\" it answers: Accept the ending; the only way now is up. It asks you: What does the sunrise at the end of this look like?"
+   },
+   {
+    "question": "What one small action would change the most?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "sharp-edged",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Strength",
+      true
+     ]
+    ],
+    "text": "Strength falls upside down. My grimoire says: .. What to do next: watch for self-doubt; then meet it with patience and gentle courage. Zodiac lens: Taurus' earth element grounds this Major Arcana lesson in self-doubt; reversed, this current turns inward or slows. To \"What one small action would change the most?\" it answers: Self-doubt, raw emotion spilling, burnout from suppressing; face that, then meet it with patience and gentle courage. Picture courage that is gentle; taming fear and anger, but stalled or turned inward. It asks you: Where would gentleness succeed where force has failed?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "Let the next card answer:",
+    "feeling": "at a crossroads",
+    "passes": 5,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Knight of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Knight of Pentacles falls. My grimoire says: A gardener tending a garden, nurturing seeds with patience and care. Where it settles: slow but reliable progress. Zodiac lens: Taurus' earth element resonates with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What needs healing so this can move?\" it answers: Stay steady and keep doing the work. Picture it: consistency, dependable effort. It asks you: Is your steadiness serving you, or have you become stuck?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Hanged Man falls upside down.",
+  "The Ace of Pentacles falls.",
+  "My grimoire says: The Ace of Pentacles, upright: A new client approaches you with an opportunity to start a small business incubator program in your community.",
+  "The Queen of Swords falls.",
+  "It asks you: What does the sunrise at the end of this look like?",
+  "Strength falls upside down.",
+  "The Knight of Pentacles falls.",
+  "It asks you: Is your steadiness serving you, or have you become stuck?"
+ ]
+}
