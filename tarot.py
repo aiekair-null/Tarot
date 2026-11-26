@@ -66,6 +66,9 @@ def _shimmering(fn):
     return run
 
 
+_PAIRS = {"screen": None, "map": {}}
+
+
 class UI:
     def __init__(self, scr, plan=None):
         self.scr = scr
@@ -84,6 +87,10 @@ class UI:
                 pass
             curses.start_color()
             self.big = curses.COLORS >= 256
+            root = getattr(scr, "real", scr)             # colour pairs belong to curses, not to this UI:
+            if _PAIRS["screen"] is not root:             # every UI on one screen (the Ctrl+W room too) shares
+                _PAIRS["screen"], _PAIRS["map"] = root, {}   # one table, so none renumbers the others' colours
+            self.pairs = _PAIRS["map"]
             scr.bkgd(" ", self.attr(153))
 
     # size is read fresh every time, so a resized terminal re-lays everything out on the next frame
@@ -111,13 +118,19 @@ class UI:
             return (fg & 0xFF) | ((bg & 0xFF) << 8) | ((1 << 16) if bold else 0)
         key = (self._c(fg), self._c(bg))
         if key not in self.pairs:
-            n = len(self.pairs) + 1
-            if n >= curses.COLOR_PAIRS:
-                return curses.A_BOLD if bold else 0
-            try:
-                curses.init_pair(n, *key)
-            except (curses.error, ValueError, OverflowError):
-                return 0
+            n = len(set(self.pairs.values())) + 1
+            if n >= curses.COLOR_PAIRS:                  # out of pairs: borrow the closest one already made
+                if not self.pairs:
+                    return curses.A_BOLD if bold else 0
+                rgb = [xterm_rgb(c) for c in key]
+                near = min(self.pairs, key=lambda k: sum((a - b) ** 2 for c, want in zip(k, rgb)
+                                                         for a, b in zip(xterm_rgb(c), want)))
+                n = self.pairs[near]
+            else:
+                try:
+                    curses.init_pair(n, *key)
+                except (curses.error, ValueError, OverflowError):
+                    return 0
             self.pairs[key] = n
         return curses.color_pair(self.pairs[key]) | (curses.A_BOLD if bold else 0)
 
@@ -134,7 +147,7 @@ class UI:
         s = s[: self.w - x - (1 if y == self.h - 1 else 0)]
         if s:
             try:
-                self.scr.addstr(y, x, s, self.attr(153) if a is None else a)
+                self.scr.addstr(y, x, art.plain(s), self.attr(153) if a is None else a)
             except curses.error:
                 pass
 
@@ -155,6 +168,7 @@ class UI:
                     continue
                 if trip:
                     fg = psyche.recolor(fg, i, j, t)
+                ch, fg, bg = art.solid(ch, fg, bg)
                 self.put(y + j, x + i + dx, ch, self.attr(fg, bg))
 
     def glow(self, y, x, s, phase=None, mood=None):
@@ -1763,6 +1777,31 @@ def star_chart(reader):
                f"Venus in {b['Venus']['sign']} is how you love.", "mystic", "fade")
 
 
+def _check_utf8():
+    """Veyra's glyphs need a UTF-8 terminal. On anything else (a Latin-1 locale shows them as rows of
+    'â'), the pixel art switches to plain coloured cells and she says how to fix the system."""
+    for st in (sys.stdout, sys.stderr):
+        try:
+            st.reconfigure(errors="replace")             # an odd character must never crash a reading
+        except Exception:
+            pass
+    if os.name == "nt":
+        return
+    try:
+        cs = locale.nl_langinfo(locale.CODESET)
+    except Exception:
+        return
+    if "utf" in cs.lower().replace("-", ""):
+        return
+    art.BLOCKS = False
+    if os.environ.get("TAROT_QUIET_LOCALE") != "1":
+        print(f"  ! This terminal is not UTF-8 (it is {cs}), so Veyra's symbols will show as junk.\n"
+              "    Fix it once (Arch):  sudo sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && sudo locale-gen\n"
+              "                         echo LANG=en_US.UTF-8 | sudo tee /etc/locale.conf   then log out and back in.\n"
+              "    (TAROT_QUIET_LOCALE=1 hides this.)\n")
+        time.sleep(2.5)
+
+
 def main():
     try:
         locale.setlocale(locale.LC_ALL, "")
@@ -1773,6 +1812,7 @@ def main():
             locale.setlocale(locale.LC_ALL, "")
         except locale.Error:
             pass
+    _check_utf8()
     arg = (sys.argv[1:] or [""])[0]
     if arg == "model":
         _model_mode()

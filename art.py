@@ -4,6 +4,27 @@ Every sprite is a grid of palette letters ('.' = transparent). Two pixel rows sh
 terminal cell using the half-block trick (top pixel = foreground of '▀', bottom = background),
 so a 16x16 sprite fills 16 columns x 8 rows. The same cell grids feed both the curses ritual
 and plain ANSI printing, so the art looks identical everywhere."""
+import os
+
+# Some terminal fonts have no block glyphs (▀ ▄ █): they draw a little box with the hex code in it
+# instead, so solid pixels vanish into the table and faint digits show through the art. Full pixels are
+# therefore always drawn as coloured spaces, which every font can show. TAROT_BLOCKS=0 does the same for
+# half pixels too (blockier, but nothing depends on the font at all).
+BLOCKS = os.environ.get("TAROT_BLOCKS", "1") != "0"
+PLAIN = str.maketrans({"█": "#", "▀": '"', "▄": "_", "▌": "|", "▐": "|", "░": ".",
+                       "▗": ".", "▖": ".", "▝": "'", "▘": "'"})
+
+
+def solid(ch, fg, bg):
+    """One cell as the terminal should draw it: full blocks become coloured spaces."""
+    if ch == "█" or (not BLOCKS and ch in "▀▄"):
+        return " ", fg, fg
+    return ch, fg, bg
+
+
+def plain(s):
+    """Loose text with block glyphs in it, for fonts without them (TAROT_BLOCKS=0)."""
+    return s if BLOCKS else s.translate(PLAIN)
 
 # palette letter -> xterm-256 color index
 PAL = {
@@ -439,6 +460,7 @@ def ansi(rows):
     for row in rows:
         s, last = [], None
         for ch, fg, bg in row:
+            ch, fg, bg = solid(ch, fg, bg)
             if (fg, bg) != last:
                 s.append(f"\x1b[38;5;{fg}m\x1b[48;5;{bg}m")
                 last = (fg, bg)

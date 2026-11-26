@@ -8,7 +8,7 @@ Each run produces a different video: a new speech, different lore and memory pic
     narrative into a Lore or Memory scene, then cuts back.
   * She explains what she has been doing, thanks people for participating, and ends with
     "questions or a live reading? contact Veyra".
-  * Output: a 1080x1920, 60fps reel (MP4) of about 2:30, plus a transcript you can use as the post caption.
+  * Output: a 540x960 (or --res 1080 / TAROT_VIDEO_RES=1080: 1080x1920), 60fps reel (MP4) of about 2:30, plus a transcript you can use as the post caption.
 
 Reuses what the Veyra project already has (auto-discovered from the current folder):
   * lore files     : anything named *lore* (.md .txt .json .jsonl), or --lore PATH
@@ -34,7 +34,8 @@ CONTACT_NAME = "Veyra"
 CONTACT_LINE = "Send me a message right here on Facebook."
 BRAND = "8b/8b(L)"           # 8-bit / 8 billion / Local
 MODEL_LABEL = "QWEN 8B"
-W, H = 270, 480              # pixel-art canvas, upscaled with nearest-neighbour to 1080x1920
+W, H = 270, 480              # pixel-art canvas, upscaled with nearest-neighbour to the output size
+OUT_RES = int(os.environ.get("TAROT_VIDEO_RES", "540"))   # output width: 540x960 for now, 1080 for 1080x1920
 SR = 44100
 
 # ------------------------------------------------------------------ small utils
@@ -60,9 +61,25 @@ FONT = ImageFont.load_default_imagefont() if hasattr(ImageFont, "load_default_im
 CW = max(1, int(FONT.getlength("M")))     # 6 px
 CH = 11
 
+# The bitmap font only has Latin-1 letters: one curly quote from the model used to crash the whole video
+# ("'latin-1' codec can't encode character '\u2019'"). Smart punctuation becomes plain, the rest is dropped.
+_PLAIN = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201a": ",", "\u201c": '"', "\u201d": '"', "\u2013": "-",
+                        "\u2014": "-", "\u2026": "...", "\u2022": "*", "\u2726": "*", "\u2727": "*", "\u2605": "*",
+                        "\u2192": "->", "\u203a": ">", "\u2039": "<", "\u00a0": " ", "\u2009": " ", "\u200b": ""})
+
+
+def latin1(s):
+    """Text the bitmap font can draw."""
+    return str(s).translate(_PLAIN).encode("latin-1", "ignore").decode("latin-1")
+
+
+def text_len(s):
+    return FONT.getlength(latin1(s))
+
 @lru_cache(maxsize=4096)
 def text_mask(s, scale=1):
-    w = max(1, int(FONT.getlength(s)) + 1)
+    s = latin1(s)
+    w = max(1, int(text_len(s)) + 1)
     m = Image.new("L", (w, CH + 1), 0)
     d = ImageDraw.Draw(m); d.fontmode = "1"
     d.text((0, 0), s, fill=255, font=FONT)
@@ -173,7 +190,7 @@ def repo_snippets(rng, exclude):
     except Exception:
         pass
     try:
-        m = json.load(open("memory.json"))
+        m = json.load(open("memory.json", encoding="utf-8"))
         for c in m.get("channelings", []): add("memory", c, "channelings")
         for card, imgs in m.get("learned", {}).items():
             for im in imgs: add("memory", f"What I learned about {card}: {im}", "learned")
@@ -760,7 +777,7 @@ class Renderer:
         put_text(f, 6, 5, "VEYRA", hexrgb("#ffd36b"))
         put_text(f, 40, 5, "// " + BRAND, hexrgb("#b9a6e8"))
         tag = label
-        x = W - 6 - int(FONT.getlength(tag))
+        x = W - 6 - int(text_len(tag))
         put_text(f, x, 5, tag, hexrgb("#4ff0ff"))
         if int(t * 2) % 2 == 0:
             d.rectangle((x - 8, 8, x - 5, 11), fill=(255, 70, 90))
@@ -805,7 +822,7 @@ class Renderer:
             part = line[:max(0, left)]
             put_text(f, x0 + 9, yy, part, (240, 232, 255))
             if 0 < left < len(line) and int(t * 6) % 2 == 0:
-                cx = x0 + 9 + int(FONT.getlength(part))
+                cx = x0 + 9 + int(text_len(part))
                 d.rectangle((cx + 1, yy + 1, cx + 5, yy + 9), fill=hexrgb("#4ff0ff"))
             left -= len(line) + 1; yy += 13
 
@@ -897,7 +914,7 @@ class Renderer:
             part = line[:left]
             put_text(f, bx0 + 12, yy, part, ink, shadow=None)
             if left < len(line) and int(t * 6) % 2 == 0:
-                x = bx0 + 12 + int(FONT.getlength(part))
+                x = bx0 + 12 + int(text_len(part))
                 d.rectangle((x + 1, yy + 1, x + 5, yy + 9), fill=ink)
             left -= len(line) + 1; yy += 13
         # picture-in-picture Veyra, still talking
@@ -1039,7 +1056,8 @@ def main():
     ap.add_argument("--exclude", nargs="*", default=[], help="skip lore/memory passages containing these words")
     ap.add_argument("--length", type=float, default=150, help="target seconds (default 150 = 2:30)")
     ap.add_argument("--fps", type=int, default=60)
-    ap.add_argument("--res", type=int, default=1080, choices=[540, 720, 1080], help="output width")
+    ap.add_argument("--res", type=int, default=OUT_RES if OUT_RES in (540, 1080) else 540, choices=[540, 1080],
+                    help="output width (default 540, or TAROT_VIDEO_RES)")
     try:
         from video import VIDEOS as _VIDEOS
     except Exception:
@@ -1081,7 +1099,7 @@ def main():
 
     # pick 3 passages, favouring ones not used in earlier videos, mixing lore and memory
     hist_path = os.path.join(a.out, ".veyra_promo_history.json")
-    try: used = set(json.load(open(hist_path)))
+    try: used = set(json.load(open(hist_path, encoding="utf-8")))
     except Exception: used = set()
     hid = lambda s: hashlib.sha1(s["text"].encode()).hexdigest()[:12]
     fresh = [s for s in snippets if hid(s) not in used] or snippets
@@ -1173,11 +1191,11 @@ def main():
     if proc.returncode != 0: sys.exit("ffmpeg failed")
 
     txt = out[:-4] + ".txt"
-    with open(txt, "w") as fh:
+    with open(txt, "w", encoding="utf-8") as fh:
         fh.write(f"Veyra promo  |  seed {seed}  |  {time.strftime('%Y-%m-%d %H:%M')}\n\n{script_txt}\n\n"
                  f"--- suggested post caption ---\nVeyra is growing: now running {MODEL_LABEL}, locally. "
                  f"Questions or want a live reading? Contact {CONTACT_NAME}. #tarot #AI #8bit\n")
-    json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w"))
+    json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w", encoding="utf-8"))
     shutil.rmtree(tmp, ignore_errors=True)
     print(f"\nDone: {out}\n      {txt}")
     return out
