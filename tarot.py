@@ -1764,7 +1764,15 @@ def star_chart(reader):
 
 
 def main():
-    locale.setlocale(locale.LC_ALL, "")
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error:                                  # a locale the system never generated: carry on
+        for k in ("LC_ALL", "LC_CTYPE", "LANG"):
+            os.environ.pop(k, None)
+        try:
+            locale.setlocale(locale.LC_ALL, "")
+        except locale.Error:
+            pass
     arg = (sys.argv[1:] or [""])[0]
     if arg == "model":
         _model_mode()
