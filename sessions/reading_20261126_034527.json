@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 03:45",
+ "question": "A Live Reading",
+ "profile": "sign: Cancer (water)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Ten of Wands",
+   false
+  ],
+  [
+   "Knight of Cups",
+   false
+  ],
+  [
+   "The Hermit",
+   false
+  ],
+  [
+   "Knight of Pentacles",
+   false
+  ],
+  [
+   "The High Priestess",
+   false
+  ],
+  [
+   "The Star",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The cards are gathered with gratitude. What they showed is a lantern, not a cage; walk where it lights.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What connection matters most right now, and why?",
+   "What fear is dressed up as common sense?",
+   "What does the spirit world see that you cannot?",
+   "What have you survived that proves you can handle this?",
+   "How can you align daily work with what matters most?",
+   "What does the High Priestess lead into?"
+  ],
+  "log": [
+   {
+    "question": "What connection matters most right now, and why?",
+    "opener": "She whispers to the cards:",
+    "feeling": "on the edge of something",
+    "passes": 4,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Ten of Wands",
+      false
+     ]
+    ],
+    "text": "The Ten of Wands falls. My grimoire says: In the upcoming weeks, Jessica faces a project at work that requires significant effort and resources but lacks clear guidance or support from her team. She feels overwhelmed by the demands and fears making mistakes if she tries to tackle everything on her own. This scenario mirrors the Ten of Wands. The first card out of the deck names your concern: burden, responsibility, heavy workload, stress. In your life it looks like carrying too much; unwilling to ask for help. Zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What connection matters most right now, and why?\" it answers: Put something down and ask for help. It asks you: What can you put down today?"
+   },
+   {
+    "question": "What fear is dressed up as common sense?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "worried",
+    "passes": 6,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Knight of Cups",
+      false
+     ]
+    ],
+    "text": "The Knight of Cups falls. My grimoire says: In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th. What stands in the way: romance, pushed too far. Idealism, a dreamy quest is what pushes back. Zodiac lens: Cancer's water element resonates with the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What fear is dressed up as common sense?\" it answers: Follow your heart, but check that it is real. It asks you: Is it romance you want, or the feeling of being chosen?"
+   },
+   {
+    "question": "What does the spirit world see that you cannot?",
+    "opener": "Let the next card answer:",
+    "feeling": "worried",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Hermit",
+      false
+     ]
+    ],
+    "text": "The Hermit falls. My grimoire says: A person in a tumultuous divorce, seeking quiet reflection to find their own path. What you cannot see yet: a retreat, a search for your own light. Zodiac lens: Cancer's water element grounds this Major Arcana lesson in soul-searching; upright, this current can move openly. To \"What does the spirit world see that you cannot?\" it answers: Step back and find your own answer in the quiet. It asks you: What answer would you hear if the noise stopped for a week?"
+   },
+   {
+    "question": "What have you survived that proves you can handle this?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "weighed down",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Knight of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Knight of Pentacles falls. My grimoire says: A gardener tending a garden, nurturing seeds with patience and care. What helps you: hard work, routine, reliability, conservatism. Lean on consistency, dependable effort. Zodiac lens: Cancer's water element harmonizes with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What have you survived that proves you can handle this?\" it answers: Stay steady and keep doing the work. It asks you: Is your steadiness serving you, or have you become stuck?"
+   },
+   {
+    "question": "How can you align daily work with what matters most?",
+    "opener": "Let the next card answer:",
+    "feeling": "uneasy",
+    "passes": 2,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The High Priestess",
+      false
+     ]
+    ],
+    "text": "The High Priestess falls. What to do next: wait, watch, and trust what you sense before you act. Zodiac lens: Cancer's water element grounds this Major Arcana lesson in intuition; upright, this current can move openly. To \"How can you align daily work with what matters most?\" it answers: Wait, watch, and trust what you sense before you act. A scene comes to me: dreams, gut knowing, the pull to be still and listen. It asks you: What do you already know but have not admitted?"
+   },
+   {
+    "question": "What does the High Priestess lead into?",
+    "opener": "She whispers to the cards:",
+    "feeling": "pulled by fate",
+    "passes": 8,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "The Star",
+      true
+     ]
+    ],
+    "text": "The Star falls upside down. My grimoire says: In the midst of a long, grueling job search that feels like an endless storm, Jessica finds herself at a crossroads where she must either give up or persevere. The Star shows her that with faith and patience, she can find a glimmer of calm and hope amidst the chaos. Where it settles if nothing shifts: despair, lack of faith, discouragement, fatigue. Steer it: keep faith and let yourself heal. Zodiac lens: Cancer's water element grounds this Major Arcana lesson in despair; reversed, this current turns inward or slows. To \"What does the High Priestess lead into?\" it answers: Despair, discouragement, hope run dry, fatigue; face that, then keep faith and let yourself heal. Picture faith, calm after storm, being open and seen, but stalled or turned inward. It asks you: What small light can you still see ahead?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Cancer's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Knight of Cups falls.",
+  "The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th.",
+  "The Knight of Pentacles falls.",
+  "The High Priestess falls.",
+  "The Star falls upside down.",
+  "The Star shows her that with faith and patience, she can find a glimmer of calm and hope amidst the chaos.",
+  "It asks you: What small light can you still see ahead?"
+ ]
+}

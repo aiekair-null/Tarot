@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 10:28",
+ "question": "A Live Reading",
+ "profile": "sign: Virgo (earth)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Magician",
+   false
+  ],
+  [
+   "Knight of Pentacles",
+   false
+  ],
+  [
+   "Four of Swords",
+   true
+  ],
+  [
+   "The Hierophant",
+   false
+  ],
+  [
+   "Four of Wands",
+   true
+  ],
+  [
+   "Strength",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What do you need to understand about a bond that is on your mind?",
+   "Where are you holding on too tightly?",
+   "What can you not see yet?",
+   "What do you do better than you believe, and how does overcoming past traumas touch it?",
+   "How can you turn feeling at a crossroads into something useful, and how does overcoming past traumas touch it?",
+   "What is the likely shape of the next season?"
+  ],
+  "log": [
+   {
+    "question": "What do you need to understand about a bond that is on your mind?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "curious",
+    "passes": 5,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "The Magician",
+      false
+     ]
+    ],
+    "text": "The Magician falls. The first card out of the deck names your concern: manifestation, resourcefulness, power, inspired action. In your life it looks like realizing you already hold everything needed; will turned into action. Zodiac lens: Virgo's earth element grounds this Major Arcana lesson in manifestation; upright, this current can move openly. To \"What do you need to understand about a bond that is on your mind?\" it answers: Use what is already in your hands and say clearly what you want. It asks you: What resources are you overlooking in your own hands?"
+   },
+   {
+    "question": "Where are you holding on too tightly?",
+    "opener": "She whispers to the cards:",
+    "feeling": "quietly happy",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Knight of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Knight of Pentacles falls. My grimoire says: A gardener tending a garden, nurturing seeds with patience and care. What stands in the way: hard work, pushed too far. Consistency, dependable effort is what pushes back. Zodiac lens: Virgo's earth element resonates with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"Where are you holding on too tightly?\" it answers: Stay steady and keep doing the work. It asks you: Is your steadiness serving you, or have you become stuck?"
+   },
+   {
+    "question": "What can you not see yet?",
+    "opener": "The spirits ask through her:",
+    "feeling": "hopeful",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Four of Swords",
+      true
+     ]
+    ],
+    "text": "The Four of Swords falls upside down. My grimoire says: The team has just completed a grueling project deadline, and amidst the initial relief comes an unsettling feeling of needing to step back from their work before moving on. They've been so focused and intense that they're now craving a period of rest and reflection together. For this card, upside down is relief: exhaustion, being forced to rest, restlessness. Zodiac lens: Virgo's earth element challenges the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"What can you not see yet?\" it answers: Rest before you act again. Picture the weight lifting from much-needed rest, meditation. It asks you: What would real rest look like?"
+   },
+   {
+    "question": "What do you do better than you believe, and how does overcoming past traumas touch it?",
+    "opener": "Let the next card answer:",
+    "feeling": "lighter than before",
+    "passes": 4,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Hierophant",
+      false
+     ]
+    ],
+    "text": "The Hierophant falls. What helps you: spiritual wisdom, tradition, institutions, mentorship. Lean on a belief system, a teacher, asking what you were taught and still hold. Zodiac lens: Virgo's earth element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly. To \"What do you do better than you believe, and how does overcoming past traumas touch it?\" it answers: Seek good counsel and the proven path. It asks you: Which inherited rule are you following without having chosen it?"
+   },
+   {
+    "question": "How can you turn feeling at a crossroads into something useful, and how does overcoming past traumas touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "at a crossroads",
+    "passes": 9,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Four of Wands",
+      true
+     ]
+    ],
+    "text": "The Four of Wands falls upside down. My grimoire says: .. What to do next: watch for tense home life; then celebrate and honor what has been built. Zodiac lens: Virgo's earth element meets the Fire (action, passion) current of Wands; reversed, this current turns inward or slows. To \"How can you turn feeling at a crossroads into something useful, and how does overcoming past traumas touch it?\" it answers: Tension at home, a canceled celebration, instability; face that, then celebrate and honor what has been built. Picture harmony, belonging, relief, but stalled or turned inward. It asks you: What are you ready to celebrate?"
+   },
+   {
+    "question": "What is the likely shape of the next season?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "pulled by fate",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Strength",
+      true
+     ]
+    ],
+    "text": "Strength falls upside down. My grimoire says: .. Where it settles if nothing shifts: self-doubt, weakness, raw emotion, insecurity. Steer it: meet it with patience and gentle courage. Zodiac lens: Virgo's earth element grounds this Major Arcana lesson in self-doubt; reversed, this current turns inward or slows. To \"What is the likely shape of the next season?\" it answers: Self-doubt, raw emotion spilling, burnout from suppressing; face that, then meet it with patience and gentle courage. Picture courage that is gentle; taming fear and anger, but stalled or turned inward. It asks you: Where would gentleness succeed where force has failed?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Knight of Pentacles falls.",
+  "The Four of Swords falls upside down.",
+  "It asks you: Which inherited rule are you following without having chosen it?",
+  "The Four of Wands falls upside down.",
+  "Zodiac lens: Virgo's earth element meets the Fire (action, passion) current of Wands; reversed, this current turns inward or slows.",
+  "It asks you: What are you ready to celebrate?",
+  "Strength falls upside down.",
+  "It asks you: Where would gentleness succeed where force has failed?"
+ ]
+}

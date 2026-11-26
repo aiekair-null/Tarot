@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 05:29",
+ "question": "A Live Reading",
+ "profile": "sign: Leo (fire)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Cups",
+   true
+  ],
+  [
+   "The Sun",
+   true
+  ],
+  [
+   "Four of Pentacles",
+   false
+  ],
+  [
+   "Three of Cups",
+   false
+  ],
+  [
+   "Ace of Swords",
+   false
+  ],
+  [
+   "Seven of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What do you need to understand about a bond that is on your mind?",
+   "What old belief about money or worth is still in charge, and how does overcoming past traumas touch it?",
+   "What is happening beneath the surface of this?",
+   "What do you do better than you believe, and how does overcoming past traumas touch it?",
+   "How can you grow through this rather than around it?",
+   "What is the likely shape of the next season?"
+  ],
+  "log": [
+   {
+    "question": "What do you need to understand about a bond that is on your mind?",
+    "opener": "Let the next card answer:",
+    "feeling": "unsettled",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Four of Cups",
+      true
+     ]
+    ],
+    "text": "The Four of Cups falls upside down. My grimoire says: A messy office party where Jessica feels left out and struggles to find a place within her team. For this card, upside down is relief: awakening, accepting the offered cup. Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows. To \"What do you need to understand about a bond that is on your mind?\" it answers: Look up and notice what is being offered. Picture the weight lifting from contemplation, numbness, a sulk. It asks you: What offer have you not looked at because you were sulking?"
+   },
+   {
+    "question": "What old belief about money or worth is still in charge, and how does overcoming past traumas touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "longing",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The Sun",
+      true
+     ]
+    ],
+    "text": "The Sun falls upside down. What stands in the way: a dimmed joy, temporary sadness, over-optimism. Zodiac lens: Leo's fire element grounds this Major Arcana lesson in temporary sadness; reversed, this current turns inward or slows. To \"What old belief about money or worth is still in charge, and how does overcoming past traumas touch it?\" it answers: A dimmed joy, temporary sadness, over-optimism; face that, then be open, be seen, enjoy it. Picture vitality, confidence, being truly seen, but stalled or turned inward. It asks you: What would feel like pure daylight for you right now?"
+   },
+   {
+    "question": "What is happening beneath the surface of this?",
+    "opener": "Let the next card answer:",
+    "feeling": "held back",
+    "passes": 4,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Four of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Four of Pentacles falls. My grimoire says: A business meeting where a team member holds onto old contracts, causing delays and misunderstandings. What you cannot see yet: the grip of security. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What is happening beneath the surface of this?\" it answers: Protect what matters, but do not grip too tight. It asks you: What are you gripping, and what is it protecting you from?"
+   },
+   {
+    "question": "What do you do better than you believe, and how does overcoming past traumas touch it?",
+    "opener": "Let the next card answer:",
+    "feeling": "blocked",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Three of Cups",
+      false
+     ]
+    ],
+    "text": "The Three of Cups falls. My grimoire says: In the midst of a challenging project at work, Jessica leaned on her closest friends for support and celebrated their collective successes with heartfelt gatherings, finding solace in the camaraderie that brought them all closer. What helps you: celebration, friendship, sisterhood, community. Lean on community, joy with others. Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What do you do better than you believe, and how does overcoming past traumas touch it?\" it answers: Lean on friends and celebrate together. It asks you: Who nourishes you, and who drains you?"
+   },
+   {
+    "question": "How can you grow through this rather than around it?",
+    "opener": "She whispers to the cards:",
+    "feeling": "emotional",
+    "passes": 2,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Ace of Swords",
+      false
+     ]
+    ],
+    "text": "The Ace of Swords falls. My grimoire says: A team leader who needs to take a step back from their high-stress project, feeling overwhelmed with tasks. What to do next: say the true thing plainly. Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"How can you grow through this rather than around it?\" it answers: Say the true thing plainly. Here is how it might look this month: mental clarity cutting through fog. It asks you: What truth is ready to be said plainly?"
+   },
+   {
+    "question": "What is the likely shape of the next season?",
+    "opener": "She whispers to the cards:",
+    "feeling": "hopeful",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Seven of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and. Where it settles: slow, steady growth that pays off. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What is the likely shape of the next season?\" it answers: Be patient and assess your investment. Picture it: assessing the harvest. It asks you: Is the effort rewarding you, or is it time to change fields?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows.",
+  "The Sun falls upside down.",
+  "The Four of Pentacles falls.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly.",
+  "The Seven of Pentacles falls.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly."
+ ]
+}

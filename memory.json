@@ -11,78 +11,79 @@
   "card_counts": {
     "The Fool": 4,
     "Queen of Wands": 3,
-    "Ace of Wands": 3,
+    "Ace of Wands": 4,
     "Justice": 4,
     "Ten of Cups": 2,
     "Five of Swords": 4,
-    "Four of Wands": 5,
-    "Strength": 3,
+    "Four of Wands": 6,
+    "Strength": 4,
     "King of Swords": 5,
     "Five of Cups": 3,
-    "Page of Cups": 3,
-    "The Hierophant": 2,
-    "Knight of Cups": 4,
-    "Four of Pentacles": 4,
+    "Page of Cups": 4,
+    "The Hierophant": 4,
+    "Knight of Cups": 5,
+    "Four of Pentacles": 7,
     "Nine of Cups": 4,
     "Six of Swords": 2,
-    "Eight of Pentacles": 1,
+    "Eight of Pentacles": 2,
     "Five of Wands": 6,
     "Three of Wands": 3,
-    "Knight of Pentacles": 4,
-    "Ace of Swords": 4,
+    "Knight of Pentacles": 7,
+    "Ace of Swords": 5,
     "Death": 2,
-    "Ten of Wands": 3,
+    "Ten of Wands": 4,
     "Ten of Swords": 2,
     "Six of Cups": 1,
     "Ace of Pentacles": 4,
-    "Four of Cups": 5,
-    "The Lovers": 2,
+    "Four of Cups": 8,
+    "The Lovers": 3,
     "Wheel of Fortune": 3,
     "Nine of Swords": 5,
     "Two of Pentacles": 3,
     "Seven of Wands": 1,
-    "King of Cups": 2,
-    "The Emperor": 5,
+    "King of Cups": 3,
+    "The Emperor": 6,
     "Knight of Wands": 4,
     "Seven of Swords": 4,
     "Three of Swords": 3,
     "Eight of Swords": 3,
-    "Three of Cups": 1,
+    "Three of Cups": 3,
     "Five of Pentacles": 2,
-    "The Sun": 2,
+    "The Sun": 3,
     "The Chariot": 3,
     "Eight of Cups": 2,
-    "Four of Swords": 4,
+    "Four of Swords": 6,
     "Queen of Pentacles": 2,
-    "Temperance": 2,
-    "Seven of Pentacles": 5,
-    "Nine of Wands": 4,
-    "King of Pentacles": 3,
+    "Temperance": 3,
+    "Seven of Pentacles": 6,
+    "Nine of Wands": 5,
+    "King of Pentacles": 4,
     "The Hanged Man": 4,
-    "Page of Wands": 4,
-    "The Tower": 2,
+    "Page of Wands": 5,
+    "The Tower": 3,
     "Three of Pentacles": 2,
     "Two of Wands": 4,
-    "Nine of Pentacles": 3,
-    "The Star": 2,
+    "Nine of Pentacles": 4,
+    "The Star": 3,
     "Ten of Pentacles": 1,
-    "The Empress": 1,
+    "The Empress": 3,
     "Page of Pentacles": 2,
     "Six of Pentacles": 3,
     "Queen of Swords": 2,
     "Queen of Cups": 3,
-    "The High Priestess": 2,
-    "The Hermit": 3,
+    "The High Priestess": 3,
+    "The Hermit": 4,
     "Two of Swords": 2,
     "The Devil": 2,
-    "Six of Wands": 2,
+    "Six of Wands": 3,
     "Ace of Cups": 3,
-    "King of Wands": 4,
+    "King of Wands": 5,
     "The Moon": 2,
-    "The Magician": 1,
-    "Eight of Wands": 1,
-    "The World": 1,
-    "Two of Cups": 1
+    "The Magician": 2,
+    "Eight of Wands": 2,
+    "The World": 2,
+    "Two of Cups": 1,
+    "Judgement": 1
   },
   "readings": [
     {
@@ -513,14 +514,96 @@
         "King of Swords (reversed)"
       ],
       "summary": "<think> Okay, let's tackle this query step by step. The user wants a tarot reading in the form of Veyra, following specific instructions and structure. First, I need to understand all the elements pro"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Ten of Wands",
+        "Knight of Cups",
+        "The Hermit",
+        "Knight of Pentacles",
+        "The High Priestess",
+        "The Star (reversed)"
+      ],
+      "summary": "The Ten of Wands falls. My grimoire says: In the upcoming weeks, Jessica faces a project at work that requires significant effort and resources but lacks clear guidance or support from her team. She f"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "for lost people",
+      "cards": [
+        "The World (reversed)",
+        "The Tower (reversed)",
+        "The Hierophant",
+        "Three of Cups",
+        "Page of Wands (reversed)",
+        "Knight of Pentacles",
+        "Four of Cups",
+        "Four of Pentacles",
+        "The Empress",
+        "King of Cups"
+      ],
+      "summary": "<think> Okay, let's tackle this query step by step. The user wants me to act as Veyra, a tarot reader with specific skills and tenets. The question is \"for lost people,\" with the querent being an olde"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Four of Cups (reversed)",
+        "The Sun (reversed)",
+        "Four of Pentacles",
+        "Three of Cups",
+        "Ace of Swords",
+        "Seven of Pentacles"
+      ],
+      "summary": "The Four of Cups falls upside down. My grimoire says: A messy office party where Jessica feels left out and struggles to find a place within her team. For this card, upside down is relief: awakening, "
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "The Magician",
+        "Knight of Pentacles",
+        "Four of Swords (reversed)",
+        "The Hierophant",
+        "Four of Wands (reversed)",
+        "Strength (reversed)"
+      ],
+      "summary": "The Magician falls. The first card out of the deck names your concern: manifestation, resourcefulness, power, inspired action. In your life it looks like realizing you already hold everything needed; "
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Eight of Pentacles (reversed)",
+        "Nine of Wands",
+        "Six of Wands (reversed)",
+        "King of Wands",
+        "Eight of Wands",
+        "The Lovers",
+        "The Empress"
+      ],
+      "summary": "The Eight of Pentacles falls upside down. My grimoire says: Reversed: Despite years of dedication, the artist feels undervalued and unappreciated by their community for their hard work in honing their"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "for romance",
+      "cards": [
+        "King of Pentacles",
+        "Ace of Wands",
+        "Judgement",
+        "Four of Cups",
+        "Four of Swords (reversed)",
+        "Four of Pentacles (reversed)",
+        "The Emperor",
+        "Page of Cups (reversed)",
+        "Temperance",
+        "Nine of Pentacles"
+      ],
+      "summary": "<think> Okay, let's break down this user query. They want me to act as Veyra, a tarot reader with specific skills and memory. The user provided an omen: \"Fireflies rehearse a constellation.\" There are"
     }
   ],
   "channelings": [
-    "Fireflies rehearse a constellation. The Seven of Swords leans close and asks: Where are you being less than fully honest, with them or yourself? An older message stirs again: A candle burns hardest ju",
-    "The path forks where the querent hesitated last. Ace of Swords guides, seeking light and truth to heal emotional scars.",
-    "The Ace of Wands (reversed) beckons Jessica to let go, while the Knight of Pentacles guides her toward essential truths. Amidst stormy waters and hidden depths, the Sun reveals light that tempers disc",
-    "The mirror waits behind the mirror, reflecting old wounds and unspoken truths. In your inner journey, find peace in letting go of past burdens to uncover new strength and clarity.",
-    "In the whisper of Green magic, your name is carved low on the oldest tree\u2014embrace it as a reminder to find peace and let old stories end.",
     "A lantern lit at noon for someone still arriving. My attention keeps returning to review previous decisions. The Four of Cups has found you twice now. It is not finished with you. The spirits say no m",
     "The Hanged Man shows you the weight of past wounds, The Chariot urges forward with resolve. Salt on windowsills\u2014embrace what whispers softly, strength in solitude.",
     "Moss grows on the north side of every unspoken thing. Again the Ace of Wands: twice it has come. Listen to it this time. Hold it until a card makes sense of it.",
@@ -535,14 +618,19 @@
     "Roots speak in a language of slow pressure. The Knight of Wands has found you three times now. It is not finished with you. In my grimoire, beside the King of Swords, I once wrote: .. Hold it until a ",
     "Rain writes the same letter on every roof. Again the Wheel of Fortune: three times it has come. Listen to it this time. In my grimoire, beside The Hanged Man, I once wrote: A person is suspended upsid",
     "Winter stores what summer refused to count. The Five of Wands has found you six times now. It is not finished with you. I remember this about the Eight of Pentacles: Reversed: Despite years of dedicat",
-    "Moss grows on the north side of every unspoken thing. The King of Swords has found you four times now. It is not finished with you. When Three of Swords and Two of Swords meet, Indecision is compounde"
+    "Moss grows on the north side of every unspoken thing. The King of Swords has found you four times now. It is not finished with you. When Three of Swords and Two of Swords meet, Indecision is compounde",
+    "<think>\nOkay, the user wants me to process this query as Veyra. Let me break down what's needed here.\n\nFirst, they provided a specific omen: \"An old road remembers its travelers by their weight.\" That",
+    "<think>\nOkay, let's tackle this. The user wants a message based on the given omen and threads, using specific skills: Energetic boundaries mastery, Interpolation, Green magic. The omen is \"A name carv",
+    "<think>\nOkay, let's tackle this query. The user wants me to act as Veyra, a tarot reader with specific skills and memory. They provided an omen: \"Fireflies rehearse a constellation.\" There are threads",
+    "The deepest water holds still to be seen. The Five of Wands has found you six times now. It is not finished with you. Remember this when the cards turn.",
+    "Moss grows on the north side of every unspoken thing. I have seen Five of Pentacles and Four of Swords together before. Both cards point towards the need for rest and support in different contexts, re"
   ],
   "gen": {
-    "rate": 4.89,
-    "delay": 155.27,
+    "rate": 3.33,
+    "delay": 202.05,
     "falling_tokens": 751.2,
     "three_tokens": 687.52,
-    "celtic_tokens": 1134.6
+    "celtic_tokens": 1167.5
   },
   "learned": {
     "The Fool": [
@@ -861,6 +949,21 @@
         "King of Swords (reversed)"
       ],
       "said": "yes"
+    },
+    {
+      "cards": [
+        "The World (reversed)",
+        "The Tower (reversed)",
+        "The Hierophant",
+        "Three of Cups",
+        "Page of Wands (reversed)",
+        "Knight of Pentacles",
+        "Four of Cups",
+        "Four of Pentacles",
+        "The Empress",
+        "King of Cups"
+      ],
+      "said": "yes"
     }
   ],
   "lessons": [
@@ -872,5 +975,5 @@
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
   ],
-  "next_zodiac_index": 6
+  "next_zodiac_index": 10
 }

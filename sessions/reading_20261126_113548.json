@@ -1,0 +1,206 @@
+{
+ "date": "2026-11-26 11:35",
+ "question": "A Live Reading",
+ "profile": "sign: Libra (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Eight of Pentacles",
+   true
+  ],
+  [
+   "Nine of Wands",
+   false
+  ],
+  [
+   "Six of Wands",
+   true
+  ],
+  [
+   "King of Wands",
+   false
+  ],
+  [
+   "Eight of Wands",
+   false
+  ],
+  [
+   "The Lovers",
+   false
+  ],
+  [
+   "The Empress",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The spirits have said their piece. Carry what helps; leave the rest on the cloth.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    5,
+    6
+   ]
+  ],
+  "questions": [
+   "What is the real wish underneath the worry?",
+   "What fear is dressed up as common sense?",
+   "What does the spirit world see that you cannot, and how does overcoming past traumas touch it?",
+   "What strength have you forgotten you have?",
+   "What is the next right step?",
+   "Where is this heading if you keep walking this path?"
+  ],
+  "log": [
+   {
+    "question": "What is the real wish underneath the worry?",
+    "opener": "She whispers to the cards:",
+    "feeling": "searching",
+    "passes": 2,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Eight of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Eight of Pentacles falls upside down. My grimoire says: Reversed: Despite years of dedication, the artist feels undervalued and unappreciated by their community for their hard work in honing their craft. The first card fell upside down: your concern is tangled in perfectionism, dull routine, shoddy work. Zodiac lens: Libra's air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"What is the real wish underneath the worry?\" it answers: Perfectionism, dull routine, shoddy work; face that, then keep practicing and put in the work. Picture devotion to improvement, but stalled or turned inward. It asks you: What skill would pay off if you gave it another year?"
+   },
+   {
+    "question": "What fear is dressed up as common sense?",
+    "opener": "She whispers to the cards:",
+    "feeling": "focused on money",
+    "passes": 6,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Nine of Wands",
+      false
+     ]
+    ],
+    "text": "The Nine of Wands falls. What stands in the way: resilience, pushed too far. Resilience, battle fatigue, hypervigilance is what pushes back. Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What fear is dressed up as common sense?\" it answers: Keep going; you are nearly there. It asks you: Where are you armoring against something that is not attacking?"
+   },
+   {
+    "question": "What does the spirit world see that you cannot, and how does overcoming past traumas touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "focused on money",
+    "passes": 4,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Six of Wands",
+      true
+     ]
+    ],
+    "text": "The Six of Wands falls upside down. My grimoire says: Reversed Six of Wands: Facing a recent professional setback, you feel the weight of your achievements slipping away as peers and superiors start to overlook your contributions. Hidden from you, and turned inward: pride before a fall, no recognition, fear of exposure. Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; reversed, this current turns inward or slows. To \"What does the spirit world see that you cannot, and how does overcoming past traumas touch it?\" it answers: Pride before a fall, no recognition, fear of exposure; face that, then step forward and accept the recognition. Picture confidence earned, the victory lap, but stalled or turned inward. It asks you: What victory have you not allowed yourself to feel?"
+   },
+   {
+    "question": "What strength have you forgotten you have?",
+    "opener": "Let the next card answer:",
+    "feeling": "impatient",
+    "passes": 2,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "King of Wands",
+      false
+     ]
+    ],
+    "text": "The King of Wands falls. What helps you: natural leader, vision, entrepreneur, honor. Lean on leadership with heart, honor. Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What strength have you forgotten you have?\" it answers: Lead with vision and take the first step. It asks you: What vision are you willing to stand behind?"
+   },
+   {
+    "question": "What is the next right step?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "restless",
+    "passes": 4,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Eight of Wands",
+      false
+     ]
+    ],
+    "text": "The Eight of Wands falls. My grimoire says: Reversed Eight of Wands: A recent project at work felt stalled, and the constant flow of new ideas was overwhelming. It took a week to prioritize tasks and regain momentum before progress resumed. What to do next: move fast and answer quickly. Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What is the next right step?\" it answers: Move fast and answer quickly. A scene comes to me: momentum, ideas moving fast. It asks you: What is moving faster than you can handle?"
+   },
+   {
+    "question": "Where is this heading if you keep walking this path?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "restless",
+    "passes": 6,
+    "slot": 5,
+    "idx": [
+     5,
+     6
+    ],
+    "cards": [
+     [
+      "The Lovers",
+      false
+     ],
+     [
+      "The Empress",
+      false
+     ]
+    ],
+    "text": "The Lovers falls. My grimoire says: Reversed: After months of uncertainty, you finally confront your long-held fear of commitment and realize it's not about the love itself but aligning that love with your deeply held values. Where it settles: alignment and a union that asks for honesty. Zodiac lens: Libra's air element grounds this Major Arcana lesson in love; upright, this current can move openly. To \"Where is this heading if you keep walking this path?\" it answers: Choose with your values, not only your wants. A scene comes to me: integrating head and heart; choosing who you will be. It asks you: Which choice would you make if it matched who you really are? The Empress falls. My grimoire says: When the Empress appears in your life, nurturing a small community garden with your own hands is an excellent scenario to explore her energies. Where it settles: growth, comfort, something that blooms. Zodiac lens: Libra's air element grounds this Major Arcana lesson in abundance; upright, this current can move openly. Picture it: self-nurture, connection with body and nature. It asks you: Where do you need to be mothered, and where are you over-mothering? Two cards fell together: The Lovers and The Empress. They are one answer. Two Major Arcana side by side: fate speaking twice, so this is a turning point, not a passing mood. Together: love meets abundance. Picture it: integrating head and heart; choosing who you will be, while self-nurture, connection with body and nature. Their shared counsel: choose with your values, not only your wants, and nurture it and let it grow at its own pace. Through the zodiac lens: Libra's air element grounds this Major Arcana lesson in love; upright, this current can move openly. Libra's air element grounds this Major Arcana lesson in abundance; upright, this current can move openly."
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5,
+    6
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Eight of Pentacles falls upside down.",
+  "Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Six of Wands falls upside down.",
+  "Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; reversed, this current turns inward or slows.",
+  "Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Eight of Wands falls.",
+  "Zodiac lens: Libra's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "Two cards fell together: The Lovers and The Empress."
+ ]
+}
