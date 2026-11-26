@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 15:01",
+ "question": "A Live Reading",
+ "profile": "sign: Sagittarius (fire)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Ten of Pentacles",
+   false
+  ],
+  [
+   "The Hierophant",
+   false
+  ],
+  [
+   "The Hanged Man",
+   false
+  ],
+  [
+   "Knight of Wands",
+   false
+  ],
+  [
+   "The Hermit",
+   false
+  ],
+  [
+   "The Magician",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Which part of life is calling loudest at the moment?",
+   "What stands between you and what you want, and how does letting go touch it?",
+   "What is happening beneath the surface of this?",
+   "What support is already within reach?",
+   "How can you move forward without forcing it, and how does letting go touch it?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "Which part of life is calling loudest at the moment?",
+    "opener": "She whispers to the cards:",
+    "feeling": "searching",
+    "passes": 4,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Ten of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Ten of Pentacles falls. The first card out of the deck names your concern: wealth, family legacy, long-term security, tradition. In your life it looks like roots, belonging. Zodiac lens: Sagittarius' fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"Which part of life is calling loudest at the moment?\" it answers: Think long-term and build what lasts. It asks you: What legacy are you building, and is it yours to build?"
+   },
+   {
+    "question": "What stands between you and what you want, and how does letting go touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "quietly happy",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The Hierophant",
+      false
+     ]
+    ],
+    "text": "The Hierophant falls. What stands in the way: spiritual wisdom, pushed too far. A belief system, a teacher, asking what you were taught and still hold is what pushes back. Zodiac lens: Sagittarius' fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly. To \"What stands between you and what you want, and how does letting go touch it?\" it answers: Seek good counsel and the proven path. It asks you: Which inherited rule are you following without having chosen it?"
+   },
+   {
+    "question": "What is happening beneath the surface of this?",
+    "opener": "Card, tell us:",
+    "feeling": "hopeful",
+    "passes": 8,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Hanged Man",
+      false
+     ]
+    ],
+    "text": "The Hanged Man falls. My grimoire says: A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward. What you cannot see yet: surrender, suspended animation before insight. Zodiac lens: Sagittarius' fire element grounds this Major Arcana lesson in surrender; upright, this current can move openly. To \"What is happening beneath the surface of this?\" it answers: Pause, let go of control, look from a new angle. It asks you: What shifts if you looked at this upside down?"
+   },
+   {
+    "question": "What support is already within reach?",
+    "opener": "Let the next card answer:",
+    "feeling": "at a crossroads",
+    "passes": 3,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Knight of Wands",
+      false
+     ]
+    ],
+    "text": "The Knight of Wands falls. My grimoire says: Upright: A sudden opportunity presents itself in a competitive job interview, offering the chance to showcase her passion and drive. She feels an urgent need to seize this moment before it slips away. What helps you: action, adventure, impulsiveness, high energy. Lean on restless energy, craving adventure. Zodiac lens: Sagittarius' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What support is already within reach?\" it answers: Act boldly but do not burn out. It asks you: Where are you rushing because you are afraid to stand still?"
+   },
+   {
+    "question": "How can you move forward without forcing it, and how does letting go touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "at a crossroads",
+    "passes": 3,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Hermit",
+      false
+     ]
+    ],
+    "text": "The Hermit falls. My grimoire says: A person in a tumultuous divorce, seeking quiet reflection to find their own path. What to do next: step back and find your own answer in the quiet. Zodiac lens: Sagittarius' fire element grounds this Major Arcana lesson in soul-searching; upright, this current can move openly. To \"How can you move forward without forcing it, and how does letting go touch it?\" it answers: Step back and find your own answer in the quiet. In plain life, that is a retreat, a search for your own light. It asks you: What answer would you hear if the noise stopped for a week?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "The spirits ask through her:",
+    "feeling": "pulled by fate",
+    "passes": 3,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "The Magician",
+      false
+     ]
+    ],
+    "text": "The Magician falls. Where it settles: you make it happen through focused action. Zodiac lens: Sagittarius' fire element grounds this Major Arcana lesson in manifestation; upright, this current can move openly. To \"What needs healing so this can move?\" it answers: Use what is already in your hands and say clearly what you want. Picture it: realizing you already hold everything needed; will turned into action. It asks you: What resources are you overlooking in your own hands?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Ten of Pentacles falls.",
+  "Zodiac lens: Sagittarius' fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly.",
+  "Zodiac lens: Sagittarius' fire element grounds this Major Arcana lesson in spiritual wisdom; upright, this current can move openly.",
+  "The Knight of Wands falls.",
+  "Zodiac lens: Sagittarius' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: Where are you rushing because you are afraid to stand still?",
+  "It asks you: What answer would you hear if the noise stopped for a week?",
+  "It asks you: What resources are you overlooking in your own hands?"
+ ]
+}

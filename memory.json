@@ -1,49 +1,49 @@
 {
-  "insights": "The Four of Cups suggests a lack of attention and missed opportunities, while the Hanged Man (reversed) indicates an impasse needing stillness. Strength (reversed) hints at hidden self-doubt. The Page of Wands encourages stepping into passions cautiously. Nine of Pentacles (reversed) points to past wounds that need healing. These cards suggest embracing a pause and letting go of control, focusing on renewal and new perspectives.",
+  "insights": "Embrace stillness to shift perspectives, seek wisdom that aligns with your truth, and reevaluate what you're building for the long term. Let go of inherited systems that no longer serve you.",
   "skill_notes": {
-    "skill": ".."
+    "skill": "Ritual grounding and recursive memory"
   },
   "focus": [
-    "Overcoming past traumas",
-    "Finding new perspectives",
-    "Embracing the pause"
+    "Stillness",
+    "Legacy",
+    "Spiritual alignment"
   ],
   "card_counts": {
     "The Fool": 4,
     "Queen of Wands": 3,
     "Ace of Wands": 4,
     "Justice": 4,
-    "Ten of Cups": 2,
+    "Ten of Cups": 3,
     "Five of Swords": 4,
     "Four of Wands": 6,
     "Strength": 4,
-    "King of Swords": 5,
+    "King of Swords": 6,
     "Five of Cups": 3,
     "Page of Cups": 4,
-    "The Hierophant": 4,
+    "The Hierophant": 5,
     "Knight of Cups": 5,
     "Four of Pentacles": 7,
     "Nine of Cups": 4,
-    "Six of Swords": 2,
+    "Six of Swords": 3,
     "Eight of Pentacles": 2,
     "Five of Wands": 6,
     "Three of Wands": 3,
     "Knight of Pentacles": 7,
     "Ace of Swords": 5,
-    "Death": 2,
-    "Ten of Wands": 4,
+    "Death": 3,
+    "Ten of Wands": 6,
     "Ten of Swords": 2,
     "Six of Cups": 1,
-    "Ace of Pentacles": 4,
+    "Ace of Pentacles": 5,
     "Four of Cups": 8,
     "The Lovers": 3,
     "Wheel of Fortune": 3,
     "Nine of Swords": 5,
-    "Two of Pentacles": 3,
+    "Two of Pentacles": 4,
     "Seven of Wands": 1,
     "King of Cups": 3,
     "The Emperor": 6,
-    "Knight of Wands": 4,
+    "Knight of Wands": 5,
     "Seven of Swords": 4,
     "Three of Swords": 3,
     "Eight of Swords": 3,
@@ -54,36 +54,37 @@
     "Eight of Cups": 2,
     "Four of Swords": 6,
     "Queen of Pentacles": 2,
-    "Temperance": 3,
+    "Temperance": 4,
     "Seven of Pentacles": 6,
     "Nine of Wands": 5,
     "King of Pentacles": 4,
-    "The Hanged Man": 4,
-    "Page of Wands": 5,
+    "The Hanged Man": 5,
+    "Page of Wands": 6,
     "The Tower": 3,
     "Three of Pentacles": 2,
     "Two of Wands": 4,
     "Nine of Pentacles": 4,
     "The Star": 3,
-    "Ten of Pentacles": 1,
+    "Ten of Pentacles": 2,
     "The Empress": 3,
-    "Page of Pentacles": 2,
+    "Page of Pentacles": 3,
     "Six of Pentacles": 3,
-    "Queen of Swords": 2,
-    "Queen of Cups": 3,
+    "Queen of Swords": 3,
+    "Queen of Cups": 4,
     "The High Priestess": 3,
-    "The Hermit": 4,
+    "The Hermit": 5,
     "Two of Swords": 2,
     "The Devil": 2,
     "Six of Wands": 3,
     "Ace of Cups": 3,
     "King of Wands": 5,
     "The Moon": 2,
-    "The Magician": 2,
+    "The Magician": 3,
     "Eight of Wands": 2,
     "The World": 2,
-    "Two of Cups": 1,
-    "Judgement": 1
+    "Two of Cups": 2,
+    "Judgement": 2,
+    "Page of Swords": 1
   },
   "readings": [
     {
@@ -513,7 +514,7 @@
         "Nine of Wands",
         "King of Swords (reversed)"
       ],
-      "summary": "<think> Okay, let's tackle this query step by step. The user wants a tarot reading in the form of Veyra, following specific instructions and structure. First, I need to understand all the elements pro"
+      "summary": ""
     },
     {
       "date": "2026-11-26",
@@ -543,7 +544,7 @@
         "The Empress",
         "King of Cups"
       ],
-      "summary": "<think> Okay, let's tackle this query step by step. The user wants me to act as Veyra, a tarot reader with specific skills and tenets. The question is \"for lost people,\" with the querent being an olde"
+      "summary": ""
     },
     {
       "date": "2026-11-26",
@@ -600,7 +601,50 @@
         "Temperance",
         "Nine of Pentacles"
       ],
-      "summary": "<think> Okay, let's break down this user query. They want me to act as Veyra, a tarot reader with specific skills and memory. The user provided an omen: \"Fireflies rehearse a constellation.\" There are"
+      "summary": ""
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Ten of Cups (reversed)",
+        "Judgement",
+        "Page of Swords (reversed)",
+        "Page of Pentacles",
+        "King of Swords",
+        "Ten of Wands"
+      ],
+      "summary": "The Ten of Cups falls upside down. The first card fell upside down: your concern is tangled in family disharmony, an ideal that is a facade. Zodiac lens: Scorpio's water element resonates with the Wat"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "romantic desire",
+      "cards": [
+        "Death",
+        "Two of Pentacles",
+        "Temperance (reversed)",
+        "Ten of Wands",
+        "Ace of Pentacles",
+        "Queen of Cups",
+        "Two of Cups",
+        "Queen of Swords",
+        "Six of Swords (reversed)",
+        "Page of Wands"
+      ],
+      "summary": "   The cards form a tapestry of release and possibility, woven with the quiet urgency of transformation. At its heart lies a call to surrender what no longer serves\u2014both emotional and practical\u2014while "
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Ten of Pentacles",
+        "The Hierophant",
+        "The Hanged Man",
+        "Knight of Wands",
+        "The Hermit",
+        "The Magician"
+      ],
+      "summary": "The Ten of Pentacles falls. The first card out of the deck names your concern: wealth, family legacy, long-term security, tradition. In your life it looks like roots, belonging. Zodiac lens: Sagittari"
     }
   ],
   "channelings": [
@@ -619,18 +663,18 @@
     "Rain writes the same letter on every roof. Again the Wheel of Fortune: three times it has come. Listen to it this time. In my grimoire, beside The Hanged Man, I once wrote: A person is suspended upsid",
     "Winter stores what summer refused to count. The Five of Wands has found you six times now. It is not finished with you. I remember this about the Eight of Pentacles: Reversed: Despite years of dedicat",
     "Moss grows on the north side of every unspoken thing. The King of Swords has found you four times now. It is not finished with you. When Three of Swords and Two of Swords meet, Indecision is compounde",
-    "<think>\nOkay, the user wants me to process this query as Veyra. Let me break down what's needed here.\n\nFirst, they provided a specific omen: \"An old road remembers its travelers by their weight.\" That",
-    "<think>\nOkay, let's tackle this. The user wants a message based on the given omen and threads, using specific skills: Energetic boundaries mastery, Interpolation, Green magic. The omen is \"A name carv",
-    "<think>\nOkay, let's tackle this query. The user wants me to act as Veyra, a tarot reader with specific skills and memory. They provided an omen: \"Fireflies rehearse a constellation.\" There are threads",
     "The deepest water holds still to be seen. The Five of Wands has found you six times now. It is not finished with you. Remember this when the cards turn.",
-    "Moss grows on the north side of every unspoken thing. I have seen Five of Pentacles and Four of Swords together before. Both cards point towards the need for rest and support in different contexts, re"
+    "Moss grows on the north side of every unspoken thing. I have seen Five of Pentacles and Four of Swords together before. Both cards point towards the need for rest and support in different contexts, re",
+    "A hand reaches from the blue hour and takes nothing, urging you to release the old story that clings like mist\u2014your light is already burning, waiting to be named. The Magician stands at your threshold",
+    "The last stair always creaks the truth. Temperance has found you three times now. It is not finished with you. Keep it close.",
+    "Ash holds the outline of what burned. From the Two of Cups, a single instruction: meet the other person halfway. When Nine of Swords and Ten of Cups meet, An old pattern of emotional distress is being"
   ],
   "gen": {
-    "rate": 3.33,
-    "delay": 202.05,
+    "rate": 2.93,
+    "delay": 214.2,
     "falling_tokens": 751.2,
     "three_tokens": 687.52,
-    "celtic_tokens": 1167.5
+    "celtic_tokens": 1082.1
   },
   "learned": {
     "The Fool": [
@@ -680,7 +724,8 @@
     ],
     "The Hanged Man": [
       "Upright: The Hanged Man might indicate a sudden, unexpected career change that requires complete trust and surrender to the process. This scenario could involve losing your job in an industry you've been in for decades, forcing you to pivot into a completely new field with no prior experience or con",
-      "A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward."
+      "A person is suspended upside down, unable to move. This position suggests that you are at an impasse and need a moment of stillness before moving forward.",
+      "A traveler stranded in a storm, forced to wait for the wind to shift before continuing their journey."
     ],
     "Six of Swords": [
       "In the aftermath of a tumultuous divorce, your client is finally stepping into new waters as they move to a quieter home in a different state, away from lingering emotions and unresolved conflicts.",
@@ -795,14 +840,11 @@
     "The Moon": [
       "In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination."
     ],
-    "Nine of Cups": [
-      "<think>\nOkay, the user wants me to come up with a new real-life scenario for the Nine of Cups card. Let me start by recalling what I know about this card. The upright Nine of Cups is often associated with fulfilling desires, achieving goals, and feeling content. It's about the wish being granted and"
+    "Ten of Cups": [
+      "A family gathering where hidden resentments resurface, causing emotional strain."
     ],
-    "Knight of Swords": [
-      "<think>\nOkay, the user wants a new real-life scenario for the Knight of Swords card. Let me start by recalling what I know about this card.\n\nThe Knight of Swords is associated with ambition, action, and moving forward. The upright position usually signifies boldness and taking initiative. Reversed, "
-    ],
-    "Queen of Pentacles": [
-      "<think>\nOkay, the user wants me to create a new real-life scenario for the Queen of Pentacles, either upright or reversed. Let me start by recalling what I know about this card.\n\nThe Queen of Pentacles is associated with grounding, nurturing, prosperity, and practicality. In its upright position, it"
+    "Death": [
+      "A friend's departure that clears the way for a deeper relationship"
     ]
   },
   "combos": {
@@ -826,7 +868,10 @@
     "King of Pentacles + Knight of Pentacles": "Steadfast business partner who has been the foundation for your current relationship.",
     "Six of Swords + The Hermit": "A journey towards personal direction amidst past turmoil, finding new beginnings in quiet reflection.",
     "The Fool + The Hanged Man": "Both cards suggest the need to release past burdens and find new, clearer perspectives. Together they encourage a pause in life to let go of what no longer serves you.",
-    "Strength + The Hanged Man": "Facing hidden self-doubt while at an impasse, needing stillness before moving forward."
+    "Strength + The Hanged Man": "Facing hidden self-doubt while at an impasse, needing stillness before moving forward.",
+    "Judgement + Ten of Cups": "A moment of reckoning with past familial wounds and the need for self-forgiveness.",
+    "Temperance + Two of Pentacles": "Overwhelm and imbalance require slowing down to find harmony",
+    "The Hanged Man + The Hierophant": "Tradition and suspension\u2014let go of rigid beliefs to find new paths."
   },
   "feedback": [
     {
@@ -964,6 +1009,21 @@
         "King of Cups"
       ],
       "said": "yes"
+    },
+    {
+      "cards": [
+        "Death",
+        "Two of Pentacles",
+        "Temperance (reversed)",
+        "Ten of Wands",
+        "Ace of Pentacles",
+        "Queen of Cups",
+        "Two of Cups",
+        "Queen of Swords",
+        "Six of Swords (reversed)",
+        "Page of Wands"
+      ],
+      "said": "yes"
     }
   ],
   "lessons": [
@@ -973,7 +1033,17 @@
     "Address the emotional wounds that keep you from fully embracing your desires and yearnings.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
+    "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
   ],
-  "next_zodiac_index": 10
+  "next_zodiac_index": 0,
+  "about_you": {
+    "age": "older",
+    "sex/gender": "any"
+  },
+  "intake_asked": [
+    "Is your motivation asking for more structure or less?",
+    "What's one small thing you could do for your focus tomorrow?",
+    "What's one small thing you could do for your luck tomorrow?"
+  ]
 }

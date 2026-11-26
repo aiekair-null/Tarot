@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 13:12",
+ "question": "A Live Reading",
+ "profile": "sign: Scorpio (water)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Ten of Cups",
+   true
+  ],
+  [
+   "Judgement",
+   false
+  ],
+  [
+   "Page of Swords",
+   true
+  ],
+  [
+   "Page of Pentacles",
+   false
+  ],
+  [
+   "King of Swords",
+   false
+  ],
+  [
+   "Ten of Wands",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "I return the cards to the deck and the choice to you. Go gently.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What has been quietly shaping your days, and how does overcoming past traumas touch it?",
+   "What are you avoiding looking at?",
+   "Where are you being guided, if you would only follow?",
+   "What do you do better than you believe, and how does overcoming past traumas touch it?",
+   "What one small action would change the most?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "What has been quietly shaping your days, and how does overcoming past traumas touch it?",
+    "opener": "Card, tell us:",
+    "feeling": "curious",
+    "passes": 5,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Ten of Cups",
+      true
+     ]
+    ],
+    "text": "The Ten of Cups falls upside down. The first card fell upside down: your concern is tangled in family disharmony, an ideal that is a facade. Zodiac lens: Scorpio's water element resonates with the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows. To \"What has been quietly shaping your days, and how does overcoming past traumas touch it?\" it answers: Family disharmony, an ideal that is a facade; face that, then invest in the people who feel like home. Picture emotional completeness, but stalled or turned inward. It asks you: What does a good life look like when you describe it without anyone else?"
+   },
+   {
+    "question": "What are you avoiding looking at?",
+    "opener": "Card, tell us:",
+    "feeling": "full-hearted",
+    "passes": 4,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Judgement",
+      false
+     ]
+    ],
+    "text": "Judgement falls. What stands in the way: reflection, pushed too far. An inner summons, forgiveness, rising to your better self is what pushes back. Zodiac lens: Scorpio's water element grounds this Major Arcana lesson in reflection; upright, this current can move openly. To \"What are you avoiding looking at?\" it answers: Answer the call and forgive what needs forgiving. It asks you: What is calling you to rise, and what keeps you from answering?"
+   },
+   {
+    "question": "Where are you being guided, if you would only follow?",
+    "opener": "She whispers to the cards:",
+    "feeling": "lighter than before",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Page of Swords",
+      true
+     ]
+    ],
+    "text": "The Page of Swords falls upside down. My grimoire says: Reversed Page of Swords: A former colleague, despite initial disagreements, now approaches you seeking guidance on a complex project with an open mind and a willingness to learn from all perspectives. Hidden from you, and turned inward: spiteful gossip, hasty judgment, scattered thoughts. Zodiac lens: Scorpio's water element meets the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"Where are you being guided, if you would only follow?\" it answers: Spiteful gossip, hasty judgment, scattered thoughts; face that, then ask questions and stay alert. Picture curiosity, a restless mind, but stalled or turned inward. It asks you: What question do you want to ask but have been afraid to?"
+   },
+   {
+    "question": "What do you do better than you believe, and how does overcoming past traumas touch it?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "blocked",
+    "passes": 2,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Page of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Page of Pentacles falls. What helps you: financial opportunity, ambition, studious approach. Lean on patient practical curiosity. Zodiac lens: Scorpio's water element harmonizes with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What do you do better than you believe, and how does overcoming past traumas touch it?\" it answers: Take the first practical step and study. It asks you: What practical first step can be taken this week?"
+   },
+   {
+    "question": "What one small action would change the most?",
+    "opener": "Let the next card answer:",
+    "feeling": "blocked",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "King of Swords",
+      false
+     ]
+    ],
+    "text": "The King of Swords falls. My grimoire says: .. What to do next: decide with logic and fairness. Zodiac lens: Scorpio's water element meets the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What one small action would change the most?\" it answers: Decide with logic and fairness. Here is how it might look this month: intellect used with ethics. It asks you: Can you be fair and kind at once?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "overthinking",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Ten of Wands",
+      false
+     ]
+    ],
+    "text": "The Ten of Wands falls. My grimoire says: In the upcoming weeks, Jessica faces a project at work that requires significant effort and resources but lacks clear guidance or support from her team. She feels overwhelmed by the demands and fears making mistakes if she tries to tackle everything on her own. This scenario mirrors the Ten of Wands. Where it settles: a heavy load that has to be lightened. Zodiac lens: Scorpio's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What needs healing so this can move?\" it answers: Put something down and ask for help. Picture it: carrying too much; unwilling to ask for help. It asks you: What can you put down today?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Ten of Cups falls upside down.",
+  "It asks you: What is calling you to rise, and what keeps you from answering?",
+  "The Page of Swords falls upside down.",
+  "The Page of Pentacles falls.",
+  "The King of Swords falls.",
+  "This scenario mirrors the Ten of Wands.",
+  "Zodiac lens: Scorpio's water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: What can you put down today?"
+ ]
+}
