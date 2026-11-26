@@ -1103,10 +1103,12 @@ def zodiac_picker(scr, next_index):
         ui.center(1, "six-card reading: choose a zodiac lens", 51, True)
         month, sign, element = ZODIAC_MONTHS[next_index]
         ui.center(3, f"↑ ↓ move · Enter select · auto next: {month} / {sign} ({element})", 60)
-        options = [None, *range(len(ZODIAC_MONTHS))]
+        options = [None, "none", *range(len(ZODIAC_MONTHS))]
         for row, option in enumerate(options):
             if option is None:
                 label = f"AUTO  next in sequence: {month} · {sign} ({element})"
+            elif option == "none":
+                label = "NONE  a normal six-card reading, no zodiac lens"
             else:
                 month, sign, element = ZODIAC_MONTHS[option]
                 label = f"{month} · {sign} · {element}"
@@ -1120,7 +1122,7 @@ def zodiac_picker(scr, next_index):
         elif key == curses.KEY_DOWN:
             selected = (selected + 1) % len(options)
         elif key in ENTER:
-            return None if selected == 0 else selected - 1
+            return options[selected]
         elif key in (ord("q"), ord("Q"), 27):
             return None
 
@@ -1131,6 +1133,8 @@ def choose_zodiac(reader):
     except (TypeError, ValueError):
         next_index = 0
     selected = curses.wrapper(zodiac_picker, next_index)
+    if selected == "none":                                  # a plain six-card reading
+        return None, None, None, None
     automatic = selected is None
     index = next_index if automatic else selected % len(ZODIAC_MONTHS)
     month, sign, element = ZODIAC_MONTHS[index]
@@ -1412,7 +1416,8 @@ def live_reading(reader):
     fx.say("A Live Reading. You do not need to ask anything: I will put my own questions to the deck, "
            "and it will answer by dropping cards from the shuffle. Sometimes two fall together; those speak as one.",
            "mystic", "fade")
-    fx.say(f"{sign}, a sign of {element}. I will read the element against every card as it falls.", "mystic", "fade")
+    if sign:
+        fx.say(f"{sign}, a sign of {element}. I will read the element against every card as it falls.", "mystic", "fade")
     fx.say("Press Enter when you are ready, and simply hold how you feel in mind.", "mystic", "pulse")
     fx.prompt()
     plan = {"intro": "calm", "wash": "storm", "cut": "mystic", "reveal": "dread", "reading": "mystic"}
