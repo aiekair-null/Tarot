@@ -891,6 +891,25 @@ class Painter:
                 self.rot.clear()
         return self.rot[key]
 
+    def keep_title(self, out):
+        """Put the headline back on top after anything that touches the whole frame (fades, static,
+        flashes, the psilocybin trip): every video keeps its title caption clear at the top."""
+        np = self.np
+        if self.plain is None:
+            return out
+        if self.clock < TITLE_DONE:
+            band = self._title_at(self.clock)[:BAND]
+            mask = (band != self.plain[:BAND]).any(axis=2)
+        else:
+            band = self.base[:BAND]
+            if getattr(self, "_title_mask", None) is None:
+                self._title_mask = (band != self.plain[:BAND]).any(axis=2)
+            mask = self._title_mask
+        if not out.flags.writeable:
+            out = out.copy()
+        out[:BAND][mask] = band[mask]
+        return out
+
     def frame(self, content, cap=None, fade=1.0, held=None):
         np = self.np
         out = (self._title_at(self.clock) if self.clock < TITLE_DONE else self.base).copy()
@@ -906,7 +925,7 @@ class Painter:
         if held:
             out = self.hold_up(out, *held)
         if fade < 1.0:
-            out = (out.astype(np.float32) * max(0.0, fade)).astype(np.uint8)
+            out = self.keep_title((out.astype(np.float32) * max(0.0, fade)).astype(np.uint8))
         return out
 
     def hold_up(self, out, cards, local, dur):
@@ -1236,7 +1255,7 @@ def compose(p, titles, pop, scenes, sc, t, sess, cuts, cap, fade):
     nxt = scenes[scenes.index(sc) + 1] if scenes.index(sc) + 1 < len(scenes) else None
     if nxt and nxt["name"].startswith("txin") and sc["start"] + sc["dur"] - t < 0.25:
         out = edit.static_burst(out, 1 - (sc["start"] + sc["dur"] - t) / 0.25, int(t * 30))
-    return out
+    return p.keep_title(out)
 
 
 def render(sess, out_path, voice_kind, say=print, progress=None):
@@ -1296,7 +1315,7 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
             out = compose(p, titles, pop, scenes, sc, t, sess, cuts, cap, fade)
             try:
                 if trip:
-                    out = psyche.trip_frame(out, t, n in trip_cuts and (n // 3) % 2 == 0)
+                    out = p.keep_title(psyche.trip_frame(out, t, n in trip_cuts and (n // 3) % 2 == 0))
                 proc.stdin.write(out.tobytes())
             except BrokenPipeError:
                 break

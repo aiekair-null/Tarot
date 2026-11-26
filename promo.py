@@ -173,6 +173,7 @@ def render(out_path, voice_kind, say=print, progress=None):
             sc = next(s for s in reversed(scenes) if s["start"] <= t)
             cap = next((c for at, c, _, dd in ev if at <= t < at + dd + 0.25), None)
             fade = min(1.0, t / 0.6) if sc["name"] == "hello" else (min(1.0, (total - t) / 1.2) if sc["name"] == "end" else 1.0)
+            p.clock = t                                    # the title draws itself on, as in the readings
             try:
                 proc.stdin.write(p.frame(content(p, sc, t, extra), cap, fade, held(sc, t)).tobytes())
             except BrokenPipeError:
