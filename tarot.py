@@ -1612,8 +1612,9 @@ def make_and_share(sess):
         share_menu(path)
 
 
-def promo_video(reader):
-    """The promo reel maker (veyra_promo.py), run inside Veyra with the model she already has loaded."""
+def promo_video(reader, horoscope=None):
+    """The promo reel maker (veyra_promo.py), run inside Veyra with the model she already has loaded.
+    horoscope (from Your stars) records the day's horoscope in the promo's style instead of the usual reel."""
     try:
         import veyra_promo
     except Exception as e:
@@ -1621,7 +1622,9 @@ def promo_video(reader):
     import deps
     if not deps.ensure_ffmpeg(_ask, _note):
         return
-    fx.say("Veyra makes a new promo reel (about 2:30, different every time). This takes a while...", "mystic", "fade")
+    fx.say("Veyra records today's horoscope in the promo's style. This takes a while..." if horoscope else
+           "Veyra makes a new promo reel (about 2:30, different every time). This takes a while...", "mystic", "fade")
+    veyra_promo.HOROSCOPE = horoscope
     b, orig, argv = reader.brain, veyra_promo.Brain.__init__, sys.argv
     if b.kind == "llama" and b.llm is not None:         # share her loaded model instead of loading it twice
         def shared(self, a):
@@ -1638,6 +1641,7 @@ def promo_video(reader):
         fx.say(f"The promo did not finish: {str(e)[:160]}", "dread", "type")
     finally:
         veyra_promo.Brain.__init__, sys.argv = orig, argv
+        veyra_promo.HOROSCOPE = None
     if path:
         fx.say(f"The promo is ready: {path}", "hope", "shimmer")
         share_menu(path)
@@ -1810,8 +1814,37 @@ def _sync_after_session():
 
 
 def stars_menu(reader, sign=None):
+    """Your stars, then (unless you say no) today's horoscope recorded as a promo video."""
+    sg = _stars_reading(reader, sign)
+    if not sg:
+        return
+    fx.say("Shall I record today's horoscope as a promo video? I introduce myself first (my model, my purpose, "
+           "my creator), then read the day's sky for " + sg + ". [Y/n]", "hope", "fade")
+    if not fx.prompt().lower().startswith("n"):
+        horoscope_promo(reader, sg)
+
+
+def horoscope_promo(reader, sg):
+    """Today's horoscope for a sign, recorded in the promo's style by the promo maker."""
+    import astro, datetime, re
+    sky = astro.today()
+    d = astro.day_reading(sky)
+    text = fx.run_with_animation(lambda: astro.horoscope(sg, reader), 12,
+                                 (f"~ {astro.GLYPH[sg]} reading {sg}'s sky ~",)) or astro.horoscope(sg)
+    text = re.sub(r"\[[^\]]*\]", "", text).strip()
+    now = datetime.date.today()
+    h = {"date_spoken": f"{now:%A, %B} {now.day}", "sign": sg, "glyph": astro.GLYPH[sg],
+         "phase": sky["phase"].lower(), "moon": d["moon"], "sun": d["sun"], "moon_glyph": astro.GLYPH[d["moon"]],
+         "retro": [k for k, v in sky["bodies"].items() if v["retro"]],
+         "aspects": [f"{x['a']} {x['aspect']} {x['b']}" for x in sky.get("aspects", [])[:2]],
+         "horoscope": text, "benefit": d["benefit"], "warn": d["warn"], "benefit_glyph": astro.GLYPH[d["benefit"][0]]}
+    promo_video(reader, horoscope=h)
+
+
+def _stars_reading(reader, sign=None):
     """Your stars: the star chart and today's horoscope in one. Give a birth date and she reads the sky
-    you were born under, then what today's sky is doing to it; give just a sign and she reads that sign's day."""
+    you were born under, then what today's sky is doing to it; give just a sign and she reads that sign's day.
+    Returns the sign read (None if nothing was read)."""
     import astro, re as _re
     sky = astro.today()
     fx.banner("~ Veyra reads your stars ~", "channel", 20)
@@ -1839,7 +1872,8 @@ def stars_menu(reader, sign=None):
         text = fx.run_with_animation(lambda: astro.horoscope(sg, reader), 12,
                                      (f"~ {astro.GLYPH[sg]} reading {sg}'s sky ~",)) or astro.horoscope(sg)
         fx.say(head, "channel", "shimmer")
-        return fx.say(text, "mystic", "fade")
+        fx.say(text, "mystic", "fade")
+        return sg
     facts = astro.natal_text(natal)
     fx.say("The sky you were born under: " + facts, "calm", "type")
     touch = astro.touches(natal, sky)
@@ -1861,12 +1895,14 @@ def stars_menu(reader, sign=None):
         words = _re.sub(r"\[[^\]]*\]", "", words or "").strip() or None
     fx.say(head, "channel", "shimmer")
     if words:
-        return fx.say(words, "mystic", "fade")
+        fx.say(words, "mystic", "fade")
+        return sg
     b = natal["bodies"]                             # no model awake: read both straight from the skies
     fx.say(f"Sun in {b['Sun']['sign']}: {astro.MEANS['Sun']} lives there. Moon in {b['Moon']['sign']}: "
            f"{astro.MEANS['Moon']} finds its home there. Mars in {b['Mars']['sign']} is how you fight; "
            f"Venus in {b['Venus']['sign']} is how you love.", "mystic", "fade")
     fx.say(astro.horoscope(sg), "mystic", "fade")
+    return sg
 
 
 class _PlainOut:

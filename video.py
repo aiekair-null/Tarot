@@ -114,7 +114,8 @@ def reading_sentences(text):
 
 
 def tts_text(s):
-    s = s.replace("8b/3b(L)", "eight B, three B, L").replace("Qwen 2.5", "Kwen two point five")
+    s = s.replace("8b/3b(L)", "eight B, three B, L").replace("8b/8b(L)", "eight B, eight B, L")
+    s = s.replace("Qwen 2.5", "Kwen two point five").replace("Qwen", "Kwen")
     s = s.replace("Veyra", "Vayra").replace("Celtic", "Keltic").replace("&", "and")
     s = re.sub(r"(\d+)\s*-\s*(\d+)", r"\1 to \2", s)
     return re.sub(r"[\[\]*_#]", "", s)
@@ -140,7 +141,7 @@ def live_script(sess):
 
 
 def fortune_script(sess):
-    """A Fortune Reading: the sky, the pieces falling, then her probe moving to each piece as she reads it."""
+    """A Fortune Reading: the sky, the pieces falling, then each piece glowing and growing big as she reads it."""
     import items as I
     f = sess["fortune"]
     sents = reading_sentences(sess.get("reading", ""))
@@ -479,7 +480,7 @@ def plan(scenes, voice, say=print):
         elif sc["name"] == "cast":
             dur, lead = max(6 * 0.5 + 2.5, speech + 1.2), 0.4
         elif sc["name"].startswith("piece"):
-            dur, lead = 1.3 + speech + 0.6, 1.2     # the probe reaches the piece and nudges it first
+            dur, lead = 0.6 + speech + 0.9, 0.6     # the piece rises and grows, then settles back
         elif sc["name"] == "end":
             dur, lead = speech + 2.8, 0.5
         elif sc["name"].startswith(("txin", "living")):

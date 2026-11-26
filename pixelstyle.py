@@ -113,6 +113,60 @@ def item_image(name, turned=False):
     return _ITEMS[key]
 
 
+def headline_band(hook, t):
+    """The title caption: the title in white boxes with drawn zodiac signs either side of every line
+    (W x 50, RGBA). t is seconds into the video: letters type on, then the boxes, then the signs pop in."""
+    import video
+    left, right, title, line = hook
+    for scale, cap in ((2, 16), (1, 34)):
+        lines = textwrap.wrap(VP.latin1(title), cap)
+        if len(lines) <= 2:
+            break
+    lines = lines[:2]
+    extra = [VP.latin1(line)] if len(lines) == 1 and len(VP.latin1(line)) <= 38 else []
+    rows = [(ln, scale) for ln in lines] + [(ln, 1) for ln in extra]
+    icons = video.line_symbols(hook, len(rows), first=2)
+    im = Image.new("RGBA", (W, 50), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    letters = sum(len(ln) for ln in lines)
+    shown = int(letters * min(1.0, t / video.TITLE_WRITE))
+    box = t >= video.TITLE_WRITE
+    pops = int(max(0.0, t - video.TITLE_WRITE - 0.15) / video.ICON_POP)
+    y = 0
+    for n, (ln, sc_) in enumerate(rows):
+        g = 11 if sc_ == 2 else 9
+        ln_l, ln_r = icons[n] if n < len(icons) else ((), ())
+        spr_l = [video.zodiac_sprite(x[0], int(x[2:]) if x[1:2] == "|" else 0, g) for x in ln_l if x and x[0] in video.ZODIAC]
+        spr_r = [video.zodiac_sprite(x[0], int(x[2:]) if x[1:2] == "|" else 0, g) for x in ln_r if x and x[0] in video.ZODIAC]
+        tw = VP.text_mask(ln, sc_).width
+        lh = VP.text_mask("M", sc_).height
+        wl, wr = sum(s.width + 2 for s in spr_l), sum(s.width + 2 for s in spr_r)
+        x0 = (W - (tw + wl + wr)) // 2
+        if n < len(lines):
+            part, shown = ln[:max(0, shown)], shown - len(ln)
+        else:
+            part = ln if box else ""
+        if box and part:
+            d.rounded_rectangle((x0 - 4, y, x0 + tw + wl + wr + 3, y + lh + 2), 3, fill=(246, 240, 255, 255))
+            put_text(im, x0 + wl, y + 2, part, (26, 10, 46), scale=sc_, shadow=None)
+        elif part:
+            put_text(im, x0 + wl, y + 2, part, WHITE, scale=sc_)
+        order = list(range(len(spr_l)))[::-1]
+        ix = x0
+        for k, sp in enumerate(spr_l):
+            if box and pops > order[k]:
+                im.paste(sp, (ix, y + (lh + 2 - sp.height) // 2 + 1), sp)
+            ix += sp.width + 2
+        ix = x0 + wl + tw + 2
+        for k, sp in enumerate(spr_r):
+            if box and pops > len(spr_l) + k:
+                im.paste(sp, (ix, y + (lh + 2 - sp.height) // 2 + 1), sp)
+            ix += sp.width + 2
+        pops -= len(spr_l) + len(spr_r)
+        y += lh + 5
+    return im
+
+
 # ---------------------------------------------------------------- the painter
 class Look:
     def __init__(self, scenes, events, total, sess=None, fps=15, seed=None):
@@ -287,7 +341,7 @@ class Look:
         put_text(f, 135, self.top, "THE SPREAD", GOLD, scale=2, center=True)
         R.header(f, t, "TABLE")
 
-    # ---- the fortune table: pieces fall, and her probe moves them as she reads
+    # ---- the fortune table: pieces fall; the one she reads glows and grows big
     def _setup_fortune(self):
         fo = self.fortune
         x0, y0, x1, y1 = TABLE
@@ -297,33 +351,8 @@ class Look:
             px = x0 + 4 + (o["x"] / max(1, Wc - 18)) * (x1 - x0 - 8 - 36)
             py = y0 + 4 + (o["y"] / max(1, Hc - 9)) * (y1 - y0 - 8 - 36)
             px, py = min(max(x0 + 2, px), x1 - 38), min(max(y0 + 2, py), y1 - 38)
-            cx, cy = (x0 + x1) / 2 - 18, (y0 + y1) / 2 - 18
-            dx, dy = cx - px, cy - py
-            n = math.hypot(dx, dy) or 1
             self.pieces.append({"name": o["name"], "turned": o["turned"], "x": px, "y": py,
-                                "nx": 7 * dx / n, "ny": 5 * dy / n, "img": item_image(o["name"], o["turned"])})
-        starts = {sc["piece"]: sc["start"] for sc in self.scenes if "piece" in sc}
-        for i, pc in enumerate(self.pieces):
-            pc["t_nudge"] = starts.get(i, 1e9) + 0.55
-
-    def _veyra_hand(self, t, cx, top):
-        bob = round(math.sin(t * 1.7) * 2)
-        spr = VP.art_veyra(0, False, 2)
-        x0 = int(cx - spr.width / 2)
-        y = top + max(0, (int(120 * 0.62) - spr.height) // 2) + bob
-        return x0 + spr.width * 17 // 26 + 1, y + spr.height * 21 // 28
-
-    def _probe(self, f, hand, tip, t):
-        d = ImageDraw.Draw(f)
-        hx, hy = hand
-        dx, dy = tip[0] - hx, tip[1] - hy
-        n = math.hypot(dx, dy) or 1
-        d.line([(hx - 5 * dx / n, hy - 5 * dy / n), (hx, hy)], fill=(176, 120, 40), width=2)      # the handle
-        d.line([(hx + 1, hy + 1), (tip[0] + 1, tip[1] + 1)], fill=(40, 24, 70))                     # its shadow
-        d.line([(hx, hy), tip], fill=(206, 210, 236))                                                # the silver rod
-        paste_glow(f, self.R.flame_glow, tip[0], tip[1], 0.7 + 0.3 * math.sin(t * 9))
-        d.point([(tip[0], tip[1] - 1), (tip[0] - 1, tip[1]), (tip[0] + 1, tip[1]), (tip[0], tip[1] + 1)], fill=GOLD)
-        d.point(tip, fill=(255, 255, 255))
+                                "img": item_image(o["name"], o["turned"])})
 
     def _table(self, f, t):
         d = ImageDraw.Draw(f)
@@ -336,16 +365,11 @@ class Look:
             b = 0.5 + 0.5 * math.sin(t * r.uniform(1, 3) + x)
             d.point((x, y), fill=(int(70 + 80 * b), int(50 + 60 * b), int(120 + 90 * b)))
 
-    def _piece_pos(self, pc, t):
-        k = min(1.0, max(0.0, (t - pc["t_nudge"]) / 0.6))
-        k = ease_out_cubic(k)
-        return pc["x"] + pc["nx"] * k, pc["y"] + pc["ny"] * k
-
     def fortune_scene(self, f, t, lt, env, sc):
+        """The pieces on the table; the one she is talking about glows and grows big on the screen."""
         R = self.R
         f.paste(R.bg_img["sanctum"]); R.sky(f, t, "sanctum"); R.motes_(f, t, (255, 210, 120))
         self._table(f, t)
-        cx, top = 135, max(self.top + 8, 88)
         active = sc.get("piece")
         for i, pc in enumerate(self.pieces):
             if sc["name"] == "cast":
@@ -355,26 +379,26 @@ class Look:
                 drop = 0 if p >= 1 else (1 - p) ** 2 * 140
                 bounce = 4 * abs(math.sin((p - 1) * 6)) * max(0, 1.4 - p) if 1 <= p < 1.4 else 0
                 x, y = pc["x"], pc["y"] - drop - bounce
+            elif i == active:
+                continue                                   # drawn big, below
             else:
-                x, y = self._piece_pos(pc, t)
-            if i == active:
-                paste_glow(f, R.aura, x + 18, y + 18, 0.55 + 0.2 * math.sin(t * 3))
+                x, y = pc["x"], pc["y"]
             f.paste(pc["img"], (int(x), int(y)), pc["img"])
-        R.draw_veyra(f, t, env, cx, top, scale=0.62, aura=False)
-        hand = self._veyra_hand(t, cx, top)
-        rest = (hand[0] + 22, hand[1] + 30)
+        R.draw_veyra(f, t, env, 135, max(self.top + 8, 88), scale=0.62, aura=False)
         if active is not None and active < len(self.pieces):
-            x, y = self._piece_pos(self.pieces[active], t)
-            target = (x + 18 - self.pieces[active]["nx"] * 0.6, y + 18 - self.pieces[active]["ny"] * 0.6)
-            k = ease_out_cubic(min(1.0, lt / 0.5))
-            tip = (rest[0] + (target[0] - rest[0]) * k, rest[1] + (target[1] - rest[1]) * k)
             pc = self.pieces[active]
+            grow = ease_out_cubic(min(1.0, lt / 0.6)) * (1 - ease_out_cubic(min(1.0, max(0.0, (lt - sc["dur"] + 0.5) / 0.5))))
+            size = int(36 + (108 - 36) * grow)
+            x0, y0 = pc["x"] + 18, pc["y"] + 18
+            cx, cy = x0 + (135 - x0) * grow, y0 + (262 - y0) * grow
+            paste_glow(f, R.aura, cx, cy, 0.5 + 0.4 * grow + 0.1 * math.sin(t * 4))
+            paste_glow(f, R.flame_glow, cx, cy, 0.4 * grow)
+            big = pc["img"].resize((size, size), Image.NEAREST)
+            f.paste(big, (int(cx - size / 2), int(cy - size / 2 + math.sin(t * 2.2) * 2 * grow)), big)
             label = pc["name"].upper() + ("  //  TURNED" if pc["turned"] else "  //  UPRIGHT")
             put_text(f, 135, TABLE[1] - 14, label, GOLD if not pc["turned"] else RED, center=True)
         else:
-            tip = (rest[0] + 2 * math.sin(t * 1.3), rest[1] + 2 * math.cos(t * 1.1))
             put_text(f, 135, TABLE[1] - 14, "THE CAST", GOLD, center=True)
-        self._probe(f, hand, (int(tip[0]), int(tip[1])), t)
         R.header(f, t, "FORTUNE")
 
     # ---- the sky: Veyra inside a slowly turning wheel of the zodiac
@@ -407,18 +431,14 @@ class Look:
         if self.fortune:
             self._table(f, t)
             for i, pc in enumerate(self.pieces):
-                x, y = self._piece_pos(pc, t)
+                x, y = pc["x"], pc["y"]
                 k = max(0.0, (lt - 0.6 - i * 0.22) / 0.5)
-                if self.outro_style == 0:               # the probe sweeps them off the table
+                if self.outro_style == 0:               # they slide off the table, one by one
                     x += k * k * 260
                 else:                                   # they float up into the stars
                     y -= k * k * 220
                 if k < 1.4:
                     f.paste(pc["img"], (int(x), int(y)), pc["img"])
-            if self.outro_style == 0:
-                hand = (70, TABLE[1] + 20)
-                sx = TABLE[0] + min(1.0, max(0.0, (lt - 0.5) / 2.0)) * (TABLE[2] - TABLE[0])
-                self._probe(f, hand, (int(sx), TABLE[1] + 60), t)
         elif cards and self.outro_style == 1:          # the cards go back to sleep: turned face down, gathered
             show = cards[:10]
             n = len(show)
@@ -523,7 +543,7 @@ class Look:
             out.paste(band, (0, BAND_Y), band)
         return out.tobytes()
 
-    # ---- the headline: title in white boxes with drawn zodiac signs either side of every line
+    # ---- the headline, kept once it has finished drawing
     def band(self, t):
         import video
         if self.hook is None:
@@ -531,53 +551,7 @@ class Look:
         done = t >= video.TITLE_DONE
         if done and self._band_done is not None:
             return self._band_done
-        left, right, title, line = self.hook
-        for scale, cap in ((2, 16), (1, 34)):
-            lines = textwrap.wrap(VP.latin1(title), cap)
-            if len(lines) <= 2:
-                break
-        lines = lines[:2]
-        hook = [VP.latin1(line)] if len(lines) == 1 and len(VP.latin1(line)) <= 38 else []
-        rows = [(ln, scale) for ln in lines] + [(ln, 1) for ln in hook]
-        icons = video.line_symbols(self.hook, len(rows), first=2)
-        im = Image.new("RGBA", (W, 50), (0, 0, 0, 0))
-        d = ImageDraw.Draw(im)
-        letters = sum(len(ln) for ln in lines)
-        shown = int(letters * min(1.0, t / video.TITLE_WRITE))
-        box = t >= video.TITLE_WRITE
-        pops = int(max(0.0, t - video.TITLE_WRITE - 0.15) / video.ICON_POP)
-        y = 0
-        for n, (ln, sc_) in enumerate(rows):
-            g = 11 if sc_ == 2 else 9
-            ln_l, ln_r = icons[n] if n < len(icons) else ((), ())
-            spr_l = [video.zodiac_sprite(x[0], int(x[2:]) if x[1:2] == "|" else 0, g) for x in ln_l if x and x[0] in video.ZODIAC]
-            spr_r = [video.zodiac_sprite(x[0], int(x[2:]) if x[1:2] == "|" else 0, g) for x in ln_r if x and x[0] in video.ZODIAC]
-            tw = VP.text_mask(ln, sc_).width
-            lh = VP.text_mask("M", sc_).height
-            wl, wr = sum(s.width + 2 for s in spr_l), sum(s.width + 2 for s in spr_r)
-            x0 = (W - (tw + wl + wr)) // 2
-            if n < len(lines):
-                part, shown = ln[:max(0, shown)], shown - len(ln)
-            else:
-                part = ln if box else ""
-            if box and part:
-                d.rounded_rectangle((x0 - 4, y, x0 + tw + wl + wr + 3, y + lh + 2), 3, fill=(246, 240, 255, 255))
-                put_text(im, x0 + wl, y + 2, part, (26, 10, 46), scale=sc_, shadow=None)
-            elif part:
-                put_text(im, x0 + wl, y + 2, part, WHITE, scale=sc_)
-            order = list(range(len(spr_l)))[::-1]
-            ix = x0
-            for k, sp in enumerate(spr_l):
-                if box and pops > order[k]:
-                    im.paste(sp, (ix, y + (lh + 2 - sp.height) // 2 + 1), sp)
-                ix += sp.width + 2
-            ix = x0 + wl + tw + 2
-            for k, sp in enumerate(spr_r):
-                if box and pops > len(spr_l) + k:
-                    im.paste(sp, (ix, y + (lh + 2 - sp.height) // 2 + 1), sp)
-                ix += sp.width + 2
-            pops -= len(spr_l) + len(spr_r)
-            y += lh + 5
+        im = headline_band(self.hook, t)
         if done:
             self._band_done = im
         return im

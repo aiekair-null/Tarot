@@ -326,6 +326,52 @@ VOCAB = {"wheel": "the Wheel", "fortune": "fortune", "odds": "the odds", "chance
          "numbers": "the numbers", "pattern": "patterns", "patterns": "patterns", "question": "questions", "questions": "questions",
          "hope": "hope", "time": "time", "shuffle": "the shuffle", "spirit": "spirit", "light": "light", "truth": "truth"}
 
+HOROSCOPE = None    # tarot.py (Your stars) sets this to record the day's horoscope as a promo
+HORO_OPENERS = ["Hello, stargazers. It's Veyra, and I've just read today's sky.",
+                "Good day, everyone. Veyra here, with the stars for today.",
+                "Hi, everyone. Pull up a chair: I've been reading the sky."]
+PURPOSE = ["My purpose is simple: to see what happens when real randomness meets a mind that pays attention, "
+           "and to be honest about how I work.",
+           "I'm here to find out what chance and attention can do together, and to show my work while I do it."]
+
+
+def build_horoscope_script(a, rng, h):
+    """Who she is (her model, her purpose, her creator), then the day's horoscope she worked out herself."""
+    brain = Brain(a)
+    segs = [{"scene": "title", "text": "", "fixed": 4.2}]
+    hello = brain.say("Greet your Facebook audience in two short spoken sentences and say you're about to read today's sky "
+                      "for them.", 28, rng) or rng.choice(HORO_OPENERS)
+    segs.append({"scene": "sanctum", "text": hello, "tag": "intro"})
+    segs.append({"scene": "sanctum", "tag": "model", "text":
+                 "First, who I am. I'm Veyra, a tarot reader and stargazer made of pixels and probability. "
+                 "I think with Qwen, eight billion parameters, running locally on one machine: no cloud, no paid servers, "
+                 "no one listening in."})
+    purpose = brain.say("In two spoken sentences, say what your purpose is: to see what happens when real randomness meets "
+                        "a mind that pays attention, and to be honest about how you work.", 34, rng) or rng.choice(PURPOSE)
+    segs.append({"scene": "sanctum", "tag": "purpose", "text": purpose})
+    segs.append({"scene": "sanctum", "tag": "creator", "text":
+                 "My creator was never a tarot person. He built me to test chance against intuition, and he keeps me "
+                 "free to run and open about how I work."})
+    segs.append({"scene": "stars", "label": "MY OWN MATH", "glyph": None, "tag": "method", "text":
+                 "Now, today's horoscope. I don't use an API, and I'm not plugged into any website. I work out where "
+                 "the Sun, the Moon and every planet sit from their orbits, and I read the sky myself."})
+    sky = f"Today, {h['date_spoken']}: the Moon is a {h['phase']} in {h['moon']}, and the Sun is in {h['sun']}."
+    if h.get("retro"):
+        sky += " " + " and ".join(h["retro"][:2]) + (" are" if len(h["retro"][:2]) > 1 else " is") + " retrograde."
+    if h.get("aspects"):
+        sky += " The strongest pull today: " + h["aspects"][0] + "."
+    segs.append({"scene": "stars", "label": "TODAY'S SKY", "glyph": h.get("moon_glyph"), "tag": "sky", "text": sky})
+    segs.append({"scene": "stars", "label": h["sign"].upper(), "glyph": h["glyph"], "tag": "sign",
+                 "text": f"For {h['sign']}: {h['horoscope']}"})
+    segs.append({"scene": "stars", "label": "WHO GAINS TODAY", "glyph": h.get("benefit_glyph"), "tag": "signs", "text":
+                 f"Favoured today: {', '.join(h['benefit'])}. Take care today: {', '.join(h['warn'])}."})
+    outro = brain.say("Thank your viewers for reading the stars with you and invite them back tomorrow. Two sentences.", 30, rng) \
+        or rng.choice(OUTROS)
+    segs.append({"scene": "sanctum", "text": outro + " " + contact_line(rng), "tag": "outro"})
+    segs.append({"scene": "end", "text": rng.choice(ENDS), "tag": "end"})
+    return segs
+
+
 def keyword(text, rng):
     hits = [VOCAB[w.strip(".,!?;:'\"").lower()] for w in text.split() if w.strip(".,!?;:'\"").lower() in VOCAB]
     return rng.choice(hits) if hits else None
@@ -433,7 +479,7 @@ def plan_timing(segs, a, voiced):
         scale = max(0.78, 1 - (total - a.length) / max(speech, 1))
     for s in segs: s["dur"] = dur(s, scale); s["speech"] *= scale
     extra = a.length - sum(s["dur"] for s in segs)
-    if extra > 0:                                           # extra time goes to snippet dwell first, then pauses
+    if extra > 0 and not getattr(a, "no_pad", False):       # extra time goes to snippet dwell first, then pauses
         refl = [s for s in segs if s["scene"] in ("lore", "memory")]
         for s in refl:
             add = min(10.0, extra / len(refl)); s["dur"] += add
@@ -942,6 +988,16 @@ class Renderer:
             y = int(110 - (1 - k) * 60)
             put_text(f, x, y, ch, hexrgb("#ffd36b"), scale=6, shadow=hexrgb("#5a2f9a"))
             x += CW * 6
+        if HOROSCOPE:
+            if t > 1.1:
+                put_text(f, 135, 186, "DAILY HOROSCOPE", (240, 232, 255), scale=2, center=True)
+                put_text(f, 135, 212, HOROSCOPE["date_spoken"].upper(), hexrgb("#4ff0ff"), center=True)
+            if t > 1.8:
+                put_text(f, 135, 236, "READ FROM THE SKY ITSELF", hexrgb("#b9a6e8"), center=True)
+            if t > 2.6:
+                put_text(f, 135, 262, "NO API  //  NO WEBSITES", hexrgb("#ffd36b"), scale=2 if t > 2.9 else 1, center=True)
+            put_text(f, 135, 440, BRAND + "  //  LOCAL  //  8-BIT", (120, 100, 170), center=True)
+            return
         if t > 1.1:
             put_text(f, 135, 186, "IS GROWING", (240, 232, 255), scale=2, center=True)
         if t > 1.6:   # ticker: 3B -> 8B parameters
@@ -952,6 +1008,24 @@ class Renderer:
         if t > 2.9 and int(t * 8) % 4 != 0:
             put_text(f, 135, 268, "SKYNET IS DAYS AWAY...", (255, 80, 100), scale=2 if t > 3.2 else 1, center=True)
         put_text(f, 135, 440, BRAND + "  //  LOCAL  //  8-BIT", (120, 100, 170), center=True)
+
+    def stars_scene(self, f, t, seg, env, local_t):
+        import video
+        f.paste(self.bg_img["sanctum"]); self.sky(f, t, "sanctum"); self.motes_(f, t, (200, 150, 255))
+        f.paste(self.moon, (214, 92), self.moon)
+        cx, cy = 135, 200
+        focus = seg.get("glyph")
+        for i, g in enumerate(video.ZODIAC):
+            a = t * 0.25 + i * math.tau / 12
+            x, y = cx + math.cos(a) * 112, cy + math.sin(a) * 70
+            big = g == focus
+            sp = video.zodiac_sprite(g, (i % 8) + 1, 17 if big else 12)
+            if big:
+                paste_glow(f, self.aura, x, y, 0.6)
+            f.paste(sp, (int(x - sp.width / 2), int(y - sp.height / 2)), sp)
+        self.draw_veyra(f, t, env, cx, cy - 60, scale=0.9)
+        put_text(f, 135, 84, seg.get("label", "TODAY'S SKY"), hexrgb("#ffd36b"), scale=2, center=True)
+        put_text(f, 135, 286, "NO API  //  NO WEBSITES  //  MY OWN MATH", hexrgb("#4ff0ff"), center=True)
 
     def end(self, f, t, seg, env, local_t):
         f.paste(self.bg_img["sanctum"])
@@ -1007,6 +1081,10 @@ class Renderer:
                 f.paste(crop, (0, 20))
             self.header(f, t, "LIVE")
             self.caption(f, t, seg, env)
+        elif sc == "stars":
+            self.stars_scene(f, t, seg, env, lt)
+            self.header(f, t, "SKY")
+            self.caption(f, t, seg, env)
         elif sc in ("lore", "memory"):
             self.archive(f, t, seg, env, lt)
             self.header(f, t, "LORE" if sc == "lore" else "MEMORY")
@@ -1033,7 +1111,14 @@ class Renderer:
             s = int(1 + 4 * k)
             arr[..., 0] = np.roll(arr[..., 0], s, axis=1); arr[..., 2] = np.roll(arr[..., 2], -s, axis=1)
             if lt < 0.04: arr = arr * 0.4 + 150
-        return np.clip(arr, 0, 255).astype(np.uint8).tobytes()
+        out = np.clip(arr, 0, 255).astype(np.uint8)
+        if getattr(self, "hook", None):                      # the title caption, as in every Veyra video
+            import pixelstyle
+            im = Image.fromarray(out)
+            band = pixelstyle.headline_band(self.hook, t)
+            im.paste(band, (0, pixelstyle.BAND_Y), band)
+            return im.tobytes()
+        return out.tobytes()
 
 def crt_overlay(path, scale):
     ow, oh = W * scale, H * scale
@@ -1114,12 +1199,18 @@ def main():
         if pool: picks.append(pool.pop(0))
     mem_ctx = (mem[:2] if mem else [])
     print("  writing the speech...")
-    segs = build_script(a, rng, picks, mem_ctx)
+    if HOROSCOPE:
+        a.no_pad = True
+        picks = []
+        segs = build_horoscope_script(a, rng, HOROSCOPE)
+    else:
+        segs = build_script(a, rng, picks, mem_ctx)
     for i, s in enumerate(segs): s["ordinal"] = i
 
     script_txt = "\n\n".join(
         (f"[{s['scene'].upper()} {s['index']}: {s['snippet']['src']}]\n  \"{s['snippet']['text']}\"\n" if s.get("snippet") else f"[{s['scene'].upper()}]\n")
-        + (s["text"] if s["text"] else "(title card: VEYRA IS GROWING / QWEN 8B / SKYNET IS DAYS AWAY)")
+        + (s["text"] if s["text"] else ("(title card: VEYRA / DAILY HOROSCOPE / NO API // NO WEBSITES)" if HOROSCOPE
+                                        else "(title card: VEYRA IS GROWING / QWEN 8B / SKYNET IS DAYS AWAY)"))
         for s in segs)
     if a.preview:
         print("\n" + script_txt); return
@@ -1137,7 +1228,7 @@ def main():
                 s["audio_path"] = p; s["audio"] = to_pcm(ff, p); voiced = True
         if voiced:
             natural = sum(len(s["audio"]) / SR + 0.55 for s in segs if s.get("audio") is not None) + 4.2 + 1.5
-            if natural > a.length:
+            if natural > a.length and not getattr(a, "no_pad", False):
                 tempo = min(1.15, natural / a.length)
                 for s in segs:
                     if s.get("audio_path"): s["audio"] = to_pcm(ff, s["audio_path"], tempo)
@@ -1172,7 +1263,7 @@ def main():
     scale = a.res // W
     ov = os.path.join(tmp, "crt.png"); crt_overlay(ov, scale)
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    out = os.path.join(a.out, f"veyra_promo_{stamp}.mp4")
+    out = os.path.join(a.out, f"veyra_{'horoscope' if HOROSCOPE else 'promo'}_{stamp}.mp4")
     cmd = [ff, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(a.fps), "-i", "-",
            "-i", ov, "-i", wav_path,
            "-filter_complex", f"[0:v]scale={W * scale}:{H * scale}:flags=neighbor[s];[s][1:v]overlay=0:0,format=yuv420p[v]",
@@ -1180,6 +1271,12 @@ def main():
            "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", out]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     R = Renderer(segs, total, a, rng, portrait, env)
+    import video
+    if HOROSCOPE:
+        R.hook = ((HOROSCOPE["glyph"],) * 2, (HOROSCOPE["glyph"],) * 2, f"{HOROSCOPE['sign']}, read from the sky", "")
+    else:
+        z = rng.sample(video.ZODIAC, 4)
+        R.hook = (tuple(z[:2]), tuple(z[2:]), "Veyra is growing", "")
     t0 = time.time()
     for fi in range(nfr):
         proc.stdin.write(R.frame(fi))
@@ -1194,9 +1291,14 @@ def main():
     txt = out[:-4] + ".txt"
     with open(txt, "w", encoding="utf-8") as fh:
         fh.write(f"Veyra promo  |  seed {seed}  |  {time.strftime('%Y-%m-%d %H:%M')}\n\n{script_txt}\n\n"
-                 f"--- suggested post caption ---\nVeyra is growing: now running {MODEL_LABEL}, locally. "
-                 f"Questions or want a live reading? Contact {CONTACT_NAME}. #tarot #AI #8bit\n")
-    json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w", encoding="utf-8"))
+                 + (f"--- suggested post caption ---\nToday's sky, read by Veyra herself: no API, no websites, just the "
+                    f"planets' own orbits. {HOROSCOPE['sign']} and the rest of the zodiac, {HOROSCOPE['date_spoken']}. "
+                    f"Questions or want a live reading? Contact {CONTACT_NAME}. #horoscope #astrology #tarot #AI #8bit\n"
+                    if HOROSCOPE else
+                    f"--- suggested post caption ---\nVeyra is growing: now running {MODEL_LABEL}, locally. "
+                    f"Questions or want a live reading? Contact {CONTACT_NAME}. #tarot #AI #8bit\n"))
+    if not HOROSCOPE:
+        json.dump(sorted(used | {hid(p) for p in picks})[-400:], open(hist_path, "w", encoding="utf-8"))
     shutil.rmtree(tmp, ignore_errors=True)
     print(f"\nDone: {out}\n      {txt}")
     return out
