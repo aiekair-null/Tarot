@@ -251,13 +251,32 @@ def fortune_reading(reader):
                 f"As a {sign}, you meet this sky through {element}, and the sky is "
                 f"{'kind' if cur and astro.element_effect(element, cur) > 0 else 'testing' if cur and astro.element_effect(element, cur) < 0 else 'even-handed'} to it.\n"
                 "This week, do the one small thing the pieces point at, and let the rest settle.")
-    narrate(reader, prompt, fallback, mood)
+    text = narrate(reader, prompt, fallback, mood)
     if auto_index is not None:
         reader.mem["next_zodiac_index"] = (auto_index + 1) % len(tarot.ZODIAC_MONTHS)
         try:
             reader._save()
         except Exception:
             pass
+    sess = {"date": time.strftime("%Y-%m-%d %H:%M"), "question": f"A fortune cast from {I.GROUPS[group][0]}",
+            "profile": f"sign: {sign} ({element})", "qa": [], "spirit_qs": [], "key": "fortune", "spread": [],
+            "domain": "inner", "reading": text, "plan": None, "mind": getattr(reader, "label", ""), "falls": None,
+            "channeled": [], "psy": False, "interesting": [],
+            "fortune": {"group": group, "group_name": I.GROUPS[group][0], "W": W, "H": H,
+                        "pieces": [{"name": o["name"], "x": o["x"], "y": o["y"], "turned": o["turned"]} for o in pl],
+                        "heart": heart["name"], "loner": loner["name"],
+                        "sky": (f"the Moon is a {s['phase']} in {s['moon']}, and the Sun is in {s['sun']}. "
+                                f"Favoured today: {', '.join(s['benefit'])}." if s.get("phase") else "")}}
+    try:
+        import video
+        video.save_session(sess)
+    except Exception:
+        pass
+    fx.say("Would you like this fortune as a video, to keep or to share? [y/N]", "hope", "fade")
+    if fx.prompt().lower().startswith("y"):
+        tarot.make_and_share(sess)
+
+
 
 
 # ---------------------------------------------------------------- chat
