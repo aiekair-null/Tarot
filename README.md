@@ -35,6 +35,14 @@ mkdir -p ~/.local/bin && ln -sf ~/Tarot/packaging/arch/veyra ~/.local/bin/veyra
 veyra
 ```
 
+If the art shows "â" characters, the system locale is not UTF-8. Fix it once (no pacman needed),
+then log out and back in:
+
+```bash
+sudo sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && sudo locale-gen
+echo 'LANG=en_US.UTF-8' | sudo tee /etc/locale.conf
+```
+
 `veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
 goes to tarot.py (`veyra model`, `veyra video`...). Promos are also menu option 12. GPU: `VEYRA_GPU=vulkan veyra setup`
 (or `cuda` / `rocm`). Her Python engine lives in `~/.local/share/veyra/venv`; the clone in `~/Tarot`

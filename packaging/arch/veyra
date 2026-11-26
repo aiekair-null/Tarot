@@ -72,11 +72,7 @@ esac
 GL="$(dirname "$VENV")/gpu_layers"
 [ -f "$GL" ] && export TAROT_GPU_LAYERS="${TAROT_GPU_LAYERS:-$(cat "$GL")}"
 
-# her art needs UTF-8 (half-block pixels) and 256 colors; many minimal installs default to neither
-case "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" in
-  *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;
-  *) export LANG=C.UTF-8 LC_ALL=C.UTF-8 ;;
-esac
+# her art needs a UTF-8 terminal and 256 colors (the locale has to be fixed system-wide; see README)
 if [ "$(tput colors 2>/dev/null || echo 0)" -lt 256 ]; then
   case "${TERM:-}" in
     rxvt*|urxvt*) T=rxvt-unicode-256color ;;
