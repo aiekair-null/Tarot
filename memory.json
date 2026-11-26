@@ -10,7 +10,7 @@
   ],
   "card_counts": {
     "The Fool": 4,
-    "Queen of Wands": 1,
+    "Queen of Wands": 2,
     "Ace of Wands": 3,
     "Justice": 3,
     "Ten of Cups": 2,
@@ -21,18 +21,18 @@
     "Five of Cups": 3,
     "Page of Cups": 3,
     "The Hierophant": 2,
-    "Knight of Cups": 3,
+    "Knight of Cups": 4,
     "Four of Pentacles": 4,
     "Nine of Cups": 4,
     "Six of Swords": 2,
     "Eight of Pentacles": 1,
-    "Five of Wands": 5,
+    "Five of Wands": 6,
     "Three of Wands": 3,
     "Knight of Pentacles": 4,
-    "Ace of Swords": 3,
+    "Ace of Swords": 4,
     "Death": 2,
     "Ten of Wands": 3,
-    "Ten of Swords": 1,
+    "Ten of Swords": 2,
     "Six of Cups": 1,
     "Ace of Pentacles": 4,
     "Four of Cups": 5,
@@ -50,12 +50,12 @@
     "Three of Cups": 1,
     "Five of Pentacles": 2,
     "The Sun": 2,
-    "The Chariot": 2,
-    "Eight of Cups": 1,
-    "Four of Swords": 3,
+    "The Chariot": 3,
+    "Eight of Cups": 2,
+    "Four of Swords": 4,
     "Queen of Pentacles": 2,
     "Temperance": 2,
-    "Seven of Pentacles": 4,
+    "Seven of Pentacles": 5,
     "Nine of Wands": 3,
     "King of Pentacles": 3,
     "The Hanged Man": 4,
@@ -72,15 +72,16 @@
     "Queen of Swords": 2,
     "Queen of Cups": 3,
     "The High Priestess": 2,
-    "The Hermit": 2,
+    "The Hermit": 3,
     "Two of Swords": 2,
     "The Devil": 2,
     "Six of Wands": 2,
-    "Ace of Cups": 2,
-    "King of Wands": 2,
+    "Ace of Cups": 3,
+    "King of Wands": 3,
     "The Moon": 2,
     "The Magician": 1,
-    "Eight of Wands": 1
+    "Eight of Wands": 1,
+    "The World": 1
   },
   "readings": [
     {
@@ -467,6 +468,33 @@
         "Two of Pentacles"
       ],
       "summary": "The Eight of Swords falls upside down. For this card, upside down is relief: seeing the exit, the blindfold off, release. Zodiac lens: Aries' fire element harmonizes with the Air (intellect, conflict)"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Eight of Cups",
+        "Five of Wands",
+        "King of Wands",
+        "The Chariot",
+        "Ace of Cups",
+        "Ace of Swords"
+      ],
+      "summary": "The Eight of Cups falls. My grimoire says: Reversed: After a decade-long career in corporate law, she feels stuck and unfulfilled, yearning for new experiences but hesitant to leave behind what's fami"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "Seven of Pentacles",
+        "Queen of Wands",
+        "Ten of Swords (reversed)",
+        "Knight of Cups",
+        "The Hermit",
+        "Four of Swords (reversed)",
+        "The World (reversed)"
+      ],
+      "summary": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-e"
     }
   ],
   "channelings": [
@@ -660,6 +688,15 @@
     ],
     "The Moon": [
       "In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination."
+    ],
+    "Nine of Cups": [
+      "<think>\nOkay, the user wants me to come up with a new real-life scenario for the Nine of Cups card. Let me start by recalling what I know about this card. The upright Nine of Cups is often associated with fulfilling desires, achieving goals, and feeling content. It's about the wish being granted and"
+    ],
+    "Knight of Swords": [
+      "<think>\nOkay, the user wants a new real-life scenario for the Knight of Swords card. Let me start by recalling what I know about this card.\n\nThe Knight of Swords is associated with ambition, action, and moving forward. The upright position usually signifies boldness and taking initiative. Reversed, "
+    ],
+    "Queen of Pentacles": [
+      "<think>\nOkay, the user wants me to create a new real-life scenario for the Queen of Pentacles, either upright or reversed. Let me start by recalling what I know about this card.\n\nThe Queen of Pentacles is associated with grounding, nurturing, prosperity, and practicality. In its upright position, it"
     ]
   },
   "combos": {
@@ -802,5 +839,5 @@
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
   ],
-  "next_zodiac_index": 5
+  "next_zodiac_index": 6
 }

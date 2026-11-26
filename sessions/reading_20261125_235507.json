@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-25 23:55",
+ "question": "A Live Reading",
+ "profile": "sign: Gemini (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Eight of Cups",
+   false
+  ],
+  [
+   "Five of Wands",
+   false
+  ],
+  [
+   "King of Wands",
+   false
+  ],
+  [
+   "The Chariot",
+   false
+  ],
+  [
+   "Ace of Cups",
+   false
+  ],
+  [
+   "Ace of Swords",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "I return the cards to the deck and the choice to you. Go gently.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Why does this moment feel so searching?",
+   "Which mask have you worn so long it feels like a face?",
+   "What lesson keeps returning until it is learned?",
+   "Where can you find rest while feeling impatient?",
+   "How can you grow through this rather than around it?",
+   "How do you make peace with what has been?"
+  ],
+  "log": [
+   {
+    "question": "Why does this moment feel so searching?",
+    "opener": "Card, tell us:",
+    "feeling": "searching",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Eight of Cups",
+      false
+     ]
+    ],
+    "text": "The Eight of Cups falls. My grimoire says: Reversed: After a decade-long career in corporate law, she feels stuck and unfulfilled, yearning for new experiences but hesitant to leave behind what's familiar. The first card out of the deck names your concern: walking away, disillusionment, leaving behind. In your life it looks like seeking something deeper, a pilgrimage. Zodiac lens: Gemini's air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"Why does this moment feel so searching?\" it answers: Walk away from what no longer feeds you. It asks you: What have you outgrown but not yet left?"
+   },
+   {
+    "question": "Which mask have you worn so long it feels like a face?",
+    "opener": "Card, tell us:",
+    "feeling": "uneasy",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Five of Wands",
+      false
+     ]
+    ],
+    "text": "The Five of Wands falls. My grimoire says: A young man is involved in a heated argument with his friends, each holding a wand symbolizing their differing opinions. The conflict feels like it's tearing them apart. What stands in the way: competition, pushed too far. Inner conflict, voices arguing is what pushes back. Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"Which mask have you worn so long it feels like a face?\" it answers: Treat the conflict as healthy competition, not war. It asks you: What argument is really about something else?"
+   },
+   {
+    "question": "What lesson keeps returning until it is learned?",
+    "opener": "Let the next card answer:",
+    "feeling": "worried",
+    "passes": 2,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "King of Wands",
+      false
+     ]
+    ],
+    "text": "The King of Wands falls. What you cannot see yet: leadership with heart, honor. Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What lesson keeps returning until it is learned?\" it answers: Lead with vision and take the first step. It asks you: What vision are you willing to stand behind?"
+   },
+   {
+    "question": "Where can you find rest while feeling impatient?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "impatient",
+    "passes": 2,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Chariot",
+      false
+     ]
+    ],
+    "text": "The Chariot falls. What helps you: control, willpower, success, determination, momentum. Lean on steering opposing impulses with will. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in control; upright, this current can move openly. To \"Where can you find rest while feeling impatient?\" it answers: Commit to one direction and drive through. It asks you: What are the two forces pulling you, and who is holding the reins?"
+   },
+   {
+    "question": "How can you grow through this rather than around it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "driven",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Ace of Cups",
+      false
+     ]
+    ],
+    "text": "The Ace of Cups falls. My grimoire says: A Leo's heart is guarded by hidden fears that prevent them from fully embracing their yearnings for true connection and intimacy. What to do next: open your heart and let the feeling in. Zodiac lens: Gemini's air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"How can you grow through this rather than around it?\" it answers: Open your heart and let the feeling in. In plain life, that is an overflowing heart, compassion beginning. It asks you: What feeling are you ready to receive?"
+   },
+   {
+    "question": "How do you make peace with what has been?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "longing",
+    "passes": 4,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Ace of Swords",
+      false
+     ]
+    ],
+    "text": "The Ace of Swords falls. My grimoire says: A team leader who needs to take a step back from their high-stress project, feeling overwhelmed with tasks. Where it settles: a breakthrough of clarity. Zodiac lens: Gemini's air element resonates with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"How do you make peace with what has been?\" it answers: Say the true thing plainly. In plain life, that is mental clarity cutting through fog. It asks you: What truth is ready to be said plainly?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "It asks you: What have you outgrown but not yet left?",
+  "Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: What argument is really about something else?",
+  "Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: What vision are you willing to stand behind?",
+  "It asks you: What are the two forces pulling you, and who is holding the reins?",
+  "It asks you: What feeling are you ready to receive?",
+  "It asks you: What truth is ready to be said plainly?"
+ ]
+}

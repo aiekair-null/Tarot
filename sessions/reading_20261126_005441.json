@@ -1,0 +1,206 @@
+{
+ "date": "2026-11-26 00:54",
+ "question": "A Live Reading",
+ "profile": "sign: Gemini (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Seven of Pentacles",
+   false
+  ],
+  [
+   "Queen of Wands",
+   false
+  ],
+  [
+   "Ten of Swords",
+   true
+  ],
+  [
+   "Knight of Cups",
+   false
+  ],
+  [
+   "The Hermit",
+   false
+  ],
+  [
+   "Four of Swords",
+   true
+  ],
+  [
+   "The World",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "What energy is gathering around you right now?",
+   "What would you admit if no one were listening?",
+   "What is your intuition trying to say?",
+   "What have you survived that proves you can handle this?",
+   "How can you grow through this rather than around it?",
+   "Where does all of this want to land?"
+  ],
+  "log": [
+   {
+    "question": "What energy is gathering around you right now?",
+    "opener": "She whispers to the cards:",
+    "feeling": "on the edge of something",
+    "passes": 3,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "Seven of Pentacles",
+      false
+     ],
+     [
+      "Queen of Wands",
+      false
+     ]
+    ],
+    "text": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and. The first card out of the deck names your concern: long-term view, sustainable growth, patience. In your life it looks like assessing the harvest. Zodiac lens: Gemini's air element challenges the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What energy is gathering around you right now?\" it answers: Be patient and assess your investment. It asks you: Is the effort rewarding you, or is it time to change fields? The Queen of Wands falls. My grimoire says: The Queen of Wands in an upright reading might suggest that you are leading a community project with warmth, confidence, and leadership skills. Despite initial hesitation or perceived lack of visibility, your magnetic charm and creative authority inspire others to take action, fostering a sense of s. The first card out of the deck names your concern: courage, confidence, warmth, independence. In your life it looks like warm self-confidence, being the main character. Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. It asks you: Where are you dimming your own light? Two cards fell together: the Seven of Pentacles and the Queen of Wands. They are one answer. Pentacles and Wands are neutral elements: they coexist and need you to link them. Together: long-term view meets courage. Picture it: assessing the harvest, while warm self-confidence, being the main character. Their shared counsel: be patient and assess your investment, and own your confidence and your warmth. Through the zodiac lens: Gemini's air element challenges the Earth (wealth, work) current of Pentacles; upright, this current can move openly. Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly."
+   },
+   {
+    "question": "What would you admit if no one were listening?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "focused on money",
+    "passes": 3,
+    "slot": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Ten of Swords",
+      true
+     ]
+    ],
+    "text": "The Ten of Swords falls upside down. My grimoire says: Reversed: After years of internal turmoil and public criticism, the artist finally reached a point where they could let go of past hurts and focus on rebuilding their career from scratch. The Ten of Swords stood as a symbol that while difficult times were far behind, every chapter in their life now. For this card, upside down is relief: recovery, rising again, the worst is over. Zodiac lens: Gemini's air element resonates with the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"What would you admit if no one were listening?\" it answers: Accept the ending; the only way now is up. Picture the weight lifting from the end of a story. It asks you: What does the sunrise at the end of this look like?"
+   },
+   {
+    "question": "What is your intuition trying to say?",
+    "opener": "Let the next card answer:",
+    "feeling": "focused on money",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Knight of Cups",
+      false
+     ]
+    ],
+    "text": "The Knight of Cups falls. My grimoire says: In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th. What you cannot see yet: idealism, a dreamy quest. Zodiac lens: Gemini's air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What is your intuition trying to say?\" it answers: Follow your heart, but check that it is real. It asks you: Is it romance you want, or the feeling of being chosen?"
+   },
+   {
+    "question": "What have you survived that proves you can handle this?",
+    "opener": "She whispers to the cards:",
+    "feeling": "grounded but strained",
+    "passes": 5,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Hermit",
+      false
+     ]
+    ],
+    "text": "The Hermit falls. My grimoire says: A person in a tumultuous divorce, seeking quiet reflection to find their own path. What helps you: soul-searching, introspection, solitude, inner guidance. Lean on a retreat, a search for your own light. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in soul-searching; upright, this current can move openly. To \"What have you survived that proves you can handle this?\" it answers: Step back and find your own answer in the quiet. It asks you: What answer would you hear if the noise stopped for a week?"
+   },
+   {
+    "question": "How can you grow through this rather than around it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "practical",
+    "passes": 2,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Four of Swords",
+      true
+     ]
+    ],
+    "text": "The Four of Swords falls upside down. My grimoire says: The team has just completed a grueling project deadline, and amidst the initial relief comes an unsettling feeling of needing to step back from their work before moving on. They've been so focused and intense that they're now craving a period of rest and reflection together. For this card, upside down is relief: exhaustion, being forced to rest, restlessness. Zodiac lens: Gemini's air element resonates with the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"How can you grow through this rather than around it?\" it answers: Rest before you act again. Picture the weight lifting from much-needed rest, meditation. It asks you: What would real rest look like?"
+   },
+   {
+    "question": "Where does all of this want to land?",
+    "opener": "Let the next card answer:",
+    "feeling": "anxious",
+    "passes": 10,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "The World",
+      true
+     ]
+    ],
+    "text": "The World falls upside down. My grimoire says: The World (Upright): You have successfully completed a major project at work, and now as you look back on the journey, you feel an overwhelming sense of pride and satisfaction. The clients are pleased with your final product, and your colleagues have praised your dedication. As you celebrate this ac. Where it settles if nothing shifts: lack of closure, delays, unfinished business. Steer it: finish what you started and celebrate it. Zodiac lens: Gemini's air element grounds this Major Arcana lesson in lack of closure; reversed, this current turns inward or slows. To \"Where does all of this want to land?\" it answers: Unfinished business, a missing last step, delayed closure; face that, then finish what you started and celebrate it. Picture integration, wholeness, the end of a chapter, but stalled or turned inward. It asks you: What is one piece away from finished?"
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: Where are you dimming your own light?",
+  "Gemini's air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: What does the sunrise at the end of this look like?",
+  "The Knight of Cups falls.",
+  "The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th.",
+  "The Four of Swords falls upside down.",
+  "The World falls upside down."
+ ]
+}
