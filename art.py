@@ -562,3 +562,137 @@ def glow_halo(px, color=58):
                     if 0 <= yy < len(px) and 0 <= xx < len(row) and out[yy][xx] is None:
                         out[yy][xx] = color
     return out
+
+
+# ================================================================ grand cards (big, detailed)
+# The Live table's big cards: a bevelled gold frame with corner gems, a dithered night gradient, a
+# halo behind the outlined picture, and name plates. Only the half-block glyph is needed (plus spaces).
+_BAYER = ((0, 8, 2, 10), (12, 4, 14, 6), (3, 11, 1, 9), (15, 7, 13, 5))
+_SKY = (16, 17, 17, 18, 54, 54)                                  # panel gradient, top to bottom
+_TINT = {"major": (91, 54, 97), "Wands": (166, 130, 208), "Cups": (31, 25, 74),
+         "Swords": (103, 60, 146), "Pentacles": (28, 22, 71)}     # halo inner, halo outer, accent
+_GEM = {"major": 135, "Wands": 202, "Cups": 39, "Swords": 252, "Pentacles": 41}
+
+
+def _gradient(x, y, h, stops=_SKY):
+    f = y / max(1, h - 1) * (len(stops) - 1)
+    i = int(f)
+    j = min(len(stops) - 1, i + 1)
+    return stops[j] if (f - i) * 16 > _BAYER[y % 4][x % 4] else stops[i]
+
+
+def _outline(px, color=16):
+    """A 1-pixel dark outline around every drawn pixel, so the picture pops off the background."""
+    h, w = len(px), len(px[0])
+    out = [row[:] for row in px]
+    for y in range(h):
+        for x in range(w):
+            if px[y][x] is None and any(0 <= y + dy < h and 0 <= x + dx < w and px[y + dy][x + dx] is not None
+                                        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                out[y][x] = color
+    return out
+
+
+def _grand_frame(W, H, gem):
+    """Pixels of the frame: black outline, gold bevel (light top-left, dark bottom-right), gems at the corners."""
+    px = blank(W, H)
+    for x in range(W):
+        px[0][x] = px[H - 1][x] = 16
+        px[1][x], px[H - 2][x] = 229, 136
+        px[2][x] = px[H - 3][x] = 178
+    for y in range(H):
+        px[y][0] = px[y][W - 1] = 16
+        if 1 <= y <= H - 2:
+            px[y][1], px[y][W - 2] = 229 if y < H - 2 else 136, 136
+            px[y][2] = px[y][W - 3] = 178
+    for cx, cy in ((2, 2), (W - 3, 2), (2, H - 3), (W - 3, H - 3)):
+        for dx, dy in ((0, -1), (-1, 0), (1, 0), (0, 1)):
+            px[cy + dy][cx + dx] = gem
+        px[cy][cx] = 231
+    for cx in (W // 2 - 1, W // 2):                               # small gold studs, top and bottom
+        px[1][cx] = px[H - 2][cx] = 231
+    return px
+
+
+def _plate(px, y, W, color=235):
+    for yy in (y, y + 1):
+        for x in range(3, W - 3):
+            px[yy][x] = color
+
+
+def _fit_name(card, room):
+    name = card.upper()
+    for short in (name, name.replace("THE ", "", 1), name.replace(" OF ", " "), SHORT.get(card, name).upper()):
+        if len(short) <= room:
+            return short
+    return name[:room]
+
+
+def grand_cells(card, reversed_=False, w=22, h=18):
+    """A big, detailed card (w x h cells; at least 22 x 14)."""
+    W, H = w, h * 2
+    tag, _, _ = tags(card)
+    rank, suit = split(card)
+    kind = suit or "major"
+    inner, outer, accent = _TINT[kind]
+    px = _grand_frame(W, H, _GEM[kind])
+    top, bottom = 4, H - 5                                        # the picture window, between the plates
+    cx, cy = (W - 1) / 2, (top + bottom) / 2
+    seed = sum(map(ord, card))
+    for y in range(3, H - 3):
+        for x in range(3, W - 3):
+            d = ((x - cx) ** 2 + ((y - cy) * 1.05) ** 2) ** 0.5
+            c = _gradient(x, y - 3, H - 6)
+            if d < 9.5:
+                c = inner if d < 7.5 or (d - 7.5) * 8 < _BAYER[y % 4][x % 4] else c
+            elif d < 12 and (d - 9.5) * 6 < _BAYER[y % 4][x % 4]:
+                c = outer
+            elif (x * 7 + y * 13 + seed) % 53 == 0:
+                c = 189 if (x + y) % 3 else 231                  # stars in the night behind the picture
+            px[y][x] = c
+    for x in range(3, W - 3):                                     # thin accent lines inside the frame
+        px[3][x] = px[H - 4][x] = accent
+    for y in range(3, H - 3):
+        px[y][3] = px[y][W - 4] = accent
+    pic = card_pixels(card, min(W - 8, 18), min(bottom - top, 20))
+    pic = _outline(pic)
+    if reversed_:
+        pic = rotate180(pic)
+    stamp(px, pic, (W - len(pic[0])) // 2, int(cy - len(pic) / 2 + 0.5))
+    _plate(px, 2, W)
+    _plate(px, H - 4, W)
+    rows = halfblock(px, TABLE_BG)
+    label = tag if rank is None else rank.upper()
+    _text_row(rows[1], (w - len(label)) // 2, label, 220, 235)
+    if reversed_:
+        _text_row(rows[1], 4, "▼", 211, 235)
+        _text_row(rows[1], w - 5, "▼", 211, 235)
+    name = _fit_name(card, w - 8)
+    _text_row(rows[h - 2], (w - len(name)) // 2, name, 211 if reversed_ else (220 if rank is None else 231), 235)
+    return rows
+
+
+def grand_back(w=22, h=18, phase=0):
+    """The back of a big card: violet lattice on deep navy, a gold star at the heart, the same gold frame."""
+    W, H = w, h * 2
+    px = _grand_frame(W, H, 135)
+    cx, cy = (W - 1) / 2, (H - 1) / 2
+    for y in range(3, H - 3):
+        for x in range(3, W - 3):
+            d = abs(x - cx) + abs(y - cy) * 0.8
+            if (x + y + phase) % 6 == 0 or (x - y - phase) % 6 == 0:
+                c = 97 if int(d) % 8 < 4 else 61
+            else:
+                c = _gradient(x, y - 3, H - 6, (17, 17, 18, 17, 17))
+            if d < 6.5 and ((x + y) % 2 == 0 or d < 5):
+                c = 54
+            if d < 4.6 and (abs(x - cx) < 0.6 or abs(y - cy) < 0.6 or abs(abs(x - cx) - abs(y - cy)) < 0.6):
+                c = 220                                           # the eight-pointed star
+            if d < 1.2:
+                c = 231
+            px[y][x] = c
+    for x in range(3, W - 3):
+        px[3][x] = px[H - 4][x] = 98
+    for y in range(3, H - 3):
+        px[y][3] = px[y][W - 4] = 98
+    return halfblock(px, TABLE_BG)

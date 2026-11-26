@@ -418,15 +418,17 @@ class UI:
         return [c for i in order for c in piles[i]]
 
     # ---- the laid spread -----------------------------------------------------------------
-    def flipping(self, y, x, w, h, card, k):
+    def flipping(self, y, x, w, h, card, k, big=False):
         """Frame k of 9 of a card flip: the back narrows, the face widens."""
         widths = [w, w * 3 // 4, w // 2, w // 4, 2, w // 4, w // 2, w * 3 // 4, w]
         wd = max(2, widths[k])
         x0 = x + (w - wd) // 2
         if k < 4:
-            self.cells(y, x0, art.back_cells(wd, h) if wd >= 4 else art.frame(wd, h, 98))
+            back = (art.grand_back(wd, h) if big and wd >= 10 else art.back_cells(wd, h)) if wd >= 4 else art.frame(wd, h, 98)
+            self.cells(y, x0, back)
         else:
-            full = art.card_cells(*card, w, h) if h == BH else art.mini_cells(*card, w, h)
+            full = (art.grand_cells(*card, w, h) if big else art.card_cells(*card, w, h) if h == BH
+                    else art.mini_cells(*card, w, h))
             a = (w - wd) // 2
             self.cells(y, x0, full, (a, a + wd))
 
@@ -468,17 +470,23 @@ class UI:
             if 0 <= show < len(slots) and (flip is None or flip[1] >= 4):
                 card_ids = slots[show]
                 c, r = spread[card_ids[0]]
-                if len(card_ids) > 1:
+                cw, ch, _, big = self.fall_geom()
+                ty = 1 + ch + 2
+                if big:
+                    if len(card_ids) > 1:
+                        self.cells(ty, 8, art.grand_cells(*spread[card_ids[1]], 22, 16))
+                    self.cells(ty, 2, art.grand_cells(c, r, 22, 16))
+                elif len(card_ids) > 1:
                     other = spread[card_ids[1]]
-                    self.cells(8, 8, art.card_cells(*other, BW - 6, BH))
-                    self.cells(8, 2, art.card_cells(c, r, BW - 6, BH))
+                    self.cells(ty, 8, art.card_cells(*other, BW - 6, BH))
+                    self.cells(ty, 2, art.card_cells(c, r, BW - 6, BH))
                 else:
-                    self.cells(8, 2, art.card_cells(c, r, BW, BH))
-                tx = BW + 5
+                    self.cells(ty, 2, art.card_cells(c, r, BW, BH))
+                tx = BW + (11 if big and len(card_ids) > 1 else 5)
                 names = " + ".join(spread[j][0] for j in card_ids)
-                self.text(9, tx, f"{show + 1}. {pos[show][0]}: {names}"[: self.w - tx - 1], 51, True)
+                self.text(ty + 1, tx, f"{show + 1}. {pos[show][0]}: {names}"[: self.w - tx - 1], 51, True)
                 q = (getattr(self, "fall_questions", None) or [None] * 6)[show]
-                y = 11
+                y = ty + 3
                 if q:
                     for ln in textwrap.wrap(f"She asked the deck: \"{q}\"", self.w - tx - 2)[:2]:
                         self.text(y, tx, ln, 220)
@@ -552,11 +560,36 @@ class UI:
         self.wait_enter(lambda: self.reveal_scene(key, spread, n, None, "Enter: hear the reading", domain))
 
     # ---- falling cards ------------------------------------------------------------------------
+    def fall_geom(self):
+        """(card w, card h, gap, big) for the six-position Live table: big detailed cards when the window
+        has room (about 146 x 40 or more), the small ones otherwise (and in the 80-column videos)."""
+        cw = min(26, (self.w - 4 - 5 * 2) // 6)
+        if cw >= 22 and self.h >= 40:
+            return cw, 16, 2, True
+        return MW, MH, 1, False
+
+    def fall_text_y(self):
+        """First row of the reading text under the Live table."""
+        return 9 + self.fall_geom()[1] + 2
+
+    def fall_face(self, card, w=None, h=None):
+        cw, ch, _, big = self.fall_geom()
+        if big:
+            return art.grand_cells(*card, w or cw, h or ch)
+        return art.mini_cells(*card, w=w or MW, h=h or MH)
+
+    def fall_back(self, w=None, h=None, phase=0):
+        cw, ch, _, big = self.fall_geom()
+        w, h = w or cw, h or ch
+        return art.grand_back(w, h, phase) if big and w >= 10 else art.back_cells(w, h, phase)
+
     def fall_slot(self, i):
-        return 9, (self.w - 6 * (MW + 1)) // 2 + i * (MW + 1)
+        cw, _, gap, _ = self.fall_geom()
+        return 9, (self.w - 6 * cw - 5 * gap) // 2 + i * (cw + gap)
 
     def fall_table(self, fallen, pairs, flip=None, y=None, upto=None, slots=None):
         """Draw six positions; paired cards overlap inside their shared position."""
+        cw, ch, _, big = self.fall_geom()
         has_slot_map = slots is not None
         slots = slots if slots is not None else [[i] for i in range(len(fallen))]
         upto = len(slots) if upto is None else upto
@@ -569,25 +602,32 @@ class UI:
             if card_ids and visible and len(card_ids) > 1:
                 back, front = card_ids[1], card_ids[0]
                 if flipping.intersection(card_ids):
-                    self.flipping(sy, sx + 3, MW - 3, MH, fallen[back], flip[1])
-                    self.flipping(sy, sx, MW - 3, MH, fallen[front], flip[1])
+                    self.flipping(sy, sx + 3, cw - 3, ch, fallen[back], flip[1], big)
+                    self.flipping(sy, sx, cw - 3, ch, fallen[front], flip[1], big)
+                elif big:
+                    self.cells(sy, sx + 3, self.fall_face(fallen[back], cw - 3))
+                    self.cells(sy, sx, self.fall_face(fallen[front], cw - 3))
                 else:
                     self.cells(sy, sx, _overlapped_mini(fallen[back], fallen[front]))
             elif card_ids and visible:
                 card_id = card_ids[0]
                 if card_id in flipping:
-                    self.flipping(sy, sx, MW, MH, fallen[card_id], flip[1])
+                    self.flipping(sy, sx, cw, ch, fallen[card_id], flip[1], big)
                 else:
-                    self.cells(sy, sx, art.mini_cells(*fallen[card_id]))
+                    self.cells(sy, sx, self.fall_face(fallen[card_id]))
             elif card_ids:
                 if len(card_ids) > 1:
-                    self.cells(sy, sx + 3, _overlapped_back())
+                    if big:
+                        self.cells(sy, sx + 3, self.fall_back(cw - 3))
+                        self.cells(sy, sx, self.fall_back(cw - 3))
+                    else:
+                        self.cells(sy, sx + 3, _overlapped_back())
                 else:
-                    self.cells(sy, sx, art.back_cells(MW, MH))
+                    self.cells(sy, sx, self.fall_back())
             else:
-                self.cells(sy, sx, art.frame(MW, MH, 60))
-                self.text(sy + 2, sx + MW // 2, "?", 60)
-            self.text(sy + MH, sx + MW // 2, str(i + 1), 51 if i < upto else 60)
+                self.cells(sy, sx, art.frame(cw, ch, 60))
+                self.text(sy + ch // 2, sx + cw // 2, "?", 60)
+            self.text(sy + ch, sx + cw // 2, str(i + 1), 51 if i < upto else 60)
         if not has_slot_map:
             for a, b in pairs:
                 sy, sx = self.fall_slot(b)
@@ -619,28 +659,29 @@ class UI:
             f = min(1.0, (now - drop["t0"]) / 0.5)
             if "slot" in drop:
                 sy, sx = self.fall_slot(drop["slot"])
-                cx = self.w // 2 - MW // 2
+                cx = self.w // 2 - self.fall_geom()[0] // 2
                 y, x = int(4 + (sy - 4) * f), int(cx + (sx - cx) * f)
                 cards = drop["cards"]
-                if len(cards) > 1:
+                if len(cards) > 1 and not self.fall_geom()[3]:
                     self.cells(y, x, _overlapped_back())
                 else:
-                    self.cells(y, x, art.back_cells(MW, MH))
+                    self.cells(y, x, self.fall_back())
                 fallen = st["fallen"][:cards[0]]
                 slots = st["slots"][:drop["slot"]]
             else:
                 for i in drop["idx"]:
                     sy, sx = self.fall_slot(i)
-                    cx = self.w // 2 - MW // 2
-                    self.cells(int(4 + (sy - 4) * f), int(cx + (sx - cx) * f), art.back_cells(MW, MH))
+                    cx = self.w // 2 - self.fall_geom()[0] // 2
+                    self.cells(int(4 + (sy - 4) * f), int(cx + (sx - cx) * f), self.fall_back())
                 fallen = st["fallen"][:min(drop["idx"])]
                 slots = st.get("slots")
         else:
             fallen, slots = st["fallen"], st.get("slots")
         self.fall_table(fallen, st["pairs"], st.get("flip"), slots=slots, upto=st.get("upto"))
         lines = st.get("page", [])
+        ty = self.fall_text_y()
         for j, ln in enumerate(lines):
-            self.text(16 + j, 2, ln, 189)
+            self.text(ty + j, 2, ln, 189)
         if prompt:
             line = f"{prompt} › {buf}"
             self.glow(self.h - 2, 2, line[: self.w - 4])
@@ -677,18 +718,24 @@ class UI:
                 _, sx = self.fall_slot(i)
                 sy = 1
                 color = 220 if i == selected else (51 if i < len(slots) else 60)
-                self.text(sy + MH, sx + MW // 2 - 1, f"›{i + 1}‹" if i == selected else str(i + 1), color, i == selected)
+                cw, ch, _, big = self.fall_geom()
+                self.text(sy + ch, sx + cw // 2 - 1, f"›{i + 1}‹" if i == selected else str(i + 1), color, i == selected)
 
             card_ids = slots[selected]
             cards = [spread[i] for i in card_ids]
-            x0, y0 = 2, 9
-            if len(cards) == 1:
+            cw, ch, _, big = self.fall_geom()
+            x0, y0 = 2, 1 + ch + 3
+            if big:
+                if len(cards) > 1:
+                    self.cells(y0, x0 + 6, art.grand_cells(*cards[1], 22, 16))
+                self.cells(y0, x0, art.grand_cells(*cards[0], 22, 16))
+            elif len(cards) == 1:
                 self.cells(y0, x0, art.card_cells(*cards[0], BW, BH))
             else:
                 self.cells(y0, x0, art.card_cells(cards[0][0], cards[0][1], BW - 6, BH))
                 self.cells(y0, x0 + BW - 4, art.card_cells(cards[1][0], cards[1][1], BW - 6, BH))
 
-            tx = BW + 6
+            tx = BW + (12 if big and len(cards) > 1 else 6)
             names = " + ".join(c + (" (reversed)" if r else "") for c, r in cards)
             self.text(y0, tx, f"{selected + 1}. {pos[selected][0]}", 51, True)
             self.text(y0 + 1, tx, names[: self.w - tx - 1], 220, True)
@@ -1184,7 +1231,7 @@ def falling_ritual(scr, reader, plan, domain, concern, start, zodiac_sign=None, 
     log, asked = [], []
 
     def pages(text):
-        room = max(3, ui.h - 19)
+        room = max(3, ui.h - ui.fall_text_y() - 3)
         lines = textwrap.wrap(text, ui.w - 4)
         if not lines:
             return [[]]
