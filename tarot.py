@@ -66,6 +66,9 @@ def _shimmering(fn):
     return run
 
 
+_PAIRS = {"screen": None, "map": {}}
+
+
 class UI:
     def __init__(self, scr, plan=None):
         self.scr = scr
@@ -84,6 +87,10 @@ class UI:
                 pass
             curses.start_color()
             self.big = curses.COLORS >= 256
+            root = getattr(scr, "real", scr)             # colour pairs belong to curses, not to this UI:
+            if _PAIRS["screen"] is not root:             # every UI on one screen (the Ctrl+W room too) shares
+                _PAIRS["screen"], _PAIRS["map"] = root, {}   # one table, so none renumbers the others' colours
+            self.pairs = _PAIRS["map"]
             scr.bkgd(" ", self.attr(153))
 
     # size is read fresh every time, so a resized terminal re-lays everything out on the next frame
@@ -111,13 +118,19 @@ class UI:
             return (fg & 0xFF) | ((bg & 0xFF) << 8) | ((1 << 16) if bold else 0)
         key = (self._c(fg), self._c(bg))
         if key not in self.pairs:
-            n = len(self.pairs) + 1
-            if n >= curses.COLOR_PAIRS:
-                return curses.A_BOLD if bold else 0
-            try:
-                curses.init_pair(n, *key)
-            except (curses.error, ValueError, OverflowError):
-                return 0
+            n = len(set(self.pairs.values())) + 1
+            if n >= curses.COLOR_PAIRS:                  # out of pairs: borrow the closest one already made
+                if not self.pairs:
+                    return curses.A_BOLD if bold else 0
+                rgb = [xterm_rgb(c) for c in key]
+                near = min(self.pairs, key=lambda k: sum((a - b) ** 2 for c, want in zip(k, rgb)
+                                                         for a, b in zip(xterm_rgb(c), want)))
+                n = self.pairs[near]
+            else:
+                try:
+                    curses.init_pair(n, *key)
+                except (curses.error, ValueError, OverflowError):
+                    return 0
             self.pairs[key] = n
         return curses.color_pair(self.pairs[key]) | (curses.A_BOLD if bold else 0)
 
@@ -134,7 +147,7 @@ class UI:
         s = s[: self.w - x - (1 if y == self.h - 1 else 0)]
         if s:
             try:
-                self.scr.addstr(y, x, s, self.attr(153) if a is None else a)
+                self.scr.addstr(y, x, art.plain(s), self.attr(153) if a is None else a)
             except curses.error:
                 pass
 
@@ -155,6 +168,7 @@ class UI:
                     continue
                 if trip:
                     fg = psyche.recolor(fg, i, j, t)
+                ch, fg, bg = art.solid(ch, fg, bg)
                 self.put(y + j, x + i + dx, ch, self.attr(fg, bg))
 
     def glow(self, y, x, s, phase=None, mood=None):

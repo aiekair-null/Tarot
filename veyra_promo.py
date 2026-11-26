@@ -8,7 +8,7 @@ Each run produces a different video: a new speech, different lore and memory pic
     narrative into a Lore or Memory scene, then cuts back.
   * She explains what she has been doing, thanks people for participating, and ends with
     "questions or a live reading? contact Veyra".
-  * Output: a 1080x1920, 60fps reel (MP4) of about 2:30, plus a transcript you can use as the post caption.
+  * Output: a 540x960 (or --res 1080 / TAROT_VIDEO_RES=1080: 1080x1920), 60fps reel (MP4) of about 2:30, plus a transcript you can use as the post caption.
 
 Reuses what the Veyra project already has (auto-discovered from the current folder):
   * lore files     : anything named *lore* (.md .txt .json .jsonl), or --lore PATH
@@ -34,7 +34,8 @@ CONTACT_NAME = "Veyra"
 CONTACT_LINE = "Send me a message right here on Facebook."
 BRAND = "8b/8b(L)"           # 8-bit / 8 billion / Local
 MODEL_LABEL = "QWEN 8B"
-W, H = 270, 480              # pixel-art canvas, upscaled with nearest-neighbour to 1080x1920
+W, H = 270, 480              # pixel-art canvas, upscaled with nearest-neighbour to the output size
+OUT_RES = int(os.environ.get("TAROT_VIDEO_RES", "540"))   # output width: 540x960 for now, 1080 for 1080x1920
 SR = 44100
 
 # ------------------------------------------------------------------ small utils
@@ -1039,7 +1040,8 @@ def main():
     ap.add_argument("--exclude", nargs="*", default=[], help="skip lore/memory passages containing these words")
     ap.add_argument("--length", type=float, default=150, help="target seconds (default 150 = 2:30)")
     ap.add_argument("--fps", type=int, default=60)
-    ap.add_argument("--res", type=int, default=1080, choices=[540, 720, 1080], help="output width")
+    ap.add_argument("--res", type=int, default=OUT_RES if OUT_RES in (540, 1080) else 540, choices=[540, 1080],
+                    help="output width (default 540, or TAROT_VIDEO_RES)")
     try:
         from video import VIDEOS as _VIDEOS
     except Exception:

@@ -1,4 +1,4 @@
-"""Veyra introduces herself: a short brand reel (1080x1920) in the same 8-bit style as the readings.
+"""Veyra introduces herself: a short brand reel (540x960 by default, TAROT_VIDEO_RES=1080 for 1080x1920) in the same 8-bit style as the readings.
 
     python3 tarot.py intro       -> videos/veyra_intro.mp4, then the save / share menu
 """
@@ -6,7 +6,7 @@ import math, random, subprocess, tempfile
 from pathlib import Path
 
 import video
-from video import OW, OH, BOX, FPS, WIDE
+from video import OW, OH, BOX, FPS, WIDE, OUT_SCALE
 
 BRAND = "8b/3b(L)"
 HOOK = ("star", "MEET VEYRA", "8b/3b(L): 8-bit • 3B • Local")
@@ -161,7 +161,7 @@ def render(out_path, voice_kind, say=print, progress=None):
         extra = {"logo": brand_pixels(BRAND)}
         tmp = out_path.with_name(out_path.stem + ".part.mp4")
         cmd = [deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-               "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast",
+               "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), *OUT_SCALE, "-c:v", "libx264", "-preset", "veryfast",
                "-crf", "21", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "160k", "-shortest",
                "-movflags", "+faststart", str(tmp)]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)

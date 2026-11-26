@@ -176,7 +176,8 @@ block, shadow, hidden, spirit, support, strength, action, growth, outcome, heali
 ## Videos (Facebook reel format)
 
 After any reading she offers: **Would you like this reading as a video?** (or menu 5 /
-`python3 tarot.py video` for the last reading). The video is a 1080x1920 vertical reel:
+`python3 tarot.py video` for the last reading). The video is a 540x960 vertical reel for now
+(`TAROT_VIDEO_RES=1080` for 1080x1920):
 
 - after you choose yes, enter the title for the top of the video; leave it blank for a short,
   reading-inspired phrase. A rotating set of six pixel symbols frames it, with zodiac and element
@@ -236,7 +237,9 @@ Keys: ← → card · ↑ ↓ scroll · r reverse · w c s p jump to a suit · 0
 
 `TAROT_BACKEND` (auto, llama, ollama, openai, hf, none) · `TAROT_GGUF` (path to any .gguf) ·
 `TAROT_THREADS` · `TAROT_CTX` (default 8192) · `TAROT_WAIT_LIMIT` (default 20 s) · `TAROT_OLLAMA_MODEL` · `TAROT_ADAPTIVE=0`
-(scripted questions only) · `TAROT_FAST=1` (skip animation delays) · `TAROT_LIVE_RESEARCH=0`.
+(scripted questions only) · `TAROT_FAST=1` (skip animation delays) · `TAROT_LIVE_RESEARCH=0` ·
+`TAROT_VIDEO_RES` (540 or 1080, default 540) · `TAROT_BLOCKS=0` (terminal font has no ▀▄█ block glyphs:
+the art shows as gaps with tiny hex digits in it; better yet, switch the terminal to DejaVu Sans Mono).
 
 ## Future: one-tap sharing to Facebook Reels (saved for later)
 

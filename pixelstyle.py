@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageFilter
 import veyra_promo as VP
 from veyra_promo import W, H, put_text, hexrgb, spring, ease_out_cubic, paste_glow, paste_card
 
-SCALE = 4                       # 270x480 -> 1080x1920
+SCALE = max(1, VP.OUT_RES // W)  # 270x480 -> 540x960 for now (TAROT_VIDEO_RES=1080 -> 1080x1920)
 GOLD, CYAN, WHITE, LILAC, RED = hexrgb("#ffd36b"), hexrgb("#4ff0ff"), (240, 232, 255), hexrgb("#b9a6e8"), (255, 90, 110)
 
 

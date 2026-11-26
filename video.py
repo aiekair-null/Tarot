@@ -1,4 +1,4 @@
-"""Turn a reading into a vertical Facebook reel (1080x1920), drawn from Veyra's own pixel art.
+"""Turn a reading into a vertical Facebook reel (540x960 by default, TAROT_VIDEO_RES=1080 for 1080x1920), drawn from Veyra's own pixel art.
 
 Reel format: a pixel tapestry backdrop with a pinned hook headline at the top (icon + title +
 one-line hook, white boxes), the reading table on a navy cloth below it, and each card held up
@@ -33,6 +33,8 @@ def _videos_dir():
 VIDEOS = _videos_dir()
 SESSIONS = Path(os.environ.get("TAROT_SESSIONS", "sessions"))
 OW, OH = 1080, 1920                               # 9:16 reel
+OUT_W = int(os.environ.get("TAROT_VIDEO_RES", "540"))   # output width: 540x960 for now (1080 = full HD);
+OUT_SCALE = ["-vf", f"scale={OUT_W}:{OUT_W * 16 // 9}:flags=area"] if OUT_W != OW else []   # frames are drawn at 1080
 BAND = 640                                        # tapestry backdrop + pinned hook
 BOX_TOP, BOX = 650, 930                           # the terminal table on the cloth
 CAP_TOP, CAP_H = 1590, 190                        # spoken captions (kept above Facebook's bottom overlay)
@@ -1179,7 +1181,7 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
         titles = edit.Titles(p, 1029, BOX)
         pop = edit.WordPop(p)
         cmd = [deps.ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-               "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast",
+               "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-i", str(wav), *OUT_SCALE, "-c:v", "libx264", "-preset", "veryfast",
                "-crf", "21", "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "160k", "-shortest",
                "-movflags", "+faststart", str(out_path)]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
