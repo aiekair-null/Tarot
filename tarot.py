@@ -1345,14 +1345,26 @@ def offer_model(reader):
                "For the free AI version run:  bash setup_local.sh", "grief", "type")
 
 
-def ask_profile():
+def ask_profile(reader=None):
+    """Work and sign every time; age and gender once (then remembered); plus a few questions from a pool of
+    over a thousand that she never repeats. Blank answers are skipped."""
+    import intake
+    mem = reader.mem if reader is not None else {}
+    facts = mem.setdefault("about_you", {})
     fx.say("A few things to help me feel you out. Press Enter to skip any.", "calm", "fade")
     prof = {}
-    for label, k in (("Your age?", "age"), ("Your career, or what you do?", "career"), ("Your sex or gender?", "sex/gender")):
+    fx.say("Your career, or what you do?", "calm", "type")
+    v = ask()
+    if v:
+        prof["career"] = v
+    for label, k in (("Your age?", "age"), ("Your sex or gender?", "sex/gender")):
+        if facts.get(k):
+            prof[k] = facts[k]
+            continue
         fx.say(label, "calm", "type")
         v = ask()
         if v:
-            prof[k] = v
+            prof[k] = facts[k] = v
     fx.say("Your astrological sign? Or just its element: fire, earth, air or water.", "calm", "type")
     v = ask()
     sign, element = parse_sign(v)
@@ -1361,6 +1373,16 @@ def ask_profile():
         fx.say(f"{sign + ', ' if sign else ''}{element}. The {ELEMENT_SUIT[element]} will speak in your voice.", "mystic", "fade")
     elif v:
         prof["sign"] = v
+    for q in intake.pick(mem, 3):
+        fx.say(q, "calm", "type")
+        v = ask()
+        if v:
+            prof[q.rstrip("?")] = v
+    if reader is not None:
+        try:
+            reader._save()
+        except Exception:
+            pass
     return ", ".join(f"{k}: {v}" for k, v in prof.items()) or "(not shared)"
 
 
@@ -1385,7 +1407,7 @@ def reading(reader):
         return live_reading(reader)
     fx.say("What do you bring to the cards today?", "mystic", "fade")
     question = ask() or "What do I need to see?"
-    profile = ask_profile()
+    profile = ask_profile(reader)
 
     qa = []
     while True:
