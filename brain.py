@@ -97,6 +97,59 @@ def ollama_models():
         return []
 
 
+
+class NoThink:
+    """Drops <think>...</think> blocks from a token stream, even when a tag is split across pieces.
+    An unfinished think block (the model ran out of tokens mid-thought) is dropped too."""
+    OPEN, CLOSE = "<think>", "</think>"
+
+    def __init__(self):
+        self.buf, self.inside, self.started = "", False, False
+
+    @staticmethod
+    def _partial(text, tag):
+        """How many characters at the end of text could be the start of tag."""
+        for k in range(min(len(tag) - 1, len(text)), 0, -1):
+            if text.endswith(tag[:k]):
+                return k
+        return 0
+
+    def feed(self, piece):
+        self.buf += piece
+        out = []
+        while True:
+            if self.inside:
+                i = self.buf.find(self.CLOSE)
+                if i < 0:
+                    self.buf = self.buf[-(len(self.CLOSE) - 1):]
+                    break
+                self.buf, self.inside = self.buf[i + len(self.CLOSE):], False
+                if not self.started:
+                    self.buf = self.buf.lstrip()
+                continue
+            i, j = self.buf.find(self.OPEN), self.buf.find(self.CLOSE)
+            if j >= 0 and (i < 0 or j < i):          # a stray closing tag: just remove it
+                self.buf = self.buf[:j] + self.buf[j + len(self.CLOSE):]
+                continue
+            if i >= 0:
+                if self.buf[:i]:
+                    out.append(self.buf[:i])
+                self.buf, self.inside = self.buf[i + len(self.OPEN):], True
+                continue
+            keep = max(self._partial(self.buf, self.OPEN), self._partial(self.buf, self.CLOSE))
+            text, self.buf = (self.buf[:-keep], self.buf[-keep:]) if keep else (self.buf, "")
+            if not self.started:
+                text = text.lstrip()
+            if text:
+                self.started = True
+                out.append(text)
+            break
+        return out
+
+    def flush(self):
+        text, self.buf = ("" if self.inside else self.buf), ""
+        return [text] if text and (self.started or text.strip()) else []
+
 class Brain:
     def __init__(self, connect=True):
         self.lock = threading.RLock()
@@ -187,6 +240,11 @@ class Brain:
         return True
 
     # ---- talking ---------------------------------------------------------------
+    def thinks(self):
+        """Qwen3 (and other reasoning models) write a hidden <think> block before answering."""
+        name = (getattr(self, "label", "") + " " + str(getattr(self, "model", ""))).lower()
+        return any(k in name for k in ("qwen3", "qwq", "deepseek-r1", "-r1"))
+
     def stream(self, msgs, max_tokens=600, temperature=0.8, wait=True, _control=False):
         """Yield text pieces as they are generated. wait=False yields nothing if the model is busy.
         The control room (Ctrl+W) can pause it between tokens and tunes how it samples;
@@ -204,7 +262,14 @@ class Brain:
             elif note:
                 msgs.insert(0, {"role": "system", "content": note.strip()})
             max_tokens = control.max_tokens(max_tokens)
+        if self.thinks():                           # Qwen3: answer straight away, no reasoning out loud
+            msgs = [dict(m) for m in msgs]
+            if msgs and msgs[0].get("role") == "system":
+                msgs[0]["content"] = msgs[0]["content"].rstrip() + "\n/no_think"
+            else:
+                msgs.insert(0, {"role": "system", "content": "/no_think"})
         tune = {} if _control else control.sampling(self.kind)
+        flt = NoThink()
 
         def out(piece):
             if not _control:
@@ -228,10 +293,13 @@ class Brain:
                 for ch in it:
                     piece = ch["choices"][0].get("delta", {}).get("content")
                     if piece:
-                        yield out(piece)
+                        for t in flt.feed(piece):
+                            yield out(t)
             elif self.kind in ("ollama", "openai"):
                 body = {"model": self.model, "messages": msgs, "max_tokens": max_tokens,
                         "temperature": temperature, "stream": True, **tune}
+                if self.kind == "ollama" and self.thinks():
+                    body["think"] = False
                 req = urllib.request.Request(self.url + "/chat/completions", json.dumps(body).encode(),
                                              {"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=600) as r:
@@ -244,13 +312,17 @@ class Brain:
                         except Exception:
                             piece = None
                         if piece:
-                            yield out(piece)
+                            for t in flt.feed(piece):
+                                yield out(t)
             elif self.kind == "hf":
                 for ch in self.client.chat_completion(messages=msgs, max_tokens=max_tokens,
                                                       temperature=temperature, stream=True):
                     piece = ch.choices[0].delta.content if ch.choices else None
                     if piece:
-                        yield out(piece)
+                        for t in flt.feed(piece):
+                            yield out(t)
+            for t in flt.flush():
+                yield out(t)
         finally:
             self.lock.release()
 

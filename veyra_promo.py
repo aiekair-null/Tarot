@@ -190,7 +190,8 @@ def repo_snippets(rng, exclude):
     except Exception:
         pass
     try:
-        m = json.load(open("memory.json", encoding="utf-8"))
+        from agent import _scrub_think
+        m = _scrub_think(json.load(open("memory.json", encoding="utf-8")))
         for c in m.get("channelings", []): add("memory", c, "channelings")
         for card, imgs in m.get("learned", {}).items():
             for im in imgs: add("memory", f"What I learned about {card}: {im}", "learned")

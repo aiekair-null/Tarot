@@ -22,8 +22,36 @@ def solid(ch, fg, bg):
     return ch, fg, bg
 
 
+# A terminal window that isn't decoding UTF-8 (a Latin-1 xterm) shows every symbol as 'â' junk. There Veyra
+# speaks plain ASCII: each symbol becomes one ASCII character, so every layout keeps its width.
+ASCII = False
+_ASCII = str.maketrans({
+    "\u00b7": ".", "\u2013": "-", "\u2014": "-", "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+    "\u2022": "*", "\u2026": ".", "\u2039": "<", "\u203a": ">", "\u2190": "<", "\u2191": "^", "\u2192": ">",
+    "\u2193": "v", "\u221e": "8", "\u2234": ":", "\u2235": ":", "\u2248": "~", "\u232c": "*", "\u235f": "*",
+    "\u2500": "-", "\u2501": "-", "\u2502": "|", "\u2503": "|", "\u2504": "-", "\u2523": "+", "\u2533": "+",
+    "\u253b": "+", "\u254b": "+", "\u254d": "-", "\u2550": "=", "\u2580": '"', "\u2584": "_", "\u2588": "#",
+    "\u258c": "|", "\u2590": "|", "\u2591": ".", "\u2592": ":", "\u2593": "#", "\u2594": "-", "\u2596": ".",
+    "\u2597": ".", "\u2598": "'", "\u259d": "'", "\u25a0": "#", "\u25a1": "o", "\u25ac": "=", "\u25b0": "#",
+    "\u25b1": "-", "\u25b6": ">", "\u25bc": "v", "\u25c6": "*", "\u25c7": "*", "\u25c9": "@", "\u25cb": "o",
+    "\u25cc": ".", "\u25cf": "@", "\u25d0": "o", "\u25d1": "o", "\u25d2": "o", "\u25d3": "o", "\u25dc": ".",
+    "\u25dd": ".", "\u25de": ".", "\u25df": ".", "\u2600": "*", "\u2605": "*", "\u263d": "(", "\u263e": ")",
+    "\u2699": "*", "\u2712": "~", "\u2717": "x", "\u2726": "*", "\u2727": "+", "\u00a0": " ",
+    **{chr(c): "*" for c in range(0x2648, 0x2654)},                              # the zodiac signs
+})
+
+
+def _fold(ch):
+    import unicodedata
+    return (unicodedata.normalize("NFKD", ch).encode("ascii", "ignore").decode() or "?")[:1]
+
+
 def plain(s):
-    """Loose text with block glyphs in it, for fonts without them (TAROT_BLOCKS=0)."""
+    """Text as this terminal can show it: block glyphs swapped for fonts without them (TAROT_BLOCKS=0),
+    and everything ASCII on a terminal that isn't decoding UTF-8."""
+    if ASCII:
+        s = s.translate(_ASCII)
+        return s if s.isascii() else "".join(c if c < "\x80" else _fold(c) for c in s)
     return s if BLOCKS else s.translate(PLAIN)
 
 # palette letter -> xterm-256 color index

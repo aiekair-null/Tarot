@@ -15,6 +15,20 @@ import questions as Q
 import psyche
 
 MEMORY_PATH = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
+
+
+def _scrub_think(o):
+    """Qwen3 used to think out loud, and some of that got saved as lore ("<think> Okay, the user wants...").
+    Strip those blocks on load; an entry that was nothing but thinking is dropped."""
+    if isinstance(o, str):
+        return re.sub(r"<think>.*?(</think>|$)\s*", "", o, flags=re.S).replace("</think>", "").strip() if "think>" in o else o
+    if isinstance(o, list):
+        out = [_scrub_think(x) for x in o]
+        return [x for x in out if x != ""]
+    if isinstance(o, dict):
+        out = {k: _scrub_think(v) for k, v in o.items()}
+        return {k: v for k, v in out.items() if v != [] or not isinstance(o[k], list) or o[k] == []}
+    return o
 SYS = random.SystemRandom()
 
 SKILLS = [
@@ -103,7 +117,7 @@ class Reader:
         mem = _default_memory()
         if MEMORY_PATH.exists():
             try:
-                mem.update(json.loads(MEMORY_PATH.read_text()))
+                mem.update(_scrub_think(json.loads(MEMORY_PATH.read_text(encoding="utf-8"))))
             except Exception:
                 pass
         return mem
@@ -111,7 +125,7 @@ class Reader:
     def _save(self):
         with self.lock:
             tmp = MEMORY_PATH.with_suffix(".tmp")
-            tmp.write_text(json.dumps(self.mem, indent=2))
+            tmp.write_text(json.dumps(self.mem, indent=2), encoding="utf-8")
             tmp.replace(MEMORY_PATH)
 
     def _memory_block(self):
