@@ -637,7 +637,7 @@ class UI:
                 slots = st.get("slots")
         else:
             fallen, slots = st["fallen"], st.get("slots")
-        self.fall_table(fallen, st["pairs"], st.get("flip"), slots=slots)
+        self.fall_table(fallen, st["pairs"], st.get("flip"), slots=slots, upto=st.get("upto"))
         lines = st.get("page", [])
         for j, ln in enumerate(lines):
             self.text(16 + j, 2, ln, 189)

@@ -441,7 +441,7 @@ def plan(scenes, voice, say=print):
         elif sc["name"].startswith("ask"):
             dur, lead = max(speech + 1.0, 1.7 * min(3, sc.get("passes", 1))), 0.3
         elif sc["name"].startswith("drop"):
-            dur, lead = 1.1, 0
+            dur, lead = REVEAL_AT + 0.9, 0          # a beat face down, the flip, a moment face up
         elif sc["name"].startswith("read"):
             dur, lead = speech + 0.8, 0.3
         elif sc["name"].startswith("card"):
@@ -868,6 +868,9 @@ class Painter:
         return self.np.asarray(img)
 
 
+REVEAL_AT = 0.5   # Live Reading videos: seconds the fallen card stays face down before Veyra turns it
+
+
 def scene_content(p, sc, t, sess):
     """Draw one moment of a scene on the virtual terminal and return its pixels."""
     import tarot
@@ -913,28 +916,35 @@ def scene_content(p, sc, t, sess):
         e = log[sc["event"]]
         before = sum(len(x["idx"]) for x in log[:sc["event"]])
         cards = [tuple(c) for c in sess["spread"]]
-        upto = before if name.startswith("ask") else before + len(e["idx"])
+        upto = before + len(e["idx"])                # this event's card(s) are on the table from the ask on
         pairs = [p for p in sess["falls"].get("pairs", []) if max(p) < upto]
         saved_slots = sess["falls"].get("slots")
-        slot_upto = sc["event"] + (0 if name.startswith("ask") else 1)
         st = {"fallen": cards[:upto], "pairs": pairs,
-            "slots": saved_slots[:slot_upto] if saved_slots else None,
+            "slots": saved_slots[:sc["event"] + 1] if saved_slots else None,
             "pass_n": 13, "page": [],
             "pass_t0": sc["start"] + (local // 1.7) * 1.7}
+        face_down = e.get("slot", sc["event"]) if saved_slots else before   # face-up positions before this one
+        one = len(e["idx"]) == 1
         ui.mood = ui.plan["wash"]
-        if name.startswith("ask"):
-            st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
-            ui.falling_frame(st, footer="the deck shuffles...")
-        elif name.startswith("drop"):
+        if name.startswith("ask"):                   # the card falls face down while she asks its question
             st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
             if local < 0.5:
-                if sess["falls"].get("slots"):
+                if saved_slots:
                     st["drop"] = {"t0": sc["start"], "slot": e.get("slot", sc["event"]), "cards": e["idx"]}
                 else:
                     st["drop"] = {"t0": sc["start"], "idx": e["idx"]}
+                foot = "a card falls..." if one else "two cards fall together..."
             else:
-                st["flip"] = (tuple(e["idx"]), min(8, int((local - 0.5) / 0.6 * 9)))
-            ui.falling_frame(st, footer="a card falls!" if len(e["idx"]) == 1 else "two cards fall together!")
+                st["upto"] = face_down
+                foot = "it waits, face down" if one else "they wait, face down"
+            ui.falling_frame(st, footer=foot)
+        elif name.startswith("drop"):                # then she turns it over
+            st["page"] = textwrap.wrap(f"{e['opener']} {e['question']}", ui.w - 4)
+            if local < REVEAL_AT:
+                st["upto"] = face_down
+            else:
+                st["flip"] = (tuple(e["idx"]), min(8, int((local - REVEAL_AT) / 0.6 * 9)))
+            ui.falling_frame(st, footer="Veyra turns it over" if one else "Veyra turns them over")
         else:
             room = max(3, ui.h - 19)
             lines = textwrap.wrap(e["text"], ui.w - 4)
@@ -1175,7 +1185,8 @@ def render(sess, out_path, voice_kind, say=print, progress=None):
     if trip:                                   # psilocybin mode: the fast-cut trip
         script = psyche.trip_script(script, sess)
     scenes, events, total = plan(script, voice, say)
-    flips = [sc["start"] for sc in scenes if sc["name"].startswith(("card", "drop"))]
+    flips = [sc["start"] + (REVEAL_AT if sc["name"].startswith("drop") else 0)
+             for sc in scenes if sc["name"].startswith(("card", "drop"))]
     cuts = edit.plan_cuts(scenes, events, sess, calm=not trip)
     sfx = []
     for sc in scenes:
