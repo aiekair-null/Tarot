@@ -41,7 +41,8 @@ CAP_TOP, CAP_H = 1590, 190                        # spoken captions (kept above 
 CLOTH = (10, 14, 40)
 FPS = 15
 TITLE_WRITE = 1.4                                    # seconds for the title's letters to write on
-TITLE_DONE = TITLE_WRITE + 0.15 + 0.12 * 6 + 0.2    # then its white boxes, then six zodiac emoji
+ICON_POP = 0.09                                      # seconds between zodiac emoji popping in
+TITLE_DONE = TITLE_WRITE + 0.15 + ICON_POP * 14 + 0.2   # then the white boxes, then up to 14 emoji
 SR = 44100
 SMALL = (30, 72, 15, 30)                          # rows, cols, cell w, cell h  (fills 1080 px wide)
 WIDE = (30, 80, 13, 26)                           # the Celtic Cross table and the intro need 80 columns
@@ -766,19 +767,17 @@ class Painter:
             self.intros = {n: self.np.asarray(img)}
         return self.intros[n]
 
-    def _boxes(self, img, lines, y, f, size, icon=None, anim=None):
-        """anim (title draw-on): (letters shown, box on, icons shown); None draws everything."""
+    def _boxes(self, img, lines, y, f, size, icons=None, anim=None):
+        """Each line in a white box, with its own (left, right) zodiac symbols from icons (one pair per line).
+        anim (title draw-on): (letters shown, box on, icons shown); None draws everything.
+        Leaves the count of emoji still to pop in self._pop_left."""
         d = self.ImageDraw.Draw(img)
         left_chars = anim[0] if anim else 10 ** 6
         box_on = anim[1] if anim else True
         icons_left = anim[2] if anim else 10 ** 6
         for n, ln in enumerate(lines):
             w = d.textlength(ln, font=f)
-            pair = icon if isinstance(icon, (tuple, list)) else (icon, icon)
-            if icon and n == 0 and len(pair) == 2 and isinstance(pair[0], (tuple, list)):
-                left_names, right_names = pair
-            else:
-                left_names, right_names = ((pair[0],), (pair[1],)) if icon and n == 0 else ((), ())
+            left_names, right_names = icons[n] if icons and n < len(icons) else ((), ())
             icon_size = max(4, size // 9)
             left_icons = [self._icon(name, icon_size) for name in left_names]
             right_icons = [self._icon(name, icon_size) for name in right_names]
@@ -808,6 +807,7 @@ class Painter:
                     img.paste(ic, (int(ix), int(y + (size + 8 - ic.height) / 2)), ic)
                 ix += ic.width + 6
             y += size + 20
+        self._pop_left = icons_left
         return y
 
     def _wrap(self, text, f, width):
@@ -823,23 +823,37 @@ class Painter:
         return lines + [cur]
 
     def _pinned(self, img, t=None):
-        """The headline: title in white boxes between zodiac emoji, the hook line under it.
-        t (seconds into the video) draws it on: letters first, then the boxes, then the emoji."""
+        """The headline: every line (title and hook) in its own white box with a drawn zodiac symbol on
+        each side; the first title line carries three a side. t (seconds into the video) draws it on:
+        letters first, then the boxes, then the emoji pop in line by line."""
         left, right, title, line = self.hook
+        left, right = tuple(left), tuple(right)
         for size in (54, 48, 42, 38, 34):              # shrink until the whole title fits: never drop words
             f = self.canvas.font(size, "DejaVuSans-Bold.ttf")
             title_lines = self._wrap(title, f, OW - 450)
             if len(title_lines) <= 2:
                 break
-        anim = None
+        title_lines = title_lines[:3]
+        for hs in ((54, 48, 44, 40, 36) if size >= 48 else (48, 44, 40, 36)):   # the hook line: two lines at most
+            hf = self.canvas.font(hs, "DejaVuSans-Bold.ttf")
+            hook_lines = self._wrap(line, hf, OW - 300)
+            if len(hook_lines) <= 2:
+                break
+        hook_lines = hook_lines[:3]
+        rest = [g for g in SIGN_SYMBOLS.values() if g not in left + right] + [g for g in left + right if g in ZODIAC]
+        pairs = [((rest[(2 * k) % len(rest)],), (rest[(2 * k + 1) % len(rest)],))
+                 for k in range(len(title_lines) + len(hook_lines) - 1)]
+        icons = [(left, right)] + pairs
+        anim = hook_anim = None
         if t is not None:
-            letters = sum(len(ln) for ln in title_lines[:3])
+            letters = sum(len(ln) for ln in title_lines)
             anim = (int(letters * min(1.0, t / TITLE_WRITE)), t >= TITLE_WRITE,
-                    int(max(0.0, t - TITLE_WRITE - 0.15) / 0.12))
-        y = self._boxes(img, title_lines[:3], 270, f, size, (left, right), anim)
+                    int(max(0.0, t - TITLE_WRITE - 0.15) / ICON_POP))
+        y = self._boxes(img, title_lines, 270, f, size, icons[:len(title_lines)], anim)
+        if t is not None:
+            hook_anim = (10 ** 6, True, self._pop_left)
         if t is None or t >= TITLE_WRITE:
-            f = self.canvas.font(54 if size >= 48 else 48, "DejaVuSans-Bold.ttf")
-            self._boxes(img, self._wrap(line, f, OW - 200)[:3], y, f, f.size)
+            self._boxes(img, hook_lines, y, hf, hf.size, icons[len(title_lines):], hook_anim)
 
     # ---------- per-frame layers
     def ui(self, size):
