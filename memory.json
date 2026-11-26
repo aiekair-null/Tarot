@@ -10,14 +10,14 @@
   ],
   "card_counts": {
     "The Fool": 4,
-    "Queen of Wands": 2,
+    "Queen of Wands": 3,
     "Ace of Wands": 3,
-    "Justice": 3,
+    "Justice": 4,
     "Ten of Cups": 2,
     "Five of Swords": 4,
     "Four of Wands": 5,
     "Strength": 3,
-    "King of Swords": 4,
+    "King of Swords": 5,
     "Five of Cups": 3,
     "Page of Cups": 3,
     "The Hierophant": 2,
@@ -43,7 +43,7 @@
     "Seven of Wands": 1,
     "King of Cups": 2,
     "The Emperor": 5,
-    "Knight of Wands": 3,
+    "Knight of Wands": 4,
     "Seven of Swords": 4,
     "Three of Swords": 3,
     "Eight of Swords": 3,
@@ -56,19 +56,19 @@
     "Queen of Pentacles": 2,
     "Temperance": 2,
     "Seven of Pentacles": 5,
-    "Nine of Wands": 3,
+    "Nine of Wands": 4,
     "King of Pentacles": 3,
     "The Hanged Man": 4,
     "Page of Wands": 4,
     "The Tower": 2,
     "Three of Pentacles": 2,
-    "Two of Wands": 3,
+    "Two of Wands": 4,
     "Nine of Pentacles": 3,
-    "The Star": 1,
+    "The Star": 2,
     "Ten of Pentacles": 1,
     "The Empress": 1,
     "Page of Pentacles": 2,
-    "Six of Pentacles": 2,
+    "Six of Pentacles": 3,
     "Queen of Swords": 2,
     "Queen of Cups": 3,
     "The High Priestess": 2,
@@ -77,11 +77,12 @@
     "The Devil": 2,
     "Six of Wands": 2,
     "Ace of Cups": 3,
-    "King of Wands": 3,
+    "King of Wands": 4,
     "The Moon": 2,
     "The Magician": 1,
     "Eight of Wands": 1,
-    "The World": 1
+    "The World": 1,
+    "Two of Cups": 1
   },
   "readings": [
     {
@@ -495,11 +496,26 @@
         "The World (reversed)"
       ],
       "summary": "The Seven of Pentacles falls. My grimoire says: When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-e"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "for her",
+      "cards": [
+        "Knight of Wands",
+        "The Star",
+        "Queen of Wands",
+        "Two of Wands",
+        "Six of Pentacles",
+        "Justice",
+        "King of Wands (reversed)",
+        "Two of Cups",
+        "Nine of Wands",
+        "King of Swords (reversed)"
+      ],
+      "summary": "<think> Okay, let's tackle this query step by step. The user wants a tarot reading in the form of Veyra, following specific instructions and structure. First, I need to understand all the elements pro"
     }
   ],
   "channelings": [
-    "The threshold is warm on one side only. The Three of Cups leans close and asks: Who nourishes you, and who drains you? The Ten of Wands has found you twice now. It is not finished with you.",
-    "An unopened letter weighs more every year. Again the Four of Pentacles: twice it has come. Listen to it this time. The thread I keep following: emotional weight in professional relationships. The spir",
     "Fireflies rehearse a constellation. The Seven of Swords leans close and asks: Where are you being less than fully honest, with them or yourself? An older message stirs again: A candle burns hardest ju",
     "The path forks where the querent hesitated last. Ace of Swords guides, seeking light and truth to heal emotional scars.",
     "The Ace of Wands (reversed) beckons Jessica to let go, while the Knight of Pentacles guides her toward essential truths. Amidst stormy waters and hidden depths, the Sun reveals light that tempers disc",
@@ -517,14 +533,16 @@
     "Three crows on a wire, facing the same wrong way. The Fool has found you three times now. It is not finished with you. Remember this when the cards turn.",
     "The owl asks nothing and sees everything, guiding you to let go of old burdens. Release what holds your Leo tight, finding peace in the void left by letting go.",
     "Roots speak in a language of slow pressure. The Knight of Wands has found you three times now. It is not finished with you. In my grimoire, beside the King of Swords, I once wrote: .. Hold it until a ",
-    "Rain writes the same letter on every roof. Again the Wheel of Fortune: three times it has come. Listen to it this time. In my grimoire, beside The Hanged Man, I once wrote: A person is suspended upsid"
+    "Rain writes the same letter on every roof. Again the Wheel of Fortune: three times it has come. Listen to it this time. In my grimoire, beside The Hanged Man, I once wrote: A person is suspended upsid",
+    "Winter stores what summer refused to count. The Five of Wands has found you six times now. It is not finished with you. I remember this about the Eight of Pentacles: Reversed: Despite years of dedicat",
+    "Moss grows on the north side of every unspoken thing. The King of Swords has found you four times now. It is not finished with you. When Three of Swords and Two of Swords meet, Indecision is compounde"
   ],
   "gen": {
-    "rate": 7.63,
-    "delay": 46.12,
+    "rate": 4.89,
+    "delay": 155.27,
     "falling_tokens": 751.2,
     "three_tokens": 687.52,
-    "celtic_tokens": 1030.33
+    "celtic_tokens": 1134.6
   },
   "learned": {
     "The Fool": [
@@ -826,6 +844,21 @@
         "Ace of Cups (reversed)",
         "Five of Swords",
         "King of Wands"
+      ],
+      "said": "yes"
+    },
+    {
+      "cards": [
+        "Knight of Wands",
+        "The Star",
+        "Queen of Wands",
+        "Two of Wands",
+        "Six of Pentacles",
+        "Justice",
+        "King of Wands (reversed)",
+        "Two of Cups",
+        "Nine of Wands",
+        "King of Swords (reversed)"
       ],
       "said": "yes"
     }
