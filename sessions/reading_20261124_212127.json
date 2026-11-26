@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-24 21:21",
+ "question": "A Live Reading",
+ "profile": "sign: Leo (fire)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Four of Swords",
+   false
+  ],
+  [
+   "Two of Pentacles",
+   false
+  ],
+  [
+   "Six of Pentacles",
+   false
+  ],
+  [
+   "Page of Cups",
+   false
+  ],
+  [
+   "Page of Pentacles",
+   true
+  ],
+  [
+   "Knight of Pentacles",
+   true
+  ]
+ ],
+ "domain": "inner",
+ "reading": "The spirits have said their piece. Carry what helps; leave the rest on the cloth.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "Ollama qwen2.5:1.5b",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Which part of life is calling loudest at the moment, and how does overcoming past traumas touch it?",
+   "What keeps you from feeling less anxious?",
+   "What is moving behind the scenes, unseen?",
+   "What strength have you forgotten you have?",
+   "How can you grow through this rather than around it?",
+   "How do you make peace with what has been?"
+  ],
+  "log": [
+   {
+    "question": "Which part of life is calling loudest at the moment, and how does overcoming past traumas touch it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "searching",
+    "passes": 4,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Four of Swords",
+      false
+     ]
+    ],
+    "text": "The Four of Swords falls. My grimoire says: The team has just completed a grueling project deadline, and amidst the initial relief comes an unsettling feeling of needing to step back from their work before moving on. They've been so focused and intense that they're now craving a period of rest and reflection together. The first card out of the deck names your concern: rest, recovery, meditation, sanctuary. In your life it looks like much-needed rest, meditation. Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"Which part of life is calling loudest at the moment, and how does overcoming past traumas touch it?\" it answers: Rest before you act again. It asks you: What would real rest look like?"
+   },
+   {
+    "question": "What keeps you from feeling less anxious?",
+    "opener": "She whispers to the cards:",
+    "feeling": "anxious",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Two of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Two of Pentacles falls. My grimoire says: Upright: You've just wrapped up a demanding project at work, and in the process, you found yourself juggling multiple tasks simultaneously. Now, as you step back to review and reflect on your efforts, you realize how adaptable you are when facing complex challenges. This newfound balance allows you. What stands in the way: balance, pushed too far. Adaptability is what pushes back. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What keeps you from feeling less anxious?\" it answers: Prioritize and keep the balls in the air. It asks you: What can you stop juggling?"
+   },
+   {
+    "question": "What is moving behind the scenes, unseen?",
+    "opener": "The spirits ask through her:",
+    "feeling": "sharp-edged",
+    "passes": 4,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Six of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Six of Pentacles falls. What you cannot see yet: generosity with boundaries. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What is moving behind the scenes, unseen?\" it answers: Give and receive fairly. It asks you: Is the giving in this situation fair and free?"
+   },
+   {
+    "question": "What strength have you forgotten you have?",
+    "opener": "The spirits ask through her:",
+    "feeling": "practical",
+    "passes": 8,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Page of Cups",
+      false
+     ]
+    ],
+    "text": "The Page of Cups falls. My grimoire says: Reversed in a recent professional setback, the querent clings to old routines and emotional walls instead of embracing new ideas or nurturing creative projects that could rejuvenate their career path. What helps you: creative opportunity, intuitive message, inner child. Lean on gentle intuition, a dreamy idea. Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What strength have you forgotten you have?\" it answers: Listen to the soft message or the creative nudge. It asks you: What is the tender message you keep ignoring?"
+   },
+   {
+    "question": "How can you grow through this rather than around it?",
+    "opener": "The spirits ask through her:",
+    "feeling": "grounded but strained",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Page of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Page of Pentacles falls upside down. What to do next: watch for lack of progress; then take the first practical step and study. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"How can you grow through this rather than around it?\" it answers: Procrastination, unrealistic plans, lack of progress; face that, then take the first practical step and study. Picture patient practical curiosity, but stalled or turned inward. It asks you: What practical first step can be taken this week?"
+   },
+   {
+    "question": "How do you make peace with what has been?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "grounded but strained",
+    "passes": 2,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Knight of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Knight of Pentacles falls upside down. My grimoire says: A gardener tending a garden, nurturing seeds with patience and care. Where it settles if nothing shifts: boredom, stagnation, laziness, workaholic tendencies. Steer it: stay steady and keep doing the work. Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"How do you make peace with what has been?\" it answers: Boredom, stuck routine, obsessive perfectionism; face that, then stay steady and keep doing the work. Picture consistency, dependable effort, but stalled or turned inward. It asks you: Is your steadiness serving you, or have you become stuck?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Leo's fire element harmonizes with the Air (intellect, conflict) current of Swords; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly.",
+  "Zodiac lens: Leo's fire element challenges the Water (emotion, relationships) current of Cups; upright, this current can move openly.",
+  "The Page of Pentacles falls upside down.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows.",
+  "The Knight of Pentacles falls upside down.",
+  "Zodiac lens: Leo's fire element meets the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows."
+ ]
+}

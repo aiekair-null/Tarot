@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-25 22:24",
+ "question": "A Live Reading",
+ "profile": "sign: Aries (fire)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Eight of Swords",
+   true
+  ],
+  [
+   "The Magician",
+   true
+  ],
+  [
+   "Eight of Wands",
+   false
+  ],
+  [
+   "The Devil",
+   true
+  ],
+  [
+   "Six of Wands",
+   false
+  ],
+  [
+   "Two of Pentacles",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "Ollama qwen2.5:1.5b",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "Which part of life is calling loudest at the moment?",
+   "What part of yourself is asking to be forgiven?",
+   "What can you not see yet?",
+   "Where can you find rest while feeling held back?",
+   "How can you move forward without forcing it?",
+   "What needs healing so this can move?"
+  ],
+  "log": [
+   {
+    "question": "Which part of life is calling loudest at the moment?",
+    "opener": "She whispers to the cards:",
+    "feeling": "unsettled",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Eight of Swords",
+      true
+     ]
+    ],
+    "text": "The Eight of Swords falls upside down. For this card, upside down is relief: seeing the exit, the blindfold off, release. Zodiac lens: Aries' fire element harmonizes with the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"Which part of life is calling loudest at the moment?\" it answers: Notice the exit; the bindings are looser than they feel. Picture the weight lifting from a mind-made prison. It asks you: What is the bind made of, and is the door actually locked?"
+   },
+   {
+    "question": "What part of yourself is asking to be forgiven?",
+    "opener": "Let the next card answer:",
+    "feeling": "overthinking",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The Magician",
+      true
+     ]
+    ],
+    "text": "The Magician falls upside down. What stands in the way: smooth talker with a hidden angle; scattered talent; a plan that is all show. Zodiac lens: Aries' fire element grounds this Major Arcana lesson in manipulation; reversed, this current turns inward or slows. To \"What part of yourself is asking to be forgiven?\" it answers: Smooth talker with a hidden angle; scattered talent; a plan that is all show; face that, then use what is already in your hands and say clearly what you want. Picture realizing you already hold everything needed; will turned into action, but stalled or turned inward. It asks you: What resources are you overlooking in your own hands?"
+   },
+   {
+    "question": "What can you not see yet?",
+    "opener": "Card, tell us:",
+    "feeling": "blocked",
+    "passes": 2,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Eight of Wands",
+      false
+     ]
+    ],
+    "text": "The Eight of Wands falls. My grimoire says: Reversed Eight of Wands: A recent project at work felt stalled, and the constant flow of new ideas was overwhelming. It took a week to prioritize tasks and regain momentum before progress resumed. What you cannot see yet: momentum, ideas moving fast. Zodiac lens: Aries' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What can you not see yet?\" it answers: Move fast and answer quickly. It asks you: What is moving faster than you can handle?"
+   },
+   {
+    "question": "Where can you find rest while feeling held back?",
+    "opener": "Card, tell us:",
+    "feeling": "held back",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "The Devil",
+      true
+     ]
+    ],
+    "text": "The Devil falls upside down. For this card, upside down is relief: breaking free, naming the chain, early recovery from a hold. Zodiac lens: Aries' fire element grounds this Major Arcana lesson in breaking free; reversed, this current turns inward or slows. To \"Where can you find rest while feeling held back?\" it answers: Name what binds you and loosen its grip. Picture the weight lifting from shadow, patterns you feel unable to leave. It asks you: What do you tell yourself you cannot leave, and is the chain truly locked?"
+   },
+   {
+    "question": "How can you move forward without forcing it?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "turned inward",
+    "passes": 4,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Six of Wands",
+      false
+     ]
+    ],
+    "text": "The Six of Wands falls. My grimoire says: Reversed Six of Wands: Facing a recent professional setback, you feel the weight of your achievements slipping away as peers and superiors start to overlook your contributions. What to do next: step forward and accept the recognition. Zodiac lens: Aries' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"How can you move forward without forcing it?\" it answers: Step forward and accept the recognition. Picture it: confidence earned, the victory lap. It asks you: What victory have you not allowed yourself to feel?"
+   },
+   {
+    "question": "What needs healing so this can move?",
+    "opener": "Let the next card answer:",
+    "feeling": "turned inward",
+    "passes": 3,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Two of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Two of Pentacles falls. My grimoire says: Upright: You've just wrapped up a demanding project at work, and in the process, you found yourself juggling multiple tasks simultaneously. Now, as you step back to review and reflect on your efforts, you realize how adaptable you are when facing complex challenges. This newfound balance allows you. Where it settles: you manage the juggle and adapt. Zodiac lens: Aries' fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What needs healing so this can move?\" it answers: Prioritize and keep the balls in the air. In plain life, that is adaptability. It asks you: What can you stop juggling?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "It asks you: What is the bind made of, and is the door actually locked?",
+  "The Eight of Wands falls.",
+  "Zodiac lens: Aries' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Devil falls upside down.",
+  "Zodiac lens: Aries' fire element grounds this Major Arcana lesson in breaking free; reversed, this current turns inward or slows.",
+  "Zodiac lens: Aries' fire element resonates with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Two of Pentacles falls.",
+  "Zodiac lens: Aries' fire element meets the Earth (wealth, work) current of Pentacles; upright, this current can move openly."
+ ]
+}

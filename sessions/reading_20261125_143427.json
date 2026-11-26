@@ -1,0 +1,206 @@
+{
+ "date": "2026-11-25 14:34",
+ "question": "A Live Reading",
+ "profile": "sign: Aquarius (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Emperor",
+   true
+  ],
+  [
+   "Two of Wands",
+   false
+  ],
+  [
+   "Two of Swords",
+   false
+  ],
+  [
+   "Page of Wands",
+   false
+  ],
+  [
+   "Three of Pentacles",
+   true
+  ],
+  [
+   "Nine of Cups",
+   false
+  ],
+  [
+   "The High Priestess",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "This reading is a signpost. You are the traveler. Thank you for sitting with me.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "Ollama qwen2.5:1.5b",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "What is the real wish underneath the worry?",
+   "What habit keeps pulling you back into the same loop?",
+   "What does the spirit world see that you cannot?",
+   "What support is already within reach, and how does overcoming past traumas touch it?",
+   "What needs to be said out loud, and to whom?",
+   "How do you make peace with what has been?"
+  ],
+  "log": [
+   {
+    "question": "What is the real wish underneath the worry?",
+    "opener": "The spirits ask through her:",
+    "feeling": "unsettled",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "The Emperor",
+      true
+     ],
+     [
+      "Two of Wands",
+      false
+     ]
+    ],
+    "text": "The Emperor falls upside down. The first card fell upside down: your concern is tangled in tyranny, rigid control, a father-figure conflict, chaos from no discipline. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in tyranny; reversed, this current turns inward or slows. To \"What is the real wish underneath the worry?\" it answers: Tyranny, rigid control, a father-figure conflict, chaos from no discipline; face that, then set the rules, build the structure, take charge. Picture boundaries, taking charge of your own life, but stalled or turned inward. It asks you: Where do you need structure, and where is your control choking something? The Two of Wands falls. My grimoire says: Upright: Standing at the edge of her career, she feels a pull to start a new business venture but hesitates due to fear and uncertainty. The first card out of the deck names your concern: future planning, making decisions, leaving comfort zone. In your life it looks like standing at the edge of the comfort zone. Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. It asks you: What does leaving your comfort zone cost and gain? Two cards fell together: The Emperor (upside down) and the Two of Wands. They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: tyranny meets future planning. Picture it: tyranny, rigid control, a father-figure conflict, chaos from no discipline, while standing at the edge of the comfort zone. Their shared counsel: set the rules, build the structure, take charge, and make the plan and choose your direction. Through the zodiac lens: Aquarius' air element grounds this Major Arcana lesson in tyranny; reversed, this current turns inward or slows. Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly."
+   },
+   {
+    "question": "What habit keeps pulling you back into the same loop?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "at a crossroads",
+    "passes": 1,
+    "slot": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Two of Swords",
+      false
+     ]
+    ],
+    "text": "The Two of Swords falls. My grimoire says: A business decision is weighed down by indecision, as if two paths are equally appealing but neither fully satisfying. What stands in the way: difficult choices, pushed too far. Blindfolded neutrality, avoiding feeling is what pushes back. Zodiac lens: Aquarius' air element resonates with the Air (intellect, conflict) current of Swords; upright, this current can move openly. To \"What habit keeps pulling you back into the same loop?\" it answers: Take off the blindfold and decide. It asks you: What are you refusing to look at to keep the peace?"
+   },
+   {
+    "question": "What does the spirit world see that you cannot?",
+    "opener": "Card, tell us:",
+    "feeling": "in a big season",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Page of Wands",
+      false
+     ]
+    ],
+    "text": "The Page of Wands falls. What you cannot see yet: enthusiasm, trying a new craft. Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What does the spirit world see that you cannot?\" it answers: Explore it playfully, like a beginner. It asks you: What are you curious enough to try badly?"
+   },
+   {
+    "question": "What support is already within reach, and how does overcoming past traumas touch it?",
+    "opener": "She whispers to the cards:",
+    "feeling": "driven",
+    "passes": 4,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Three of Pentacles",
+      true
+     ]
+    ],
+    "text": "The Three of Pentacles falls upside down. Help is there but blocked: lack of teamwork, poor-quality work, ignored input. Clear the way and it reaches you. Zodiac lens: Aquarius' air element challenges the Earth (wealth, work) current of Pentacles; reversed, this current turns inward or slows. To \"What support is already within reach, and how does overcoming past traumas touch it?\" it answers: Lack of teamwork, poor-quality work, ignored input; face that, then collaborate and value good craft. Picture pride in craft, but stalled or turned inward. It asks you: Who could make this better by being in the room?"
+   },
+   {
+    "question": "What needs to be said out loud, and to whom?",
+    "opener": "The spirits ask through her:",
+    "feeling": "driven",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Nine of Cups",
+      false
+     ]
+    ],
+    "text": "The Nine of Cups falls. What to do next: let yourself enjoy what you wished for. Zodiac lens: Aquarius' air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"What needs to be said out loud, and to whom?\" it answers: Let yourself enjoy what you wished for. Picture it: the wish granted, pleasure. It asks you: What would enough feel like?"
+   },
+   {
+    "question": "How do you make peace with what has been?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "impatient",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "The High Priestess",
+      false
+     ]
+    ],
+    "text": "The High Priestess falls. Where it settles: the truth surfaces quietly and your instinct proves right. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in intuition; upright, this current can move openly. To \"How do you make peace with what has been?\" it answers: Wait, watch, and trust what you sense before you act. A scene comes to me: dreams, gut knowing, the pull to be still and listen. It asks you: What do you already know but have not admitted?"
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Emperor falls upside down.",
+  "Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "Two cards fell together: The Emperor (upside down) and the Two of Wands.",
+  "Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Three of Pentacles falls upside down.",
+  "The High Priestess falls.",
+  "It asks you: What do you already know but have not admitted?"
+ ]
+}

@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-25 18:34",
+ "question": "A Live Reading",
+ "profile": "sign: Pisces (water)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "Ace of Swords",
+   true
+  ],
+  [
+   "Seven of Swords",
+   true
+  ],
+  [
+   "The Moon",
+   false
+  ],
+  [
+   "Ace of Pentacles",
+   false
+  ],
+  [
+   "Four of Wands",
+   false
+  ],
+  [
+   "Ace of Wands",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "Ollama qwen2.5:1.5b",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What do you need to understand about a bond that is on your mind?",
+   "What part of yourself is asking to be forgiven?",
+   "What practice would steady your spirit right now?",
+   "What will help most in the days ahead?",
+   "After the Ace of Pentacles, what do you do now?",
+   "What does the Four of Wands lead into?"
+  ],
+  "log": [
+   {
+    "question": "What do you need to understand about a bond that is on your mind?",
+    "opener": "She whispers to the cards:",
+    "feeling": "curious",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "Ace of Swords",
+      true
+     ]
+    ],
+    "text": "The Ace of Swords falls upside down. My grimoire says: A team leader who needs to take a step back from their high-stress project, feeling overwhelmed with tasks. The first card fell upside down: your concern is tangled in confusion, harsh words, clouded judgment. Zodiac lens: Pisces' water element meets the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"What do you need to understand about a bond that is on your mind?\" it answers: Confusion, harsh words, clouded judgment; face that, then say the true thing plainly. Picture mental clarity cutting through fog, but stalled or turned inward. It asks you: What truth is ready to be said plainly?"
+   },
+   {
+    "question": "What part of yourself is asking to be forgiven?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "anxious",
+    "passes": 4,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "Seven of Swords",
+      true
+     ]
+    ],
+    "text": "The Seven of Swords falls upside down. My grimoire says: Reversed Seven of Swords: An old business partner, now estranged and known for his deceptions, suddenly approaches you with a proposal that seems too good to be true. Despite your initial reluctance, he convinces you to invest in an undisclosed project, leading you down a path fraught with hidden mo. For this card, upside down is relief: coming clean, caught in a lie, conscience. Zodiac lens: Pisces' water element meets the Air (intellect, conflict) current of Swords; reversed, this current turns inward or slows. To \"What part of yourself is asking to be forgiven?\" it answers: Be strategic, but stay honest. Picture the weight lifting from self-deception, strategy. It asks you: Where are you being less than fully honest, with them or yourself?"
+   },
+   {
+    "question": "What practice would steady your spirit right now?",
+    "opener": "Card, tell us:",
+    "feeling": "anxious",
+    "passes": 5,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "The Moon",
+      false
+     ]
+    ],
+    "text": "The Moon falls. My grimoire says: In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination. What you cannot see yet: fear, dreams, anxiety, intuition mixed with projection. Zodiac lens: Pisces' water element grounds this Major Arcana lesson in illusion; upright, this current can move openly. To \"What practice would steady your spirit right now?\" it answers: Do not act on fear; get more facts first. It asks you: Which fear is distorting what you see?"
+   },
+   {
+    "question": "What will help most in the days ahead?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "sharp-edged",
+    "passes": 4,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Ace of Pentacles",
+      false
+     ]
+    ],
+    "text": "The Ace of Pentacles falls. My grimoire says: The Ace of Pentacles, upright: A new client approaches you with an opportunity to start a small business incubator program in your community. This initiative aligns perfectly with your recent focus on manifesting stability and prosperity through grounded action. What helps you: new financial opportunity, prosperity, manifestation. Lean on a grounded start. Zodiac lens: Pisces' water element harmonizes with the Earth (wealth, work) current of Pentacles; upright, this current can move openly. To \"What will help most in the days ahead?\" it answers: Plant the seed; take the practical opportunity. It asks you: What opportunity could you actually hold in your hands?"
+   },
+   {
+    "question": "After the Ace of Pentacles, what do you do now?",
+    "opener": "She whispers to the cards:",
+    "feeling": "stuck in your head",
+    "passes": 4,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Four of Wands",
+      false
+     ]
+    ],
+    "text": "The Four of Wands falls. My grimoire says: .. What to do next: celebrate and honor what has been built. Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"After the Ace of Pentacles, what do you do now?\" it answers: Celebrate and honor what has been built. In plain life, that is harmony, belonging, relief. It asks you: What are you ready to celebrate?"
+   },
+   {
+    "question": "What does the Four of Wands lead into?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "lighter than before",
+    "passes": 4,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Ace of Wands",
+      false
+     ]
+    ],
+    "text": "The Ace of Wands falls. My grimoire says: A flame flickers, casting shadows on the path ahead. The reversal suggests a need to reassess or redirect the energy towards healing rather than seeking new beginnings. Where it settles: a new venture or passion takes off. Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What does the Four of Wands lead into?\" it answers: Act on the spark now while it is hot. In plain life, that is creative fire, a surge of motivation. It asks you: What are you eager to begin?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Ace of Swords falls upside down.",
+  "The Seven of Swords falls upside down.",
+  "The Ace of Pentacles falls.",
+  "My grimoire says: The Ace of Pentacles, upright: A new client approaches you with an opportunity to start a small business incubator program in your community.",
+  "Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "To \"What does the Four of Wands lead into?\" it answers: Act on the spark now while it is hot.",
+  "It asks you: What are you eager to begin?"
+ ]
+}
