@@ -277,6 +277,49 @@ def touches(natal_chart, sky=None, limit=5):
     return out[:limit]
 
 
+ELEMENTS = ["fire", "earth", "air", "water"]
+PHASE_MOOD = {"New Moon": "mystic", "Waxing Crescent": "hope", "First Quarter": "ecstatic", "Waxing Gibbous": "hope",
+              "Full Moon": "ecstatic", "Waning Gibbous": "calm", "Last Quarter": "dread", "Waning Crescent": "grief"}
+
+
+def element_of(sign):
+    return ELEMENTS[SIGNS.index(sign) % 4]
+
+
+def day_reading(sky=None):
+    """Today's sky boiled down for the fortune cast and chat: the signs it favours or strains (trines and
+    squares to the Sun), the elements it helps (where most planets sit) or strains, and her mood (the Moon)."""
+    sky = sky or today()
+    b = sky["bodies"]
+    sun, moon = b["Sun"]["sign"], b["Moon"]["sign"]
+    si = SIGNS.index(sun)
+    count = {e: 0 for e in ELEMENTS}
+    for v in b.values():
+        count[element_of(v["sign"])] += 1
+    boost = sorted(ELEMENTS, key=lambda e: (-count[e], ELEMENTS.index(e)))[:2]
+    strain = [e for e in sorted(ELEMENTS, key=lambda e: count[e]) if e not in boost][:1]
+    retro = [f"{k} retrograde" for k, v in b.items() if v["retro"]]
+    events = [f"{sky['phase']} in {moon}"] + retro + [f"{x['a']} {x['aspect']} {x['b']}" for x in sky.get("aspects", [])[:3]]
+    return {"date": sky["date"], "summary": summary(sky), "events": events[:6],
+            "benefit": [sun, SIGNS[(si + 4) % 12], SIGNS[(si + 8) % 12]], "warn": [SIGNS[(si + 3) % 12], SIGNS[(si + 9) % 12]],
+            "boost": boost, "strain": strain, "sun": sun, "moon": moon, "phase": sky["phase"].lower(),
+            "mood": PHASE_MOOD.get(sky["phase"], "mystic")}
+
+
+def note(d=None):
+    """Today's sky in one paragraph, for prompts."""
+    d = d or day_reading()
+    return (f"TODAY'S SKY ({d['date']}), worked out by you from the planets' orbits: {d['summary']} "
+            f"Signs favoured: {', '.join(d['benefit'])}. Signs to take care: {', '.join(d['warn'])}. "
+            f"Elements helped: {', '.join(d['boost'])}; strained: {', '.join(d['strain'])}.")
+
+
+def element_effect(element, d=None):
+    """How today's sky treats an element: +1 helped, -1 strained, 0 neutral."""
+    d = d or day_reading()
+    return 1 if element in d["boost"] else -1 if element in d["strain"] else 0
+
+
 def sign_from_text(s):
     s = (s or "").strip().lower()
     for sg in SIGNS:

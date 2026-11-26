@@ -248,3 +248,13 @@ lets a native iPhone/iPad app hand a video to the Facebook app's Reels composer,
 personal profile's Reels. It needs a native iOS app (Xcode, a Facebook App ID, the app published live)
 and only takes 3–60 second videos (up to 1080p, H.264/H.265, under ~50 MB). Today Veyra always renders
 and uploads the full-length reading video instead, so this is parked until there is an App Store version.
+
+## Fortune Reading and Chat
+
+- **12) Fortune reading**: choose one of four groups of items (Hearth & Home, Wild & Sky, Bones & Stones, Road & Fortune).
+  She picks six pieces she feels are significant (weighted by today's sky and your sign, never the same set twice in a row),
+  they fall on a large table, and she reads where they landed, what touches or covers what, and how it meets today's sky.
+  The sky is the one she works out herself (`astro.py`, the same as **10) Your stars**). `python3 tarot.py fortune`
+- **13) Chat with Veyra**: she asks you questions, remembers what you tell her (`user_facts` in `memory.json`), and may
+  search the web when you ask about the world or the stars. `python3 tarot.py chat`
+- The 40 item sprites live in `items.py`.

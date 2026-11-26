@@ -1933,6 +1933,9 @@ def main():
     if arg in ("wires", "config", "control"):          # python3 tarot.py control -> the control room
         import control
         return curses.wrapper(control.room, "wires" if arg != "control" else "dials")
+    if arg in ("fortune", "chat"):                     # python3 tarot.py fortune | chat
+        import fortune
+        return fortune.fortune_reading(Reader()) if arg == "fortune" else fortune.chat_mode(Reader())
     if arg in ("stars", "horoscope", "sky", "chart"):  # python3 tarot.py stars [sign] -> chart + horoscope in one
         return stars_menu(Reader(), sys.argv[2] if len(sys.argv) > 2 else None)
     if arg == "psy":                                   # python3 tarot.py psy -> psilocybin mode on/off
@@ -1970,7 +1973,8 @@ def main():
             fx.say("1) Begin a reading   2) Open the grimoire   3) Let Veyra study   4) Leave   "
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
                    f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)   "
-                   "10) Your stars (star chart + today's horoscope)   11) Make a promo video", "hope", "type")
+                   "10) Your stars (star chart + today's horoscope)   11) Make a promo video   "
+                   "12) Fortune reading (cast the items)   13) Chat with Veyra", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -1983,8 +1987,14 @@ def main():
                     t = reader.study_async(int(os.environ.get("TAROT_STUDY", "3")))
                     fx.run_with_animation(lambda: t.join(), 20, ("~ Veyra studies in the quiet ~",))
                     fx.say("Her notes are saved to memory.json.", "hope", "fade")
-            elif c in ("11", "12"):
+            elif c == "11":
                 promo_video(reader)
+            elif c == "12":
+                import fortune
+                fortune.fortune_reading(reader)
+            elif c == "13":
+                import fortune
+                fortune.chat_mode(reader)
             elif c == "10":
                 stars_menu(reader)
             elif c in ("4", "q", "quit", "exit"):

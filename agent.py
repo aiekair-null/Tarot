@@ -138,7 +138,10 @@ class Reader:
 
     # ---- brain ------------------------------------------------------------------
     def _msgs(self, prompt):
-        return [{"role": "system", "content": PERSONA + self._memory_block()}, {"role": "user", "content": prompt}]
+        extra = ""
+        if self.mem.get("user_facts"):                 # what the querent has told her in Chat with Veyra
+            extra = "\nThings the querent has told you in conversation: " + "; ".join(self.mem["user_facts"][-8:])
+        return [{"role": "system", "content": PERSONA + self._memory_block() + extra}, {"role": "user", "content": prompt}]
 
     def _ask(self, prompt, max_tokens=500, temperature=0.8):
         """Quiet by design: failures never print into the ritual; after 3 in a row she reads from knowledge."""
