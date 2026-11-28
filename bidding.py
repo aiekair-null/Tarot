@@ -431,13 +431,35 @@ def diagnose(b, err, where="chat"):
     return msg + f"\n(full error saved to {ERRLOG})"
 
 
+def sleep_model(b):
+    """Close her model and free its memory."""
+    try:
+        llm = getattr(b, "llm", None)
+        if llm is not None and hasattr(llm, "close"):
+            llm.close()
+        b.llm, b.kind = None, "none"
+    except Exception:
+        pass
+
+
+def leave(b=None):
+    if b is not None:
+        sleep_model(b)
+    print(f"\n{DIM}She closes her eyes. The model is asleep and its memory is free.{RESET}")
+    sys.stdout.flush()
+    os._exit(0)                                          # no lingering threads holding the model
+
+
 def main():
     try:
         _main()
     except KeyboardInterrupt:
-        print()
+        leave(_B[0] if _B else None)
     except Exception as e:                                # never crash: explain instead
         print(f"\n{LILAC}{diagnose(None, e, 'starting up')}{RESET}\n")
+
+
+_B = []
 
 
 def _main():
@@ -461,6 +483,8 @@ def _main():
     system = SYSTEM + netsense.HOW + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
+    _B.append(b)
+    print(f"   {DIM}Esc hushes her mid-answer  ·  type quit (or press Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
     threading.Thread(target=lambda: (b.connect(), ready.set()), daemon=True).start()
 
@@ -473,12 +497,11 @@ def _main():
             try:
                 q = input(f"{LILAC}{prompt}{RESET} ").strip()
             except (EOFError, KeyboardInterrupt):
-                print()
-                break
+                leave(b)
         if not q:
             continue
-        if q.lower() in ("exit", "quit", "bye", "/exit", "/quit"):
-            break
+        if q.lower() in ("exit", "quit", "q", "bye", "/exit", "/quit", ":q") or q.startswith("\x1b"):
+            leave(b)
         if q == "/clear":
             history = []
             print(f"{DIM}(forgotten){RESET}")
