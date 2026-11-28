@@ -1124,6 +1124,16 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
     stop_rw = None
     start = time.time()
     if plan is not None:
+        # a previous run's leftover research.json ends with "running": false (written in the finally: block
+        # below) -- if that file is still sitting there, a freshly spawned research_main() can read it on its
+        # very first loop pass, see "running": false, and close itself within ~1.5s, before the writer thread
+        # a few lines down ever gets a chance to overwrite it with this run's real state. Clearing it first
+        # means the new window instead finds nothing (its own safe "waiting for a run to start" case) until
+        # the writer actually catches up -- never a stale "finished" it mistakes for its own.
+        try:
+            hands.RESEARCH_STATE.unlink(missing_ok=True)
+        except OSError:
+            pass
         err = hands.open_research_window()
         if err:
             print(f"{DIM}  (no research control room: {err}){RESET}")
