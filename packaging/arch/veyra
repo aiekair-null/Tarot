@@ -4,6 +4,7 @@
 #   veyra setup         (re)build her Python engine and download the model
 #   veyra update        pull the newest code
 #   veyra promo [...]   make a promo video (veyra_promo.py)
+#   veyra web           her chat as a neon page, opened on the TV (webchat.py)
 #   veyra chat [text]   just her portrait and "What is thy bidding?" (bidding.py)
 #   veyra <anything>    passed to tarot.py  (model, video, intro, control, horoscope, grimoire...)
 #
@@ -89,4 +90,5 @@ export PYTHONUTF8=1           # files and voices in UTF-8 whatever the locale (a
 cd "$HOME_DIR"
 if [ "${1:-}" = promo ]; then shift; exec "$PY" veyra_promo.py "$@"; fi
 if [ "${1:-}" = chat ] || [ "${1:-}" = bid ]; then shift; exec "$PY" bidding.py "$@"; fi
+if [ "${1:-}" = web ] || [ "${1:-}" = tv ]; then shift; exec "$PY" webchat.py "$@"; fi
 exec "$PY" tarot.py "$@"

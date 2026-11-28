@@ -22,3 +22,13 @@ anything on the TV.
 The stock launcher can't be recolored by settings. To make the home screen itself red, install a
 themeable launcher (e.g. Projectivy) as an APK and set it as home — then we theme it red/black and,
 if you want, drop Veyra's chat on it. That's the "custom dashboard saved for later" step.
+
+## Veyra on the TV: `veyra web`
+```bash
+veyra-tv connect 192.168.1.XX   # once
+veyra web                       # starts her on the laptop and opens her chat on the TV
+```
+A full-screen neon red/black chat page served from the laptop over your Wi-Fi. The chat lives on the
+laptop, so you can type on the TV (remote keyboard), on the laptop (open the printed address), or on a
+phone — every screen shows the same conversation. If the TV says it has no browser, install the free
+**TV Bro** app from Google Play on the TV once. `veyra web --no-tv` just serves it.
