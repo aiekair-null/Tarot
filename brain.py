@@ -25,6 +25,8 @@ CATALOG = {
                "DEFAULT: rich readings; 2-5 min per reading on 2 cores (the ritual covers the wait)"),
     "qwen3-8b": ("Qwen/Qwen3-8B-GGUF", "Qwen3-8B-Q4_K_M.gguf", "5.0 GB",
                  "Qwen3 8B, higher capacity; needs about 5 GB of disk and more memory"),
+    "qwen3-8b-abl": ("bartowski/mlabonne_Qwen3-8B-abliterated-GGUF", "mlabonne_Qwen3-8B-abliterated-Q4_K_M.gguf",
+                     "5.0 GB", "Qwen3 8B abliterated (refusals removed by mlabonne); same size and speed as qwen3-8b"),
     "small": ("Qwen/Qwen2.5-1.5B-Instruct-GGUF", "qwen2.5-1.5b-instruct-q4_k_m.gguf", "1.1 GB",
               "faster, simpler readings; for slow machines"),
     "llama": ("bartowski/Llama-3.2-3B-Instruct-GGUF", "Llama-3.2-3B-Instruct-Q4_K_M.gguf", "2.0 GB",
@@ -38,16 +40,16 @@ def find_gguf():
     p = os.environ.get("TAROT_GGUF")
     if p and Path(p).exists():
         return Path(p)
+    try:                                               # the model you picked with `models.py use` wins
+        a = MODELS_DIR / ACTIVE.read_text().strip()
+        if a.is_file():
+            return a
+    except Exception:
+        pass
     qwen3 = MODELS_DIR / CATALOG["qwen3-8b"][1]
     if qwen3.exists():
         ACTIVE.write_text(qwen3.name)
         return qwen3
-    try:
-        a = MODELS_DIR / ACTIVE.read_text().strip()
-        if a.exists():
-            return a
-    except Exception:
-        pass
     pref = MODELS_DIR / CATALOG[DEFAULT][1]
     if pref.exists():
         return pref
