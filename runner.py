@@ -467,10 +467,106 @@ def vitals_main(title, state_path):
             pidfile.unlink(missing_ok=True)
 
 
+_RESEARCH_TIPS = [
+    "cross-check a claim across more than one source before trusting it",
+    "note where something came from as you go -- site, title, date if you can tell",
+    "a primary source beats someone's summary of it, when you can reach it",
+    "if a keyword stops producing anything new, say so and move on to the next one",
+    "broaden your terms when you're stuck, narrow them when you're drowning in noise",
+]
+
+
+def research_main(title, state_path):
+    """Her research control room for an /autowork research run (bidding.py): which public sites she's
+    searching, the keyword list with how far through each one's time slice she is, and overall progress
+    against the whole time budget. Redraws in place every half second. Closes once bidding.py marks the run
+    as no longer running (the budget ran out, or it was stopped early), or on Ctrl+C."""
+    state_path = Path(state_path)
+    pidfile = state_path.with_suffix(".pid")
+    if pidfile.exists():
+        try:
+            other = int(pidfile.read_text())
+            if other != os.getpid() and alive(other):
+                print(f"{title} is already open.")
+                time.sleep(2)
+                return
+        except Exception:
+            pass
+    pidfile.write_text(str(os.getpid()))
+    sys.stdout.write(f"\x1b]0;{title}\x07")
+    tip_i, last_tip = 0, 0.0
+    try:
+        while True:
+            try:
+                st = json.loads(state_path.read_text())
+            except Exception:
+                st = {}
+            if not st:
+                sys.stdout.write(f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}research · control room{V_RESET}\n"
+                                 f"  {V_DIM}(waiting for a research run to start...){V_RESET}")
+                sys.stdout.flush()
+                time.sleep(1)
+                continue
+
+            now = time.time()
+            if now - last_tip > 8:
+                tip_i, last_tip = (tip_i + 1) % len(_RESEARCH_TIPS), now
+
+            platforms = st.get("platforms", [])
+            keywords = st.get("keywords", [])
+            current = st.get("current", 0)
+            slice_elapsed = st.get("slice_elapsed", 0.0)
+            slice_len = st.get("slice_len", 0.0) or 1.0
+            elapsed = st.get("elapsed", 0.0)
+            total = st.get("total_seconds", 0.0) or 1.0
+
+            cols = max(50, shutil.get_terminal_size((70, 20)).columns)
+            bw = max(10, min(24, cols - 32))
+
+            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}research · control room{V_RESET}",
+                   f"  {V_DIM}sites{V_RESET}   {V_WHITE}{', '.join(platforms) or 'n/a'}{V_RESET}", ""]
+
+            for i, kw in enumerate(keywords):
+                if i < current:
+                    pct, label = 100.0, "done"
+                elif i == current:
+                    pct = 0.0 if slice_len <= 0 else max(0.0, min(100.0, slice_elapsed / slice_len * 100))
+                    label = "now"
+                else:
+                    pct, label = 0.0, "queued"
+                lead = V_WHITE if i == current else V_DIM
+                marker = ">" if i == current else " "
+                out.append(f"  {lead}{marker} {kw[:28]:<28}{V_RESET} {_bar(pct, bw)} "
+                           f"{V_WHITE}{pct:5.1f}%{V_RESET} {V_DIM}{label}{V_RESET}")
+
+            overall_pct = max(0.0, min(100.0, elapsed / total * 100))
+            out.append("")
+            out.append(f"  {V_RED}overall{V_RESET} {_bar(overall_pct, bw)} {V_WHITE}{overall_pct:5.1f}%{V_RESET}  "
+                       f"{V_DIM}{_fmt_time(elapsed)} / {_fmt_time(total)}{V_RESET}")
+            out.append("")
+            out.append(f"  {V_DIM}tip: {_RESEARCH_TIPS[tip_i]}{V_RESET}")
+
+            sys.stdout.write("\n".join(out))
+            sys.stdout.flush()
+
+            if not st.get("running", True):
+                print(f"\n{V_DIM}(research run finished; this window closes too){V_RESET}")
+                time.sleep(1.5)
+                return
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if pidfile.exists() and pidfile.read_text().strip() == str(os.getpid()):
+            pidfile.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
     if len(sys.argv) >= 4 and sys.argv[1] == "watch":
         watch_main(sys.argv[2], sys.argv[3])
     elif len(sys.argv) >= 4 and sys.argv[1] == "vitals":
         vitals_main(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) >= 4 and sys.argv[1] == "research":
+        research_main(sys.argv[2], sys.argv[3])
     else:
         main()
