@@ -10,7 +10,12 @@ if not exist "%PY%" (
 )
 cd /d "%~dp0.."
 if /i "%~1"=="promo" goto promo
+if /i "%~1"=="chat" goto chat
 "%PY%" tarot.py %*
+goto done
+:chat
+shift
+"%PY%" bidding.py %1 %2 %3 %4 %5 %6 %7 %8 %9
 goto done
 :promo
 shift
