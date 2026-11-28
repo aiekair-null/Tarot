@@ -24,7 +24,7 @@ PORT = int(os.environ.get("VEYRA_WEB_PORT", "8777"))
 HERE = Path(__file__).resolve().parent
 TV_CFG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "veyra-tv" / "tv"
 
-state = {"log": [], "model": "", "sky": "", "status": "waking", "busy": False}
+state = {"log": [], "model": "", "sky": "", "status": "waking", "busy": False, "next": ""}
 lock = threading.Lock()
 B = brain.Brain(connect=False)
 SYSTEM = ""
@@ -57,6 +57,7 @@ let n=-1;const L=document.getElementById('log');
 async function poll(){try{const r=await fetch('/state');const j=await r.json();
 document.getElementById('m').textContent=j.model;document.getElementById('s').textContent=j.sky;
 document.getElementById('st').textContent=j.status==='ready'?'':j.status;
+document.getElementById('q').placeholder=j.next||'What is thy bidding?';
 const key=JSON.stringify(j.log)+j.busy;if(key!==n){n=key;const atEnd=L.scrollTop+L.clientHeight>L.scrollHeight-40;L.innerHTML='';
 for(const e of j.log){const d=document.createElement('div');d.className=e.role==='user'?'u':'a';d.textContent=e.text;
 if(e.role!=='user'&&j.busy&&e===j.log[j.log.length-1]){const c=document.createElement('span');c.className='cur';c.innerHTML='&nbsp;';d.appendChild(c)}
@@ -84,8 +85,10 @@ def answer(q):
         raw = ""
         for piece in B.stream(msgs, max_tokens=700, temperature=0.7):
             raw += piece
-            reply["text"] = re.sub(r"\n?REMEMBER:.*", "", raw, flags=re.S).rstrip()   # hide her note lines
-        for m in re.finditer(r"REMEMBER:\s*(.+)", raw):
+            reply["text"] = re.sub(r"\n?(REMEMBER|NEXT):.*", "", raw, flags=re.S | re.I).rstrip()  # hide tag lines
+        m = re.search(r"NEXT:\s*(.+)", raw, re.I)
+        state["next"] = m.group(1).strip().strip('"')[:90] if m else ""
+        for m in re.finditer(r"REMEMBER:\s*(.+)", raw, re.I):
             note = m.group(1).strip()
             if note:
                 reply["notes"].append(note)

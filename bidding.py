@@ -1,15 +1,19 @@
 """Veyra at the command line: her sprite, then "What is thy bidding?" and a plain chat with her model.
 
-    veyra chat                 talk to her (exit, quit or Ctrl+D to leave; /clear forgets the chat)
+    veyra chat                 talk to her (Esc hushes her mid-answer; exit, quit or Ctrl+D to leave;
+                               /clear forgets the chat)
     veyra chat "a question"    one answer, then back to your shell
 
 No cards, no menus, no sync: only her picture and her brain (it wakes in the background while you type)."""
 import json
 import locale
 import os
+import queue
 import random
+import shutil
 import sys
 import threading
+import time
 from pathlib import Path
 
 import art
@@ -23,9 +27,12 @@ SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs 
           "You can help with anything: questions, code, writing, plans. You do not draw or read cards here.\n"
           "You keep your own notes between conversations. When you learn something worth remembering (about the "
           "person, a promise, an idea you want to return to), end your reply with one line: REMEMBER: <short note>. "
-          "Only when it matters; never mention this rule.")
+          "Only when it matters; never mention this rule.\n"
+          "Always finish every reply with a last line: NEXT: <one short sentence in your voice that invites "
+          "their next words, under 12 words>. Never mention this rule.")
 CHAT_MODEL = "qwen3-8b-abl"                                # the abliterated Qwen3 8B is her chat brain
 MEMORY = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
+RED = "\x1b[38;5;196m"
 GOLD, LILAC, CYAN, DIM, RESET = "\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;245m", "\x1b[0m"
 
 
@@ -122,41 +129,161 @@ def pick_model():
 
 
 class Printer:
-    """Streams her words, but holds back any REMEMBER: line so it can be saved instead of shown."""
-    TAG = "REMEMBER:"
+    """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
+    TAGS = ("REMEMBER:", "NEXT:")
 
     def __init__(self):
-        self.line, self.held, self.notes = "", False, []
+        self.line, self.mode, self.notes, self.next = "", None, [], None
 
     def feed(self, piece):
         for ch in piece:
             if ch == "\n":
-                self._end_line(); print(ch, end=""); continue
+                self._end()
+                continue
+            if self.mode == "text":
+                print(ch, end="", flush=True)
+                continue
             self.line += ch
-            if not self.held:
-                if self.TAG.startswith(self.line.lstrip()[:len(self.TAG)]) and len(self.line.lstrip()) <= len(self.TAG):
-                    continue                           # might be the tag: wait
-                if self.line.lstrip().startswith(self.TAG):
-                    self.held = True
-                    continue
-                print(self.line, end="", flush=True)
-                self.line = ""
-                self.held = None                       # this line is plain text: stream the rest directly
-            elif self.held is None:
-                print(ch, end="", flush=True); self.line = ""
+            if self.mode == "tag":
+                continue
+            t = self.line.lstrip().upper()
+            if any(tag.startswith(t) for tag in self.TAGS):
+                continue                                   # could still become a tag: wait
+            if any(t.startswith(tag) for tag in self.TAGS):
+                self.mode = "tag"
+                continue
+            print(self.line, end="", flush=True)
+            self.line, self.mode = "", "text"
 
-    def _end_line(self):
+    def _end(self):
         s = self.line.strip()
-        if s.startswith(self.TAG):
-            note = s[len(self.TAG):].strip()
-            if note:
-                self.notes.append(note)
-        elif self.line:
-            print(self.line, end="")
-        self.line, self.held = "", False
+        u = s.upper()
+        if u.startswith("REMEMBER:"):
+            if s[9:].strip():
+                self.notes.append(s[9:].strip())
+        elif u.startswith("NEXT:"):
+            if s[5:].strip():
+                self.next = s[5:].strip().strip('"')[:90]
+        else:
+            print(self.line + "\n", end="", flush=True)
+        self.line, self.mode = "", None
 
     def close(self):
-        self._end_line()
+        if self.line:
+            self._end()
+
+
+class Keys:
+    """Lets Esc be read while she talks, without waiting for Enter."""
+    def __enter__(self):
+        self.fd, self.old = None, None
+        if os.name != "nt" and sys.stdin.isatty():
+            import termios, tty
+            self.fd = sys.stdin.fileno()
+            self.old = termios.tcgetattr(self.fd)
+            tty.setcbreak(self.fd)
+        return self
+
+    def esc(self):
+        if os.name == "nt":
+            import msvcrt
+            hit = False
+            while msvcrt.kbhit():
+                hit = hit or msvcrt.getwch() == "\x1b"
+            return hit
+        if self.fd is None:
+            return False
+        import select
+        hit = False
+        while select.select([self.fd], [], [], 0)[0]:
+            hit = hit or os.read(self.fd, 1) == b"\x1b"
+        return hit
+
+    def __exit__(self, *a):
+        if self.old is not None:
+            import termios
+            termios.tcflush(self.fd, termios.TCIFLUSH)
+            termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
+
+
+class Wave:
+    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes)."""
+    PASSES = 10
+
+    def __init__(self, unicode_ok):
+        self.dash = "—" if unicode_ok else "-"
+        self.k, self.pos, self.w = 0, 0, 0
+
+    def tick(self):
+        W = max(20, shutil.get_terminal_size((80, 20)).columns - 2)
+        self.w = W
+        L = int(3 + (W * 0.92 - 3) * self.k / (self.PASSES - 1))
+        right = self.k % 2 == 0
+        arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
+        span = max(0, W - L)
+        x = self.pos if right else span - self.pos
+        sys.stdout.write("\r" + RED + (" " * x + arrow).ljust(W) + RESET)
+        sys.stdout.flush()
+        self.pos += max(1, W // 45)
+        if self.pos > span:
+            self.pos, self.k = 0, (self.k + 1) % self.PASSES
+
+    def clear(self):
+        if self.w:
+            sys.stdout.write("\r" + " " * self.w + "\r")
+            sys.stdout.flush()
+
+
+def speak(b, msgs, unicode_ok):
+    """Stream one reply with the thinking wave until the first word; Esc stops her."""
+    q, stop = queue.Queue(), threading.Event()
+
+    def run():
+        try:
+            for piece in b.stream(msgs, max_tokens=700, temperature=0.7):
+                if stop.is_set():
+                    break
+                q.put(piece)
+        except Exception as e:
+            q.put(RuntimeError(str(e)))
+        finally:
+            q.put(None)
+
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    wave, pr, out, started, stopped = Wave(unicode_ok), Printer(), [], False, False
+    with Keys() as keys:
+        while True:
+            if keys.esc():
+                stop.set()
+                stopped = True
+                break
+            try:
+                item = q.get(timeout=0.03)
+            except queue.Empty:
+                if not started:
+                    wave.tick()
+                continue
+            if item is None:
+                break
+            if not started:
+                wave.clear()
+                print(CYAN, end="", flush=True)
+                started = True
+            if isinstance(item, Exception):
+                print(f"{DIM}({item}){RESET}", end="")
+                break
+            out.append(item)
+            pr.feed(item)
+    if not started:
+        wave.clear()
+    pr.close()
+    if stopped:
+        print(f"{DIM} ...(hushed){RESET}", end="")
+        out.append(" ...")
+    print(RESET + "\n")
+    t.join(timeout=5)
+    return "".join(out).strip(), pr
 
 
 def main():
@@ -183,14 +310,14 @@ def main():
     ready = threading.Event()
     threading.Thread(target=lambda: (b.connect(), ready.set()), daemon=True).start()
 
-    history = []
+    history, prompt, uni = [], "What is thy bidding?", utf8()
     once = " ".join(sys.argv[1:]).strip()
     while True:
         if once:
             q = once
         else:
             try:
-                q = input(f"{LILAC}What is thy bidding?{RESET} ").strip()
+                q = input(f"{LILAC}{prompt}{RESET} ").strip()
             except (EOFError, KeyboardInterrupt):
                 print()
                 break
@@ -211,23 +338,15 @@ def main():
             break
         history.append({"role": "user", "content": q})
         msgs = [{"role": "system", "content": system}] + history[-12:]
-        print(CYAN, end="", flush=True)
-        out, pr = [], Printer()
-        try:
-            for piece in b.stream(msgs, max_tokens=700, temperature=0.7):
-                out.append(piece)
-                pr.feed(piece)
-        except KeyboardInterrupt:
-            out.append(" ...")
-        pr.close()
-        print(RESET + "\n")
+        reply, pr = speak(b, msgs, uni)
         for note in pr.notes:
             try:
                 save_note(note)
                 print(f"{DIM}  (she noted: {note}){RESET}\n")
             except Exception:
                 pass
-        history.append({"role": "assistant", "content": "".join(out).strip()})
+        prompt = pr.next or "What is thy bidding?"
+        history.append({"role": "assistant", "content": reply})
         if once:
             break
 
