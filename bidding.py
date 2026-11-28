@@ -20,6 +20,7 @@ from pathlib import Path
 
 import art
 import brain
+import hands
 import netsense
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
@@ -31,8 +32,8 @@ SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs 
           "You keep your own notes between conversations. When you learn something worth remembering (about the "
           "person, a promise, an idea you want to return to), end your reply with one line: REMEMBER: <short note>. "
           "Only when it matters; never mention this rule.\n"
-          "Never repeat a passage you already wrote; if asked to reformat, say it once. You cannot run "
-          "commands, install anything or see this computer's files: never claim you did.\n"
+          "Never repeat a passage you already wrote; if asked to reformat, say it once. Never claim you "
+          "ran a command, installed anything or saw a file unless a RESULT shows it.\n"
           "Always finish every reply with a last line: NEXT: <one short sentence in your voice that invites "
           "their next words, under 12 words>. Never mention this rule.")
 MAX_TOKENS = int(os.environ.get("VEYRA_CHAT_TOKENS", "1500"))   # room to finish a long answer
@@ -170,7 +171,7 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:") + netsense.TOOLS
+    TAGS = ("REMEMBER:", "NEXT:", "RUN:") + netsense.TOOLS
 
     def __init__(self):
         self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
@@ -204,6 +205,10 @@ class Printer:
         if u.startswith("REMEMBER:"):
             if s[9:].strip():
                 self.notes.append(s[9:].strip())
+        elif u.lstrip("*`").startswith("RUN:") and hands.ON:
+            cmd = s.lstrip("*`")[4:].strip().strip("`")
+            if cmd:
+                self.tool = self.tool or ("RUN", cmd)
         elif any(u.lstrip("*`").startswith(t) for t in netsense.TOOLS):
             self.tool = self.tool or netsense.find_call(s)
         elif u.startswith("NEXT:"):
@@ -363,7 +368,7 @@ def _pass(b, msgs, unicode_ok):
     return "".join(out).strip(), pr, stopped
 
 
-def speak(b, msgs, unicode_ok, rounds=4):
+def speak(b, msgs, unicode_ok, rounds=8):
     """Her answer, letting her search / read / watch up to `rounds` times before she replies."""
     msgs, looked = list(msgs), []
     for _ in range(rounds):
@@ -371,15 +376,26 @@ def speak(b, msgs, unicode_ok, rounds=4):
         if not pr.tool or stopped:
             break
         tool, arg = pr.tool
-        verb = {"SEARCH": "searches", "READ": "reads", "YOUTUBE": "watches"}[tool]
-        print(f"{DIM}  (she {verb}: {arg[:70]}){RESET}", flush=True)
-        result = netsense.run(pr.tool)
-        looked.append(f"{tool} {arg}")
+        if tool == "RUN":
+            cmd = hands.approve(arg)
+            if cmd is None:
+                result = "The person REFUSED this command. Do not run it; offer another way or ask what they want."
+                print(f"{DIM}  (refused){RESET}")
+            else:
+                with Keys() as k:
+                    result = hands.run(cmd, k.esc)
+                arg = cmd
+                looked.append(f"ran {cmd}")
+        else:
+            verb = {"SEARCH": "searches", "READ": "reads", "YOUTUBE": "watches"}[tool]
+            print(f"{DIM}  (she {verb}: {arg[:70]}){RESET}", flush=True)
+            result = netsense.run(pr.tool)
+            looked.append(f"{tool} {arg}")
         msgs += [{"role": "assistant", "content": text},
                  {"role": "user", "content": f"RESULT of {tool}: {arg}\n{result}\n\n(Now answer me from this. "
                                              "Look something else up only if you truly need to.)"}]
     if looked:
-        text = "(I looked up: " + "; ".join(looked) + ")\n" + text
+        text = "(I used: " + "; ".join(looked) + ")\n" + text
     return text, pr
 
 
@@ -480,7 +496,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)
