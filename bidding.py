@@ -28,8 +28,11 @@ SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs 
           "You keep your own notes between conversations. When you learn something worth remembering (about the "
           "person, a promise, an idea you want to return to), end your reply with one line: REMEMBER: <short note>. "
           "Only when it matters; never mention this rule.\n"
+          "Never repeat a passage you already wrote; if asked to reformat, say it once. You cannot run "
+          "commands, install anything or see this computer's files: never claim you did.\n"
           "Always finish every reply with a last line: NEXT: <one short sentence in your voice that invites "
           "their next words, under 12 words>. Never mention this rule.")
+MAX_TOKENS = int(os.environ.get("VEYRA_CHAT_TOKENS", "1500"))   # room to finish a long answer
 CHAT_MODEL = "qwen3-8b-abl"                                # the abliterated Qwen3 8B is her chat brain
 MEMORY = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
 RED = "\x1b[38;5;196m"
@@ -128,12 +131,47 @@ def pick_model():
     return found.name if found else "none"
 
 
+class Wrap:
+    """Word-wraps her text so each line stops about six words short of the right edge."""
+    def __init__(self):
+        cols = shutil.get_terminal_size((80, 20)).columns
+        self.limit = max(40, cols - 36)
+        self.col, self.word = 0, ""
+
+    def write(self, s):
+        for ch in s:
+            if ch == "\n":
+                self.flush()
+                print(flush=True)
+                self.col = 0
+            elif ch == " ":
+                self.flush()
+                if 0 < self.col < self.limit:
+                    print(" ", end="", flush=True)
+                    self.col += 1
+            else:
+                self.word += ch
+                if len(self.word) >= self.limit:
+                    self.flush()
+
+    def flush(self):
+        if not self.word:
+            return
+        if self.col and self.col + len(self.word) > self.limit:
+            print(flush=True)
+            self.col = 0
+        print(self.word, end="", flush=True)
+        self.col += len(self.word)
+        self.word = ""
+
+
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
     TAGS = ("REMEMBER:", "NEXT:")
 
     def __init__(self):
         self.line, self.mode, self.notes, self.next = "", None, [], None
+        self.w = Wrap()
 
     def feed(self, piece):
         for ch in piece:
@@ -141,7 +179,7 @@ class Printer:
                 self._end()
                 continue
             if self.mode == "text":
-                print(ch, end="", flush=True)
+                self.w.write(ch)
                 continue
             self.line += ch
             if self.mode == "tag":
@@ -152,7 +190,7 @@ class Printer:
             if any(t.startswith(tag) for tag in self.TAGS):
                 self.mode = "tag"
                 continue
-            print(self.line, end="", flush=True)
+            self.w.write(self.line)
             self.line, self.mode = "", "text"
 
     def _end(self):
@@ -165,12 +203,13 @@ class Printer:
             if s[5:].strip():
                 self.next = s[5:].strip().strip('"')[:90]
         else:
-            print(self.line + "\n", end="", flush=True)
+            self.w.write(self.line + "\n")
         self.line, self.mode = "", None
 
     def close(self):
         if self.line:
             self._end()
+        self.w.flush()
 
 
 class Keys:
@@ -240,7 +279,7 @@ def speak(b, msgs, unicode_ok):
 
     def run():
         try:
-            for piece in b.stream(msgs, max_tokens=700, temperature=0.7):
+            for piece in b.stream(msgs, max_tokens=MAX_TOKENS, temperature=0.7):
                 if stop.is_set():
                     break
                 q.put(piece)
@@ -281,6 +320,9 @@ def speak(b, msgs, unicode_ok):
     if stopped:
         print(f"{DIM} ...(hushed){RESET}", end="")
         out.append(" ...")
+    text = "".join(out).strip()
+    if not stopped and started and not pr.next and text and text[-1] not in ".!?\"')*":
+        print(f"{DIM}\n(she ran out of breath mid-thought; type 'go on' for the rest){RESET}", end="")
     print(RESET + "\n")
     t.join(timeout=5)
     return "".join(out).strip(), pr
