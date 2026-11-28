@@ -28,6 +28,7 @@ import subprocess
 
 import art
 import brain
+import codex
 import eyes
 import hands
 import netsense
@@ -994,7 +995,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + codex.HOW + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)
