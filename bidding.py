@@ -246,26 +246,47 @@ class Keys:
 
 
 class Wave:
-    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes)."""
+    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes),
+    slowly, shimmering as it flies, in a new color every time it starts over."""
     PASSES = 10
+    SLOW = 4                                                  # 4x longer than the first version
+    RAMPS = [(52, 88, 124, 160, 196, 203, 210, 217),          # neon red
+             (53, 90, 127, 164, 201, 207, 213, 219),          # magenta
+             (23, 30, 37, 44, 51, 87, 123, 159),              # cyan
+             (94, 130, 166, 172, 208, 214, 220, 228),         # gold
+             (54, 55, 56, 57, 93, 99, 141, 183),              # violet
+             (22, 28, 34, 40, 46, 83, 120, 157)]              # green
 
     def __init__(self, unicode_ok):
         self.dash = "—" if unicode_ok else "-"
-        self.k, self.pos, self.w = 0, 0, 0
+        self.k, self.pos, self.w, self.frame, self.color = 0, 0.0, 0, 0, 0
 
     def tick(self):
         W = max(20, shutil.get_terminal_size((80, 20)).columns - 2)
         self.w = W
+        self.frame += 1
         L = int(3 + (W * 0.92 - 3) * self.k / (self.PASSES - 1))
         right = self.k % 2 == 0
         arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
         span = max(0, W - L)
-        x = self.pos if right else span - self.pos
-        sys.stdout.write("\r" + RED + (" " * x + arrow).ljust(W) + RESET)
+        p = int(self.pos)
+        x = p if right else span - p
+        ramp = self.RAMPS[self.color % len(self.RAMPS)]
+        n = len(ramp)
+        out = []
+        for i, ch in enumerate(arrow):                       # a bright glint travels along the arrow
+            j = (i - self.frame) % (n * 2) if right else (i + self.frame) % (n * 2)
+            shade = ramp[j if j < n else 2 * n - 1 - j]
+            if (i * 7 + self.frame) % 23 == 0:
+                shade = 231                                  # an occasional white sparkle
+            out.append(f"\x1b[38;5;{shade}m{ch}")
+        sys.stdout.write("\r" + " " * x + "".join(out) + RESET + " " * (W - x - L))
         sys.stdout.flush()
-        self.pos += max(1, W // 45)
+        self.pos += max(1, W // 45) / self.SLOW
         if self.pos > span:
-            self.pos, self.k = 0, (self.k + 1) % self.PASSES
+            self.pos, self.k = 0.0, self.k + 1
+            if self.k >= self.PASSES:                        # starts over small, in a new color
+                self.k, self.color = 0, self.color + 1
 
     def clear(self):
         if self.w:
