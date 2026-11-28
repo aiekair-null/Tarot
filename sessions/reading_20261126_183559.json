@@ -1,0 +1,191 @@
+{
+ "date": "2026-11-26 18:35",
+ "question": "A Live Reading",
+ "profile": "sign: Aquarius (air)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Chariot",
+   false
+  ],
+  [
+   "The World",
+   false
+  ],
+  [
+   "Six of Wands",
+   false
+  ],
+  [
+   "Queen of Cups",
+   false
+  ],
+  [
+   "Knight of Wands",
+   false
+  ],
+  [
+   "Seven of Wands",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "I return the cards to the deck and the choice to you. Go gently.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [],
+  "questions": [
+   "What has been quietly shaping your days?",
+   "Which mask have you worn so long it feels like a face?",
+   "Where are you being guided, if you would only follow?",
+   "Who or what is on your side right now?",
+   "What is this chapter teaching you?",
+   "What would let you feel lighter than open?"
+  ],
+  "log": [
+   {
+    "question": "What has been quietly shaping your days?",
+    "opener": "She whispers to the cards:",
+    "feeling": "unsettled",
+    "passes": 1,
+    "slot": 0,
+    "idx": [
+     0
+    ],
+    "cards": [
+     [
+      "The Chariot",
+      false
+     ]
+    ],
+    "text": "The Chariot falls. The first card out of the deck names your concern: control, willpower, success, determination, momentum. In your life it looks like steering opposing impulses with will. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in control; upright, this current can move openly. To \"What has been quietly shaping your days?\" it answers: Commit to one direction and drive through. It asks you: What are the two forces pulling you, and who is holding the reins?"
+   },
+   {
+    "question": "Which mask have you worn so long it feels like a face?",
+    "opener": "Card, tell us:",
+    "feeling": "at a crossroads",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     1
+    ],
+    "cards": [
+     [
+      "The World",
+      false
+     ]
+    ],
+    "text": "The World falls. My grimoire says: The World (Upright): You have successfully completed a major project at work, and now as you look back on the journey, you feel an overwhelming sense of pride and satisfaction. The clients are pleased with your final product, and your colleagues have praised your dedication. As you celebrate this ac. What stands in the way: completion, pushed too far. Integration, wholeness, the end of a chapter is what pushes back. Zodiac lens: Aquarius' air element grounds this Major Arcana lesson in completion; upright, this current can move openly. To \"Which mask have you worn so long it feels like a face?\" it answers: Finish what you started and celebrate it. It asks you: What is one piece away from finished?"
+   },
+   {
+    "question": "Where are you being guided, if you would only follow?",
+    "opener": "The spirits ask through her:",
+    "feeling": "at a crossroads",
+    "passes": 1,
+    "slot": 2,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Six of Wands",
+      false
+     ]
+    ],
+    "text": "The Six of Wands falls. My grimoire says: Reversed Six of Wands: Facing a recent professional setback, you feel the weight of your achievements slipping away as peers and superiors start to overlook your contributions. What you cannot see yet: confidence earned, the victory lap. Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"Where are you being guided, if you would only follow?\" it answers: Step forward and accept the recognition. It asks you: What victory have you not allowed yourself to feel?"
+   },
+   {
+    "question": "Who or what is on your side right now?",
+    "opener": "Let the next card answer:",
+    "feeling": "quietly happy",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Queen of Cups",
+      false
+     ]
+    ],
+    "text": "The Queen of Cups falls. My grimoire says: An individual grappling with deep intuition and compassionate boundaries. What helps you: compassion, warmth, emotional stability, intuition. Lean on deep intuition, compassion with boundaries. Zodiac lens: Aquarius' air element meets the Water (emotion, relationships) current of Cups; upright, this current can move openly. To \"Who or what is on your side right now?\" it answers: Lead with compassion and keep your boundaries. It asks you: Who needs your compassion, and have you left any for yourself?"
+   },
+   {
+    "question": "What is this chapter teaching you?",
+    "opener": "Card, tell us:",
+    "feeling": "lighter than before",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "Knight of Wands",
+      false
+     ]
+    ],
+    "text": "The Knight of Wands falls. My grimoire says: Upright: A sudden opportunity presents itself in a competitive job interview, offering the chance to showcase her passion and drive. She feels an urgent need to seize this moment before it slips away. What to do next: act boldly but do not burn out. Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What is this chapter teaching you?\" it answers: Act boldly but do not burn out. Here is how it might look this month: restless energy, craving adventure. It asks you: Where are you rushing because you are afraid to stand still?"
+   },
+   {
+    "question": "What would let you feel lighter than open?",
+    "opener": "She whispers to the cards:",
+    "feeling": "open",
+    "passes": 1,
+    "slot": 5,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "Seven of Wands",
+      false
+     ]
+    ],
+    "text": "The Seven of Wands falls. My grimoire says: Reversed: A recent disagreement with a colleague at work led to an argument over project priorities. Despite feeling defensive and standing firm, the conversation left her emotionally drained and questioning whether she was truly justified in holding her ground. The Seven of Wands Tarot card has ill. Where it settles: you keep your position under challenge. Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What would let you feel lighter than open?\" it answers: Hold your ground and defend what matters. In plain life, that is standing your ground when challenged. It asks you: What is worth defending, and what are you only defending out of habit?"
+   }
+  ],
+  "slots": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: Who needs your compassion, and have you left any for yourself?",
+  "The Knight of Wands falls.",
+  "Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: Where are you rushing because you are afraid to stand still?",
+  "The Seven of Wands falls.",
+  "Zodiac lens: Aquarius' air element harmonizes with the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: What is worth defending, and what are you only defending out of habit?"
+ ]
+}

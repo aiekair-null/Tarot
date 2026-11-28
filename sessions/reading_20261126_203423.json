@@ -1,0 +1,206 @@
+{
+ "date": "2026-11-26 20:34",
+ "question": "A Live Reading",
+ "profile": "sign: Pisces (water)",
+ "qa": [],
+ "spirit_qs": [],
+ "key": "falling",
+ "spread": [
+  [
+   "The Emperor",
+   false
+  ],
+  [
+   "Ace of Cups",
+   true
+  ],
+  [
+   "Page of Wands",
+   false
+  ],
+  [
+   "Queen of Wands",
+   false
+  ],
+  [
+   "The Chariot",
+   true
+  ],
+  [
+   "The Devil",
+   false
+  ],
+  [
+   "The Tower",
+   false
+  ]
+ ],
+ "domain": "inner",
+ "reading": "Thank you for trusting the table. The rest of the story is yours to write.",
+ "plan": {
+  "intro": "calm",
+  "wash": "storm",
+  "cut": "mystic",
+  "reveal": "dread",
+  "reading": "mystic"
+ },
+ "mind": "built-in Qwen3-8B-Q4_K_M.gguf",
+ "falls": {
+  "pairs": [
+   [
+    0,
+    1
+   ]
+  ],
+  "questions": [
+   "Which part of life is calling loudest at the moment?",
+   "What is draining your energy without you noticing?",
+   "What is happening beneath the surface of this, and how does momentum touch it?",
+   "Which quality in you will carry this through?",
+   "What would the bravest version of you do next?",
+   "How does this settle when the dust clears?"
+  ],
+  "log": [
+   {
+    "question": "Which part of life is calling loudest at the moment?",
+    "opener": "Veyra asks the deck:",
+    "feeling": "unsettled",
+    "passes": 2,
+    "slot": 0,
+    "idx": [
+     0,
+     1
+    ],
+    "cards": [
+     [
+      "The Emperor",
+      false
+     ],
+     [
+      "Ace of Cups",
+      true
+     ]
+    ],
+    "text": "The Emperor falls. The first card out of the deck names your concern: authority, structure, solid foundation, control, stability. In your life it looks like boundaries, taking charge of your own life. Zodiac lens: Pisces' water element grounds this Major Arcana lesson in authority; upright, this current can move openly. To \"Which part of life is calling loudest at the moment?\" it answers: Set the rules, build the structure, take charge. It asks you: Where do you need structure, and where is your control choking something? The Ace of Cups falls upside down. My grimoire says: A Leo's heart is guarded by hidden fears that prevent them from fully embracing their yearnings for true connection and intimacy. The first card fell upside down: your concern is tangled in blocked feelings, an offer not fully received. Zodiac lens: Pisces' water element resonates with the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows. Picture an overflowing heart, compassion beginning, but stalled or turned inward. It asks you: What feeling are you ready to receive? Two cards fell together: The Emperor and the Ace of Cups (upside down). They are one answer. A Major beside a Minor: the larger force sets the tone and the everyday card shows where it lands. Together: authority meets blocked emotions. Picture it: boundaries, taking charge of your own life, while blocked feelings, an offer not fully received. Their shared counsel: set the rules, build the structure, take charge, and open your heart and let the feeling in. Through the zodiac lens: Pisces' water element grounds this Major Arcana lesson in authority; upright, this current can move openly. Pisces' water element resonates with the Water (emotion, relationships) current of Cups; reversed, this current turns inward or slows."
+   },
+   {
+    "question": "What is draining your energy without you noticing?",
+    "opener": "The spirits ask through her:",
+    "feeling": "at a crossroads",
+    "passes": 2,
+    "slot": 1,
+    "idx": [
+     2
+    ],
+    "cards": [
+     [
+      "Page of Wands",
+      false
+     ]
+    ],
+    "text": "The Page of Wands falls. What stands in the way: exploration, pushed too far. Enthusiasm, trying a new craft is what pushes back. Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What is draining your energy without you noticing?\" it answers: Explore it playfully, like a beginner. It asks you: What are you curious enough to try badly?"
+   },
+   {
+    "question": "What is happening beneath the surface of this, and how does momentum touch it?",
+    "opener": "Veyra turns the question over:",
+    "feeling": "pulled by fate",
+    "passes": 7,
+    "slot": 2,
+    "idx": [
+     3
+    ],
+    "cards": [
+     [
+      "Queen of Wands",
+      false
+     ]
+    ],
+    "text": "The Queen of Wands falls. My grimoire says: The Queen of Wands in an upright reading might suggest that you are leading a community project with warmth, confidence, and leadership skills. Despite initial hesitation or perceived lack of visibility, your magnetic charm and creative authority inspire others to take action, fostering a sense of s. What you cannot see yet: warm self-confidence, being the main character. Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly. To \"What is happening beneath the surface of this, and how does momentum touch it?\" it answers: Own your confidence and your warmth. It asks you: Where are you dimming your own light?"
+   },
+   {
+    "question": "Which quality in you will carry this through?",
+    "opener": "She whispers to the cards:",
+    "feeling": "restless",
+    "passes": 1,
+    "slot": 3,
+    "idx": [
+     4
+    ],
+    "cards": [
+     [
+      "The Chariot",
+      true
+     ]
+    ],
+    "text": "The Chariot falls upside down. My grimoire says: A runner training for a marathon, pushing through pain to reach the finish line. Help is there but blocked: losing control, aggression, spinning wheels, no clear direction. Clear the way and it reaches you. Zodiac lens: Pisces' water element grounds this Major Arcana lesson in lack of control; reversed, this current turns inward or slows. To \"Which quality in you will carry this through?\" it answers: Losing control, aggression, spinning wheels, no clear direction; face that, then commit to one direction and drive through. Picture steering opposing impulses with will, but stalled or turned inward. It asks you: What are the two forces pulling you, and who is holding the reins?"
+   },
+   {
+    "question": "What would the bravest version of you do next?",
+    "opener": "Card, tell us:",
+    "feeling": "at a crossroads",
+    "passes": 1,
+    "slot": 4,
+    "idx": [
+     5
+    ],
+    "cards": [
+     [
+      "The Devil",
+      false
+     ]
+    ],
+    "text": "The Devil falls. What to do next: name what binds you and loosen its grip. Zodiac lens: Pisces' water element grounds this Major Arcana lesson in shadow self; upright, this current can move openly. To \"What would the bravest version of you do next?\" it answers: Name what binds you and loosen its grip. In plain life, that is shadow, patterns you feel unable to leave. It asks you: What do you tell yourself you cannot leave, and is the chain truly locked?"
+   },
+   {
+    "question": "How does this settle when the dust clears?",
+    "opener": "Card, tell us:",
+    "feeling": "pulled by fate",
+    "passes": 2,
+    "slot": 5,
+    "idx": [
+     6
+    ],
+    "cards": [
+     [
+      "The Tower",
+      false
+     ]
+    ],
+    "text": "The Tower falls. Where it settles: sudden change that clears the ground. Zodiac lens: Pisces' water element grounds this Major Arcana lesson in sudden upheaval; upright, this current can move openly. To \"How does this settle when the dust clears?\" it answers: Let the false structure fall instead of propping it up. Picture it: an awakening that clears false foundations. It asks you: What was built on a lie, and what is already shaking?"
+   }
+  ],
+  "slots": [
+   [
+    0,
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    4
+   ],
+   [
+    5
+   ],
+   [
+    6
+   ]
+  ]
+ },
+ "channeled": [],
+ "psy": false,
+ "interesting": [
+  "The Ace of Cups falls upside down.",
+  "Two cards fell together: The Emperor and the Ace of Cups (upside down).",
+  "Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "The Queen of Wands falls.",
+  "Zodiac lens: Pisces' water element challenges the Fire (action, passion) current of Wands; upright, this current can move openly.",
+  "It asks you: Where are you dimming your own light?",
+  "The Chariot falls upside down.",
+  "It asks you: What was built on a lie, and what is already shaking?"
+ ]
+}

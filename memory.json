@@ -1,19 +1,19 @@
 {
-  "insights": "Embrace stillness to shift perspectives, seek wisdom that aligns with your truth, and reevaluate what you're building for the long term. Let go of inherited systems that no longer serve you.",
+  "insights": "Embrace the past as a foundation, not an anchor. Let nostalgia fuel creativity but keep your feet grounded in present momentum.",
   "skill_notes": {
-    "skill": "Ritual grounding and recursive memory"
+    "skill": "Intuition and balance"
   },
   "focus": [
-    "Stillness",
-    "Legacy",
-    "Spiritual alignment"
+    "Nostalgia vs forward motion",
+    "Mastery through discipline",
+    "Trust-based relationships"
   ],
   "card_counts": {
     "The Fool": 4,
-    "Queen of Wands": 3,
+    "Queen of Wands": 4,
     "Ace of Wands": 4,
     "Justice": 4,
-    "Ten of Cups": 3,
+    "Ten of Cups": 4,
     "Five of Swords": 4,
     "Four of Wands": 6,
     "Strength": 4,
@@ -21,7 +21,7 @@
     "Five of Cups": 3,
     "Page of Cups": 4,
     "The Hierophant": 5,
-    "Knight of Cups": 5,
+    "Knight of Cups": 6,
     "Four of Pentacles": 7,
     "Nine of Cups": 4,
     "Six of Swords": 3,
@@ -29,62 +29,63 @@
     "Five of Wands": 6,
     "Three of Wands": 3,
     "Knight of Pentacles": 7,
-    "Ace of Swords": 5,
+    "Ace of Swords": 6,
     "Death": 3,
     "Ten of Wands": 6,
     "Ten of Swords": 2,
-    "Six of Cups": 1,
+    "Six of Cups": 2,
     "Ace of Pentacles": 5,
     "Four of Cups": 8,
     "The Lovers": 3,
     "Wheel of Fortune": 3,
     "Nine of Swords": 5,
-    "Two of Pentacles": 4,
-    "Seven of Wands": 1,
+    "Two of Pentacles": 5,
+    "Seven of Wands": 2,
     "King of Cups": 3,
-    "The Emperor": 6,
-    "Knight of Wands": 5,
+    "The Emperor": 7,
+    "Knight of Wands": 6,
     "Seven of Swords": 4,
     "Three of Swords": 3,
     "Eight of Swords": 3,
     "Three of Cups": 3,
     "Five of Pentacles": 2,
     "The Sun": 3,
-    "The Chariot": 3,
+    "The Chariot": 5,
     "Eight of Cups": 2,
     "Four of Swords": 6,
     "Queen of Pentacles": 2,
-    "Temperance": 4,
+    "Temperance": 5,
     "Seven of Pentacles": 6,
     "Nine of Wands": 5,
-    "King of Pentacles": 4,
+    "King of Pentacles": 5,
     "The Hanged Man": 5,
-    "Page of Wands": 6,
-    "The Tower": 3,
+    "Page of Wands": 7,
+    "The Tower": 4,
     "Three of Pentacles": 2,
     "Two of Wands": 4,
     "Nine of Pentacles": 4,
     "The Star": 3,
-    "Ten of Pentacles": 2,
+    "Ten of Pentacles": 3,
     "The Empress": 3,
     "Page of Pentacles": 3,
     "Six of Pentacles": 3,
     "Queen of Swords": 3,
-    "Queen of Cups": 4,
+    "Queen of Cups": 5,
     "The High Priestess": 3,
     "The Hermit": 5,
     "Two of Swords": 2,
-    "The Devil": 2,
-    "Six of Wands": 3,
-    "Ace of Cups": 3,
+    "The Devil": 3,
+    "Six of Wands": 4,
+    "Ace of Cups": 4,
     "King of Wands": 5,
-    "The Moon": 2,
+    "The Moon": 3,
     "The Magician": 3,
     "Eight of Wands": 2,
-    "The World": 2,
+    "The World": 3,
     "Two of Cups": 2,
     "Judgement": 2,
-    "Page of Swords": 1
+    "Page of Swords": 1,
+    "Knight of Swords": 1
   },
   "readings": [
     {
@@ -645,11 +646,53 @@
         "The Magician"
       ],
       "summary": "The Ten of Pentacles falls. The first card out of the deck names your concern: wealth, family legacy, long-term security, tradition. In your life it looks like roots, belonging. Zodiac lens: Sagittari"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "The Chariot",
+        "The World",
+        "Six of Wands",
+        "Queen of Cups",
+        "Knight of Wands",
+        "Seven of Wands"
+      ],
+      "summary": "The Chariot falls. The first card out of the deck names your concern: control, willpower, success, determination, momentum. In your life it looks like steering opposing impulses with will. Zodiac lens"
+    },
+    {
+      "date": "2026-11-26",
+      "question": "A Live Reading",
+      "cards": [
+        "The Emperor",
+        "Ace of Cups (reversed)",
+        "Page of Wands",
+        "Queen of Wands",
+        "The Chariot (reversed)",
+        "The Devil",
+        "The Tower"
+      ],
+      "summary": "The Emperor falls. The first card out of the deck names your concern: authority, structure, solid foundation, control, stability. In your life it looks like boundaries, taking charge of your own life."
+    },
+    {
+      "date": "2026-11-27",
+      "question": "business dealings",
+      "cards": [
+        "Six of Cups",
+        "Knight of Cups",
+        "King of Pentacles",
+        "Temperance",
+        "Ten of Cups (reversed)",
+        "Two of Pentacles",
+        "Ten of Pentacles",
+        "Ace of Swords",
+        "Knight of Swords",
+        "The Moon"
+      ],
+      "summary": "   The cards whisper of a journey where the past is both anchor and albatross, urging you to balance nostalgia with forward motion. The moon\u2019s pull on your tides mirrors this tension\u2014between holding o"
     }
   ],
   "channelings": [
-    "A lantern lit at noon for someone still arriving. My attention keeps returning to review previous decisions. The Four of Cups has found you twice now. It is not finished with you. The spirits say no m",
-    "The Hanged Man shows you the weight of past wounds, The Chariot urges forward with resolve. Salt on windowsills\u2014embrace what whispers softly, strength in solitude.",
     "Moss grows on the north side of every unspoken thing. Again the Ace of Wands: twice it has come. Listen to it this time. Hold it until a card makes sense of it.",
     "Salt on the windowsill, a name nobody says. Move now or hold steady; your true work calls you here, but let go of what no longer serves, embracing renewal amidst hidden wounds.",
     "The crows on the wire, each facing west, whisper: \"Jessica's team confusion mirrors your path. Find courage in clarity; trust your strengths now.",
@@ -667,14 +710,16 @@
     "Moss grows on the north side of every unspoken thing. I have seen Five of Pentacles and Four of Swords together before. Both cards point towards the need for rest and support in different contexts, re",
     "A hand reaches from the blue hour and takes nothing, urging you to release the old story that clings like mist\u2014your light is already burning, waiting to be named. The Magician stands at your threshold",
     "The last stair always creaks the truth. Temperance has found you three times now. It is not finished with you. Keep it close.",
-    "Ash holds the outline of what burned. From the Two of Cups, a single instruction: meet the other person halfway. When Nine of Swords and Ten of Cups meet, An old pattern of emotional distress is being"
+    "Ash holds the outline of what burned. From the Two of Cups, a single instruction: meet the other person halfway. When Nine of Swords and Ten of Cups meet, An old pattern of emotional distress is being",
+    "The moon does not argue with the tide; it only leans. The Ace of Swords has found you five times now. It is not finished with you. Keep it close.",
+    "A thread pulled gently unravels the right knot\u2014your charisma hums with quiet resolve, and a new strength stirs like moonlight on still water. The past holds its breath as you step into what is waiting"
   ],
   "gen": {
-    "rate": 2.93,
-    "delay": 214.2,
+    "rate": 2.79,
+    "delay": 209.99,
     "falling_tokens": 751.2,
     "three_tokens": 687.52,
-    "celtic_tokens": 1082.1
+    "celtic_tokens": 950.86
   },
   "learned": {
     "The Fool": [
@@ -697,7 +742,9 @@
       "In the context of a recent breakup, the King of Cups (reversed) indicates that while she clings tightly to her memories and feelings for him, they are increasingly turbulent and difficult to manage. This inner turmoil has left her feeling lost and adrift emotionally."
     ],
     "Six of Cups": [
-      "In the context of a recent stressful work project, the Six of Cups appeared in a reversed position, symbolizing unresolved childhood emotions and nostalgia for simpler times\u2014situations at home that need to be reconciled before moving forward professionally."
+      "In the context of a recent stressful work project, the Six of Cups appeared in a reversed position, symbolizing unresolved childhood emotions and nostalgia for simpler times\u2014situations at home that need to be reconciled before moving forward professionally.",
+      "A reunion with a mentor who once guided you in your career, offering wisdom from the past.",
+      "Nostalgia, comfort in memories; a call to revisit what once brought joy but may now hinder growth"
     ],
     "Four of Pentacles": [
       "A business meeting where a team member holds onto old contracts, causing delays and misunderstandings."
@@ -736,7 +783,8 @@
     ],
     "Ace of Swords": [
       "A conversation with a mentor who helped her clarify her goals for the future",
-      "A team leader who needs to take a step back from their high-stress project, feeling overwhelmed with tasks."
+      "A team leader who needs to take a step back from their high-stress project, feeling overwhelmed with tasks.",
+      "New ideas emerging; clarity in thought that cuts through confusion like light breaking dawn"
     ],
     "Ace of Wands": [
       "A project stalled due to internal conflicts, leaving the creator feeling fizzled and like there\u2019s an unfulfilled spark.",
@@ -749,7 +797,8 @@
       "Reversed Seven of Cups: Jessica finds herself overwhelmed by a project she started, each cup representing different ideas and opportunities. She wishes her team could choose one dream to pursue fully, but the uncertainty leaves her stuck, unable to commit despite knowing in her heart that something "
     ],
     "Knight of Cups": [
-      "In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th"
+      "In the current scenario, Jessica receives an email from an old friend who had been in a tumultuous relationship, seeking advice on whether to end it. The friend is torn between idealism and practicality, much like the Knight of Cups, feeling passionately about their dreams but also grappling with th",
+      "Dreams, emotional sensitivity; the need for creative expression and idealism without becoming lost within it"
     ],
     "Three of Cups": [
       "In the midst of a challenging project at work, Jessica leaned on her closest friends for support and celebrated their collective successes with heartfelt gatherings, finding solace in the camaraderie that brought them all closer."
@@ -762,7 +811,8 @@
       "Jessica feels isolated and unsupported after moving away, struggling financially and emotionally."
     ],
     "Two of Pentacles": [
-      "Upright: You've just wrapped up a demanding project at work, and in the process, you found yourself juggling multiple tasks simultaneously. Now, as you step back to review and reflect on your efforts, you realize how adaptable you are when facing complex challenges. This newfound balance allows you "
+      "Upright: You've just wrapped up a demanding project at work, and in the process, you found yourself juggling multiple tasks simultaneously. Now, as you step back to review and reflect on your efforts, you realize how adaptable you are when facing complex challenges. This newfound balance allows you ",
+      "Adaptability and juggling multiple responsibilities, but also signs of being overwhelmed by shifting priorities"
     ],
     "Seven of Pentacles": [
       "When you finally landed the promotion at work, after months of relentless effort and sacrifice in both time and resources, only to find that your hard-earned gains have been tempered with unexpected financial setbacks, this Seven of Pentacles reveals a complex mix of relief from years of stress and "
@@ -777,7 +827,8 @@
       "The World (Upright): You have successfully completed a major project at work, and now as you look back on the journey, you feel an overwhelming sense of pride and satisfaction. The clients are pleased with your final product, and your colleagues have praised your dedication. As you celebrate this ac"
     ],
     "Temperance": [
-      "In a corporate negotiation, finding the middle path involves both parties giving and receiving equally, which can be particularly challenging when one side feels they are at a disadvantage."
+      "In a corporate negotiation, finding the middle path involves both parties giving and receiving equally, which can be particularly challenging when one side feels they are at a disadvantage.",
+      "Balance between opposites\u2014emotion vs. logic, past vs. future\u2014and a call to integrate them with care"
     ],
     "Four of Cups": [
       "A messy office party where Jessica feels left out, struggling to find a place within the team.",
@@ -838,13 +889,36 @@
       "The Queen of Wands in an upright reading might suggest that you are leading a community project with warmth, confidence, and leadership skills. Despite initial hesitation or perceived lack of visibility, your magnetic charm and creative authority inspire others to take action, fostering a sense of s"
     ],
     "The Moon": [
-      "In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination."
+      "In the midst of a heated argument with a long-time partner, you find yourself staring at the full moon through your bedroom window, feeling trapped in an endless cycle of fear and projection, unsure if what's happening is real or just a product of your overactive imagination.",
+      "Uncertainty, hidden fears\u2014truth may appear distorted under emotional or psychological fog"
     ],
     "Ten of Cups": [
-      "A family gathering where hidden resentments resurface, causing emotional strain."
+      "A family gathering where hidden resentments resurface, causing emotional strain.",
+      "Disillusionment or unmet emotional needs from relationships that once provided fulfillment; the risk of clinging too tightly out of fear of loss"
     ],
     "Death": [
       "A friend's departure that clears the way for a deeper relationship"
+    ],
+    "The Chariot": [
+      "A runner training for a marathon, pushing through pain to reach the finish line."
+    ],
+    "King of Pentacles": [
+      "Practical mastery, financial stability; authority through discipline and resourcefulness in material matters"
+    ],
+    "Ten of Pentacles": [
+      "Legacy, family harmony\u2014symbolizing a desire for stability through shared values or inherited wealth/gifts"
+    ],
+    "Knight of Swords": [
+      "Action driven by inspiration and intuition rather than logic\u2014a bold leap into the unknown with hope as your compass"
+    ],
+    "Nine of Wands": [
+      "Upright: A small business owner, after years of fighting to keep their shop open through rent hikes and dwindling customers, finally sees a long-awaited grant application approved\u2014just as they\u2019re about to give up."
+    ],
+    "Three of Pentacles": [
+      "Three of Pentacles upright: A young artisan in Lisbon opens her first pop-up studio, showcasing handcrafted ceramics under the patronage of a local architect who sees potential beyond mere decoration\u2014her work becomes part of an urban renewal project."
+    ],
+    "Queen of Pentacles": [
+      "Upright Queen of Pentacles: A single mother working two jobs uses her evenings to knit blankets for a local shelter, yet neglects her own health\u2014until she realizes that true nurturing begins with tending the soil of self-care."
     ]
   },
   "combos": {
@@ -871,7 +945,11 @@
     "Strength + The Hanged Man": "Facing hidden self-doubt while at an impasse, needing stillness before moving forward.",
     "Judgement + Ten of Cups": "A moment of reckoning with past familial wounds and the need for self-forgiveness.",
     "Temperance + Two of Pentacles": "Overwhelm and imbalance require slowing down to find harmony",
-    "The Hanged Man + The Hierophant": "Tradition and suspension\u2014let go of rigid beliefs to find new paths."
+    "The Hanged Man + The Hierophant": "Tradition and suspension\u2014let go of rigid beliefs to find new paths.",
+    "The Chariot + The World": "Completion and control in tandem\u2014celebrating success while staying focused on future goals",
+    "King of Pentacles + Knight of Cups": "Creative passion meets financial stability\u2014trust that both can coexist and thrive together",
+    "Knight of Cups + Six of Cups": "A nostalgic longing for comfort that risks becoming a crutch; creativity needs grounding in reality to avoid drifting into fantasy.",
+    "King of Pentacles + Temperance": "Mastery through discipline and balance\u2014using practical skills with emotional awareness ensures stability without rigidity."
   },
   "feedback": [
     {
@@ -1024,6 +1102,21 @@
         "Page of Wands"
       ],
       "said": "yes"
+    },
+    {
+      "cards": [
+        "Six of Cups",
+        "Knight of Cups",
+        "King of Pentacles",
+        "Temperance",
+        "Ten of Cups (reversed)",
+        "Two of Pentacles",
+        "Ten of Pentacles",
+        "Ace of Swords",
+        "Knight of Swords",
+        "The Moon"
+      ],
+      "said": "yes"
     }
   ],
   "lessons": [
@@ -1034,17 +1127,21 @@
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
+    "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey.",
     "Embrace the pause and let go of past burdens to find renewal amidst your ongoing journey."
   ],
-  "next_zodiac_index": 1,
+  "next_zodiac_index": 3,
   "about_you": {
     "age": "older",
     "sex/gender": "any"
   },
   "intake_asked": [
+    "Are your friendships asking for more play or less?",
     "Is your motivation asking for more structure or less?",
+    "What's one small thing you could do for your family this weekend?",
     "What's one small thing you could do for your focus tomorrow?",
-    "What's one small thing you could do for your luck tomorrow?"
+    "What's one small thing you could do for your luck tomorrow?",
+    "What's one small thing you could do for your spending this week?"
   ],
   "last_cast": {
     "group": 4,
