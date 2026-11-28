@@ -135,7 +135,12 @@ def open_window_for(target):
     time.sleep(1.5)
     if p.poll() is not None and p.returncode != 0:
         return f"({argv[0]} closed straight away with exit code {p.returncode}; it may need options or a terminal)"
-    where = " -- its text output appears in the Veyra-action window" if log else ""
+    if log:
+        where = " -- its text output appears in the Veyra-action window"
+    elif err:
+        where = f" (no Veyra-action window: {err}; its output is not being shown anywhere)"
+    else:
+        where = " (its output is not being shown anywhere)"
     return f"(started {argv[0]} in its own window on their screen, pid {p.pid}{where})"
 
 
