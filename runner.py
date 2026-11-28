@@ -11,6 +11,7 @@ import os
 import pty
 import re
 import shlex
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -196,8 +197,156 @@ def watch_main(title, stream_path):
             pidfile.unlink(missing_ok=True)
 
 
+CLK_TCK = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
+SERVER_NAME = {"ollama": "ollama", "openai": "llama-server"}   # kind -> process name to find, when she isn't in-process
+V_GOLD, V_CYAN, V_RED, V_DIM, V_WHITE, V_RESET = ("\x1b[38;5;220m", "\x1b[38;5;51m", "\x1b[38;5;203m",
+                                                   "\x1b[38;5;245m", "\x1b[38;5;231m", "\x1b[0m")
+
+
+def _cpu_ticks(pid):
+    """utime+stime, in clock ticks, for pid -- or None if it's gone, or this isn't Linux."""
+    try:
+        parts = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[-1].split()
+        return int(parts[11]) + int(parts[12])             # fields 14 & 15 of /proc/pid/stat
+    except Exception:
+        return None
+
+
+def _find_pid_by_name(name):
+    """First living pid whose /proc/pid/comm is exactly `name` (Linux only), or None."""
+    try:
+        for p in Path("/proc").iterdir():
+            if p.name.isdigit():
+                try:
+                    if (p / "comm").read_text().strip() == name:
+                        return int(p.name)
+                except OSError:
+                    continue
+    except OSError:
+        pass
+    return None
+
+
+def _brain_pid(state):
+    """Whichever process is actually doing her thinking right now: her own chat process when the model runs
+    in-process (kind "llama"), or the local server's process when it's external (ollama, a llama.cpp server)."""
+    kind = state.get("kind", "")
+    if kind == "llama":
+        return state.get("chat_pid")
+    name = SERVER_NAME.get(kind)
+    return _find_pid_by_name(name) if name else None
+
+
+def _bar(pct, width):
+    pct = 0 if pct is None else max(0.0, min(100.0, pct))
+    fill = int(round(width * pct / 100))
+    return V_RED + "█" * fill + V_DIM + "░" * (width - fill) + V_RESET
+
+
+def _fmt_time(secs):
+    secs = max(0, int(secs))
+    h, r = divmod(secs, 3600)
+    m, s = divmod(r, 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+
+def _wrap(text, width):
+    words, lines, line = text.split(), [], ""
+    for w in words:
+        if line and len(line) + 1 + len(w) > width:
+            lines.append(line)
+            line = w
+        else:
+            line = f"{line} {w}" if line else w
+    if line or not lines:
+        lines.append(line)
+    return lines
+
+
+def vitals_main(title, state_path):
+    """A small htop-like window: how much CPU she's using, tokens generated and their rate, how long she's
+    been awake, and a live block showing whatever she's doing or thinking right now. Redraws in place every
+    half second. Closes when the chat marks itself no longer running, or on Ctrl+C."""
+    state_path = Path(state_path)
+    pidfile = state_path.with_suffix(".pid")
+    if pidfile.exists():
+        try:
+            other = int(pidfile.read_text())
+            if other != os.getpid() and alive(other):
+                print(f"{title} is already open.")
+                time.sleep(2)
+                return
+        except Exception:
+            pass
+    pidfile.write_text(str(os.getpid()))
+    sys.stdout.write(f"\x1b]0;{title}\x07")
+    last_ticks = last_tick_t = None
+    last_tokens, last_tok_t = 0, time.time()
+    try:
+        while True:
+            try:
+                st = json.loads(state_path.read_text())
+            except Exception:
+                st = {}
+            now = time.time()
+            pid = _brain_pid(st)
+            ticks = _cpu_ticks(pid) if pid else None
+            cpu_pct = None
+            if ticks is not None and last_ticks is not None and last_tick_t is not None:
+                dt = now - last_tick_t
+                if dt > 0:
+                    cpu_pct = (ticks - last_ticks) / CLK_TCK / dt * 100
+            last_ticks, last_tick_t = ticks, now
+
+            tokens = st.get("tokens", 0)
+            dt2 = now - last_tok_t
+            rate = (tokens - last_tokens) / dt2 if dt2 > 0 else 0.0
+            last_tokens, last_tok_t = tokens, now
+
+            uptime = now - st.get("start", now)
+            cols = max(44, shutil.get_terminal_size((60, 20)).columns)
+            who = {"llama": "built-in model", "ollama": "Ollama", "openai": "local server",
+                   "hf": "Hugging Face (cloud)", "none": "", "": ""}.get(st.get("kind", ""), st.get("kind", ""))
+            model = st.get("model", "")
+
+            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET}  {V_DIM}vitals{V_RESET}"]
+            if cpu_pct is None:
+                cpu_line = f"{V_DIM}n/a" + (f" ({who} process not found){V_RESET}" if who else f"{V_RESET}")
+            else:
+                bw = max(10, min(30, cols - 26))
+                cpu_line = f"{_bar(cpu_pct, bw)} {V_WHITE}{cpu_pct:5.1f}%{V_RESET}  {V_DIM}{who}{V_RESET}"
+            out.append(f"\n  {V_DIM}cpu{V_RESET}     {cpu_line}")
+            out.append(f"  {V_DIM}tokens{V_RESET}  {V_WHITE}{tokens:,}{V_RESET} total  {V_DIM}·{V_RESET} "
+                        f"{V_CYAN}{rate:.1f}{V_RESET} tok/s")
+            out.append(f"  {V_DIM}uptime{V_RESET}  {V_WHITE}{_fmt_time(uptime)}{V_RESET}" +
+                       (f"  {V_DIM}· {model}{V_RESET}" if model else ""))
+            bw2 = cols - 4
+            out.append(f"\n  {V_DIM}┌─ what she's doing right now " + "─" * max(0, bw2 - 28) + f"┐{V_RESET}")
+            lines = _wrap(st.get("status", "waking up") or "...", bw2 - 2)[:4]
+            for ln in lines:
+                out.append(f"  {V_DIM}│{V_RESET} {V_CYAN}{ln.ljust(bw2 - 2)}{V_RESET} {V_DIM}│{V_RESET}")
+            for _ in range(4 - len(lines)):
+                out.append(f"  {V_DIM}│{V_RESET} {' ' * (bw2 - 2)} {V_DIM}│{V_RESET}")
+            out.append(f"  {V_DIM}└" + "─" * bw2 + f"┘{V_RESET}\n")
+            sys.stdout.write("\n".join(out))
+            sys.stdout.flush()
+
+            if not st.get("running", True) and st:
+                print(f"\n{V_DIM}(chat closed; this window closes too){V_RESET}")
+                time.sleep(1.2)
+                return
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if pidfile.exists() and pidfile.read_text().strip() == str(os.getpid()):
+            pidfile.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
     if len(sys.argv) >= 4 and sys.argv[1] == "watch":
         watch_main(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) >= 4 and sys.argv[1] == "vitals":
+        vitals_main(sys.argv[2], sys.argv[3])
     else:
         main()
