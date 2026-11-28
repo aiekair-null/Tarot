@@ -621,65 +621,46 @@ class Keys:
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
 
 
-GROW = float(os.environ.get("VEYRA_WAVE_GROW", "2.5"))     # cells the arrow gains each time it returns from an edge
+# The same rising-brightness shape as fx.py's SHEEN (the shimmer she reads cards with), kept to reds only.
+THINK_SHEEN = [52, 88, 124, 160, 196, 203, 210, 217]
+
+# Plain ASCII stand-ins for the sparkle glyphs a letter flickers through before it settles. fx.py's card-
+# reading "glitch" reveal uses Unicode block/star characters (GLYPHS = "░▒▓◇◆✦✧⌬⍟∴∵") -- on a font missing
+# those, each one draws as an empty "tofu" box, the same reason the arrow's dash and tail were plain ASCII.
+THINK_GLYPHS = "*+%#=~.:"
+THINK_WORD = "thinking"
 
 
 class Wave:
-    """While she thinks: a small red arrow flies all the way off one edge of the window, vanishes
-    completely for a moment (as if it carried on into whatever's next to the window -- a program can only
-    ever draw inside its own window, so a true hand-off to a neighboring one isn't something this can
-    actually do; fully disappearing and popping back is the honest version of that idea), then returns from
-    that same edge heading the other way, a bit longer than before. It starts as just a tail and one dash to
-    the arrowhead and grows only at each return, not continuously mid-flight -- so a slow model (a long wait
-    for the first token) still shows a clearly changing animation the whole time instead of a static line."""
-    SLOW = 4                                                  # 4x slower than the first version
-    MIN_LEN = 3                                               # tail + one dash + arrowhead, its starting shape
-    GONE_TICKS = 10                                           # ~0.3s fully blank before it reappears
-    TAIL = "o"                                                # plain ASCII stand-in for "*" -- same reason as
-                                                               # the dash below: an unsupported glyph draws as
-                                                               # an empty box on a font that lacks it.
+    """While she thinks: the same sparkle-letters reveal she reads cards out loud with (fx.py's "glitch"
+    effect -- random glyphs settling left to right into real letters, the text shimmering through a color
+    gradient as it goes), recolored red here instead of her reading moods. A card reading resolves once and
+    stays resolved; a wait for her first token has no such fixed end, so this holds briefly once fully
+    settled, then scrambles and resolves again, on repeat, for as long as the wait lasts."""
+    RESOLVE = 1.4                                             # seconds to go from all-sparkle to fully settled
+    HOLD = 0.6                                                # seconds held settled before it scrambles again
+    CYCLE = RESOLVE + HOLD
 
     def __init__(self, unicode_ok):
-        # Plain "-", unconditionally: unicode_ok only reflects the locale's encoding, not whether this
-        # terminal's font actually has a glyph for the fancier em-dash -- on fonts that don't, it's drawn as
-        # an empty "tofu" box instead of a clean line.
-        self.dash = "-"
-        self.length, self.x, self.dir, self.w = float(self.MIN_LEN), 0.0, 1, 0
-        self.state, self.gone_left = "flying", 0
+        self.word = THINK_WORD
+        self.t0 = time.time()
+        self.w = 0
 
     def tick(self):
+        n = len(self.word)
+        elapsed = (time.time() - self.t0) % self.CYCLE
+        p = min(1.0, elapsed / self.RESOLVE)                  # 0 -> 1 across the resolve phase, then holds at 1
+        shown = [self.word[i] if p >= (i + 1) / n else random.choice(THINK_GLYPHS) for i in range(n)]
+        k = (time.time() - self.t0) * 0.5                     # slow traveling phase, for the shimmer
+        painted = "".join(
+            f"\x1b[38;5;{THINK_SHEEN[int(((k + i * 0.15) % 1.0) * len(THINK_SHEEN))]}m{c}"
+            for i, c in enumerate(shown)
+        )
         W = max(20, cols() - 2)
         self.w = W
-        if self.state == "gone":
-            sys.stdout.write("\r" + " " * W)
-            sys.stdout.flush()
-            self.gone_left -= 1
-            if self.gone_left <= 0:
-                self._reappear(W)
-            return
-        L = int(self.length)
-        arrow = (self.TAIL + self.dash * (L - 2) + ">") if self.dir > 0 else ("<" + self.dash * (L - 2) + self.TAIL)
-        speed = 1 + 3 * (L / W) ** 2                          # 1x when small, up to 4x as it nears full width
-        self.x += max(1, W // 45) / self.SLOW * speed * self.dir
-        xi = int(self.x)
-        left, right = max(0, xi), min(W, xi + L)
-        out = "\r" + " " * W
-        if right > left:
-            visible = arrow[left - xi:right - xi]
-            out = "\r" + " " * left + RED + visible + RESET
-        sys.stdout.write(out)
+        pad = max(0, (W - n) // 2)
+        sys.stdout.write("\r" + " " * pad + painted + RESET)
         sys.stdout.flush()
-        if (self.dir > 0 and xi >= W) or (self.dir < 0 and xi + L <= 0):
-            self.state, self.gone_left = "gone", self.GONE_TICKS
-
-    def _reappear(self, W):
-        """Grow a bit (or reset once it's spanned the full width -- a cap, not a freeze), flip direction, and
-        step back in from the same edge it vanished from, heading the other way."""
-        self.length = self.MIN_LEN if self.length >= W else min(float(W), self.length + GROW)
-        self.dir *= -1
-        L = int(self.length)
-        self.x = float(W) if self.dir < 0 else float(-L)      # back in from the right moving left, or vice versa
-        self.state = "flying"
 
     def clear(self):
         if self.w:
@@ -1124,6 +1105,16 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
     stop_rw = None
     start = time.time()
     if plan is not None:
+        # a previous run's leftover research.json ends with "running": false (written in the finally: block
+        # below) -- if that file is still sitting there, a freshly spawned research_main() can read it on its
+        # very first loop pass, see "running": false, and close itself within ~1.5s, before the writer thread
+        # a few lines down ever gets a chance to overwrite it with this run's real state. Clearing it first
+        # means the new window instead finds nothing (its own safe "waiting for a run to start" case) until
+        # the writer actually catches up -- never a stale "finished" it mistakes for its own.
+        try:
+            hands.RESEARCH_STATE.unlink(missing_ok=True)
+        except OSError:
+            pass
         err = hands.open_research_window()
         if err:
             print(f"{DIM}  (no research control room: {err}){RESET}")
@@ -1204,7 +1195,10 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
                 pass
 
 
-def fit(history, budget=14000):
+FIT_BUDGET = 14000                                   # ~4000 tokens she's guaranteed to still see, every turn
+
+
+def fit(history, budget=FIT_BUDGET):
     """The newest messages that fit her memory window (about 4000 tokens), always starting with the person."""
     keep, used = [], 0
     for m in reversed(history):
@@ -1334,7 +1328,8 @@ def _main():
     open_her_window()
     print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  "
           f"/autowork [Nh] [Mm] has her work unattended, checking in on her own (menu includes a "
-          f"research mode: pick platforms, give keywords)  ·  type quit (or Ctrl+C) to leave{RESET}\n")
+          f"research mode: pick platforms, give keywords)  ·  /summarize sums up the chat so you can start "
+          f"fresh without losing it  ·  type quit (or Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
 
     def _wake():
@@ -1345,6 +1340,7 @@ def _main():
     threading.Thread(target=_wake, daemon=True).start()
 
     history, prompt, uni = [], "What is thy bidding?", utf8()
+    low_room_warned = False                          # so the "my head's getting full" nudge fires once, not every turn
     once = " ".join(sys.argv[1:]).strip()
     while True:
         if once:
@@ -1374,6 +1370,7 @@ def _main():
             continue
         if q == "/clear":
             history = []
+            low_room_warned = False
             print(f"{DIM}(forgotten){RESET}")
             continue
         if not ready.is_set():
@@ -1391,6 +1388,38 @@ def _main():
                 if not task:
                     continue
             _autowork(b, history, system, uni, hours, minutes, task, plan)
+            continue
+        if q.lower() in ("/summarize", "/summary"):
+            if not history:
+                print(f"{DIM}  (nothing to sum up yet){RESET}")
+                continue
+            _status("she writes down everything so far, for a fresh chat to pick up")
+            try:
+                ctx_tokens = b.llm.n_ctx() if b.llm is not None else None
+            except Exception:
+                ctx_tokens = None
+            # this is a one-shot pass with no tool rounds to leave room for, so it can draw on far more of
+            # her actual context window than the normal per-turn FIT_BUDGET allows
+            budget = max(FIT_BUDGET, int(ctx_tokens * 3.3 * 0.6)) if ctx_tokens else FIT_BUDGET
+            ask = ("Sum up this whole conversation for yourself in a brand new chat that will remember none of "
+                   "it: who the person is and what they're working on, decisions already settled, anything "
+                   "still open or pending, and whatever you'd need so you don't repeat yourself or contradict "
+                   "something already agreed. Write it plainly as a note your future self will read cold -- "
+                   "complete and specific, not a performance, no need to stay in character for this one.")
+            msgs = [{"role": "system", "content": system}] + fit(history, budget=budget) + \
+                   [{"role": "user", "content": ask}]
+            try:
+                print(f"\n{GOLD}{'-' * max(20, min(60, cols()))}{RESET}")
+                speak(b, msgs, uni)
+            except Exception as e:
+                doing("something snagged; she works out what went wrong")
+                with OUT():
+                    print(RESET + f"\n{LILAC}{diagnose(b, e, 'summarizing')}{RESET}\n")
+                continue
+            print(f"{GOLD}{'-' * max(20, min(60, cols()))}{RESET}")
+            print(f"{DIM}  copy everything above this line into your first message in a new chat, then "
+                  f"/clear (or restart her) here.{RESET}\n")
+            low_room_warned = False
             continue
         history.append({"role": "user", "content": q})
         if WIN is not None:
@@ -1416,6 +1445,14 @@ def _main():
                 pass
         prompt = pr.next or "What is thy bidding?"
         history.append({"role": "assistant", "content": reply})
+        # once she's carrying more than fit() will hand her next turn, she's starting to lose the edges of
+        # this chat -- say so once, in her own voice, rather than let it go on quietly dropping older turns
+        if not low_room_warned and sum(len(m["content"]) for m in history) > FIT_BUDGET:
+            low_room_warned = True
+            with OUT():
+                print(f"\n{LILAC}My head's getting full, dear one -- I'm starting to lose the edges of what "
+                      f"we've said. Say {GOLD}/summarize{LILAC} and I'll write it all down so you can start a "
+                      f"new chat without us losing the thread.{RESET}\n")
         if once:
             break
 
