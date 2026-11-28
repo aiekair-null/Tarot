@@ -43,7 +43,8 @@ sudo sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && sudo locale-gen
 echo 'LANG=en_US.UTF-8' | sudo tee /etc/locale.conf
 ```
 
-`veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
+`veyra chat` skips the tarot: just her portrait and "What is thy bidding?", talking straight to her model
+(`veyra chat "a question"` answers once and exits). `veyra setup` rebuilds, `veyra update` pulls new code, `veyra promo` makes a promo, anything else
 goes to tarot.py (`veyra model`, `veyra video`...). Promos are also menu option 12. GPU: `VEYRA_GPU=vulkan veyra setup`
 (or `cuda` / `rocm`). Her Python engine lives in `~/.local/share/veyra/venv`; the clone in `~/Tarot`
 still syncs memory and sessions to GitHub.
