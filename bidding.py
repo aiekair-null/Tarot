@@ -18,6 +18,7 @@ from pathlib import Path
 
 import art
 import brain
+import netsense
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
           "You talk like an old-world traveling fortune teller from a candlelit caravan: warm, theatrical and "
@@ -167,14 +168,16 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:")
+    TAGS = ("REMEMBER:", "NEXT:") + netsense.TOOLS
 
     def __init__(self):
-        self.line, self.mode, self.notes, self.next = "", None, [], None
+        self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
         self.w = Wrap()
 
     def feed(self, piece):
         for ch in piece:
+            if self.tool:                                  # a lookup was asked for: ignore the rest
+                return
             if ch == "\n":
                 self._end()
                 continue
@@ -199,6 +202,8 @@ class Printer:
         if u.startswith("REMEMBER:"):
             if s[9:].strip():
                 self.notes.append(s[9:].strip())
+        elif any(u.lstrip("*`").startswith(t) for t in netsense.TOOLS):
+            self.tool = self.tool or netsense.find_call(s)
         elif u.startswith("NEXT:"):
             if s[5:].strip():
                 self.next = s[5:].strip().strip('"')[:90]
@@ -294,8 +299,8 @@ class Wave:
             sys.stdout.flush()
 
 
-def speak(b, msgs, unicode_ok):
-    """Stream one reply with the thinking wave until the first word; Esc stops her."""
+def _pass(b, msgs, unicode_ok):
+    """Stream one reply with the thinking wave until the first word; Esc stops her; a tool line ends it."""
     q, stop = queue.Queue(), threading.Event()
 
     def run():
@@ -335,9 +340,16 @@ def speak(b, msgs, unicode_ok):
                 break
             out.append(item)
             pr.feed(item)
+            if pr.tool:                                    # she asked to look something up: stop and fetch it
+                stop.set()
+                break
     if not started:
         wave.clear()
     pr.close()
+    if pr.tool:
+        print(RESET, end="")
+        t.join(timeout=5)
+        return "".join(out).strip(), pr, stopped
     if stopped:
         print(f"{DIM} ...(hushed){RESET}", end="")
         out.append(" ...")
@@ -346,7 +358,27 @@ def speak(b, msgs, unicode_ok):
         print(f"{DIM}\n(she ran out of breath mid-thought; type 'go on' for the rest){RESET}", end="")
     print(RESET + "\n")
     t.join(timeout=5)
-    return "".join(out).strip(), pr
+    return "".join(out).strip(), pr, stopped
+
+
+def speak(b, msgs, unicode_ok, rounds=4):
+    """Her answer, letting her search / read / watch up to `rounds` times before she replies."""
+    msgs, looked = list(msgs), []
+    for _ in range(rounds):
+        text, pr, stopped = _pass(b, msgs, unicode_ok)
+        if not pr.tool or stopped:
+            break
+        tool, arg = pr.tool
+        verb = {"SEARCH": "searches", "READ": "reads", "YOUTUBE": "watches"}[tool]
+        print(f"{DIM}  (she {verb}: {arg[:70]}){RESET}", flush=True)
+        result = netsense.run(pr.tool)
+        looked.append(f"{tool} {arg}")
+        msgs += [{"role": "assistant", "content": text},
+                 {"role": "user", "content": f"RESULT of {tool}: {arg}\n{result}\n\n(Now answer me from this. "
+                                             "Look something else up only if you truly need to.)"}]
+    if looked:
+        text = "(I looked up: " + "; ".join(looked) + ")\n" + text
+    return text, pr
 
 
 def main():
@@ -367,7 +399,7 @@ def main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     ready = threading.Event()
