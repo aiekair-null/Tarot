@@ -32,6 +32,7 @@ import codex
 import eyes
 import hands
 import netsense
+import research
 import runner
 import x11
 
@@ -624,32 +625,35 @@ GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gain
 
 class Wave:
     """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
-    getting faster as it nears full width, until it fills the whole line."""
+    getting faster as it nears full width -- then loops back to a short arrow and keeps bouncing, rather than
+    freezing solid, so a slow model (a long wait for the first token) still shows visible motion the whole
+    time instead of going static partway through."""
     SLOW = 4                                                  # 4x slower than the first version
 
     def __init__(self, unicode_ok):
-        self.dash = "—" if unicode_ok else "-"
+        # Plain "-", unconditionally: unicode_ok only reflects the locale's encoding, not whether this
+        # terminal's font actually has a glyph for the fancier em-dash -- on fonts that don't, it's drawn as
+        # an empty "tofu" box instead of a clean line.
+        self.dash = "-"
         self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
+        if int(self.length) >= W:
+            # Reached full width -- loop back to a short arrow instead of sitting there static.
+            self.length, self.pos, self.dir = 3.0, 0.0, 1
         speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
         self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
         L = int(self.length)
-        full = L >= W
-        right = self.dir > 0 or full
-        arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
+        arrow = self.dash * (L - 1) + ">" if self.dir > 0 else "<" + self.dash * (L - 1)
         span = max(0, W - L)
-        if full:
-            x = 0
-        else:
-            self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
-            if self.pos >= span:
-                self.pos, self.dir = float(span), -1
-            elif self.pos <= 0:
-                self.pos, self.dir = 0.0, 1
-            x = min(int(self.pos), span)
+        self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
+        if self.pos >= span:
+            self.pos, self.dir = float(span), -1
+        elif self.pos <= 0:
+            self.pos, self.dir = 0.0, 1
+        x = min(int(self.pos), span)
         sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
         sys.stdout.flush()
 
@@ -892,6 +896,214 @@ def speak(b, msgs, unicode_ok, rounds=8):
     return text, pr
 
 
+def _parse_autowork(q):
+    """'/autowork [Nh] [Mm] <task>' -> (hours, minutes, task). Either number can be left out; defaults are
+    10 hours, checking in every 20 minutes. An empty task (just '/autowork', or '/autowork 6h') drops into
+    the mode-select menu instead of requiring it all typed on one line."""
+    rest = q[len("/autowork"):].strip()
+    hours, minutes = 10.0, 20.0
+    m = re.match(r"(\d+(?:\.\d+)?)\s*h(?:ours?)?\b\s*", rest, re.I)
+    if m:
+        hours = float(m.group(1))
+        rest = rest[m.end():]
+    m = re.match(r"(\d+(?:\.\d+)?)\s*m(?:in(?:utes?)?)?\b\s*", rest, re.I)
+    if m:
+        minutes = float(m.group(1))
+        rest = rest[m.end():]
+    return hours, minutes, rest.strip()
+
+
+PLATFORMS = ["Google", "Reddit", "YouTube", "Facebook"]
+
+
+def _pick_platforms():
+    """Ask which public sites she should search. A list of platform names, or None if cancelled."""
+    print(f"\n{DIM}  where should she look?{RESET}")
+    for i, label in enumerate(PLATFORMS, 1):
+        print(f"{DIM}    {i}) {label}{RESET}")
+    alln = len(PLATFORMS) + 1
+    print(f"{DIM}    {alln}) all of these{RESET}")
+    while True:
+        try:
+            a = input(hands.rl_safe(f"{LILAC}  pick one or more (e.g. 1,3) or {alln} for all: {RESET}")).strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return None
+        if not a:
+            continue
+        if a == str(alln) or a.lower() in ("all", "a"):
+            return list(PLATFORMS)
+        picks = [PLATFORMS[int(p) - 1] for p in re.split(r"[,\s]+", a) if p.isdigit() and 1 <= int(p) <= len(PLATFORMS)]
+        if picks:
+            return picks
+        print(f"{DIM}    didn't catch that -- numbers like 1,3, or {alln} for all{RESET}")
+
+
+def _pick_keywords():
+    """Ask for the keyword list, semicolon-separated. A list of keywords, or None if cancelled/empty."""
+    try:
+        a = input(hands.rl_safe(f"{LILAC}  keywords to search for (separate with ;): {RESET}")).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+    kws = [k.strip() for k in a.split(";") if k.strip()]
+    return kws or None
+
+
+def _autowork_setup():
+    """The /autowork mode menu: 1) a plain task, or 2) a research run across specific platforms and
+    keywords. Returns (task, plan) where plan is {"platforms": [...], "keywords": [...]} for research mode
+    or None for a plain task; (None, None) if the person backs out."""
+    print(f"\n{DIM}  what kind of work?{RESET}")
+    print(f"{DIM}    1) General -- give her a task to work on unattended{RESET}")
+    print(f"{DIM}    2) Research -- she works a keyword list across specific public sites{RESET}")
+    try:
+        mode = input(hands.rl_safe(f"{LILAC}  pick a mode [1/2]: {RESET}")).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None, None
+    if mode == "2":
+        platforms = _pick_platforms()
+        if not platforms:
+            return None, None
+        keywords = _pick_keywords()
+        if not keywords:
+            return None, None
+        where = ", ".join(platforms)
+        task = (f"Research the following keywords, searching {where} for each one: "
+                f"{'; '.join(keywords)}. Work through them one at a time, in the order given.")
+        return task, {"platforms": platforms, "keywords": keywords}
+    try:
+        task = input(hands.rl_safe(f"{LILAC}  what should she work on? {RESET}")).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None, None
+    return (task or None), None
+
+
+def _research_slice(plan, total_seconds, elapsed):
+    """Which keyword index is 'current' right now, and how long each keyword's slice is, splitting the
+    whole time budget evenly across the keyword list."""
+    n = max(1, len(plan["keywords"]))
+    slice_len = total_seconds / n
+    idx = min(n - 1, int(elapsed // slice_len)) if slice_len > 0 else 0
+    return idx, slice_len
+
+
+def _research_writer(plan, start, total_seconds, stop_event):
+    """Keeps the Veyra-research control room's state file current every second: which keyword is active
+    (an even split of the time budget across the keyword list), time spent on it, and overall progress."""
+    while not stop_event.is_set():
+        elapsed = time.time() - start
+        idx, slice_len = _research_slice(plan, total_seconds, elapsed)
+        state = {
+            "platforms": plan["platforms"],
+            "keywords": plan["keywords"],
+            "current": idx,
+            "slice_elapsed": max(0.0, elapsed - idx * slice_len),
+            "slice_len": slice_len,
+            "elapsed": elapsed,
+            "total_seconds": total_seconds,
+            "running": elapsed < total_seconds,
+        }
+        try:
+            hands.RESEARCH_STATE.parent.mkdir(parents=True, exist_ok=True)
+            tmp = hands.RESEARCH_STATE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state))
+            tmp.replace(hands.RESEARCH_STATE)
+        except OSError:
+            pass
+        stop_event.wait(1.0)
+
+
+def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
+    """Keeps her working on `task` for up to `hours`, feeding her an automatic check-in turn every
+    `minutes` -- no one has to type anything. This is the same process, the same windows, just not
+    returning to the input prompt: it keeps its own clock, so the chat session (and the machine) has to
+    stay running the whole time. While it runs, safe RUN/WRITE/OPEN calls go through without a prompt
+    (hands.AUTO_SAFE); anything DANGER-flagged, or a write outside the home folder, still stops and waits
+    for a real yes, however long that takes. With a research `plan` (platforms + keywords), opens the
+    Veyra-research control room, adds research.HOW to her instructions for this run, and keeps each
+    check-in focused on whichever keyword the time budget says is current. Stops early on Ctrl+C."""
+    deadline = time.time() + hours * 3600
+    total_seconds = hours * 3600
+    interval = max(60.0, minutes * 60)
+    print(f"\n{DIM}  (autowork: running for up to {hours:g}h, checking in every {minutes:g}m -- Ctrl+C to "
+          f"stop early. Safe commands and writes run without asking; anything riskier still waits for "
+          f"you.){RESET}\n")
+    hands.AUTO_SAFE = True
+    extra_system = ""
+    stop_rw = None
+    start = time.time()
+    if plan is not None:
+        err = hands.open_research_window()
+        if err:
+            print(f"{DIM}  (no research control room: {err}){RESET}")
+        extra_system = research.HOW
+        stop_rw = threading.Event()
+        threading.Thread(target=_research_writer, args=(plan, start, total_seconds, stop_rw), daemon=True).start()
+    q = task
+    try:
+        while True:
+            history.append({"role": "user", "content": q})
+            if WIN is not None:
+                with OUT():
+                    print(f"\n{LILAC}you:{RESET} {q}\n")
+                print(f"{DIM}  (she answers in the Veyra-output window){RESET}")
+            msgs = [{"role": "system", "content": system + extra_system}] + fit(history)
+            try:
+                reply, pr = speak(b, msgs, unicode_ok)
+            except Exception as e:
+                doing("something snagged; she works out what went wrong")
+                with OUT():
+                    print(RESET + f"\n{LILAC}{diagnose(b, e, 'answering')}{RESET}\n")
+                history.pop()
+                reply, pr = None, None
+            if reply is not None:
+                for note in pr.notes:
+                    try:
+                        save_note(note)
+                        doing(f"she writes a note to herself: {note}")
+                    except Exception:
+                        pass
+                history.append({"role": "assistant", "content": reply})
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                print(f"\n{DIM}  (autowork: {hours:g}h is up){RESET}")
+                break
+            wait = min(interval, remaining)
+            print(f"{DIM}  (autowork: next check-in in {wait / 60:.0f}m; Ctrl+C to stop){RESET}")
+            time.sleep(wait)
+            if plan is not None:
+                idx, _ = _research_slice(plan, total_seconds, time.time() - start)
+                kw = plan["keywords"][idx]
+                where = ", ".join(plan["platforms"])
+                q = (f"Check in: write a short paragraph on exactly what you've found on \"{kw}\" so far "
+                     f"(searching {where}) and where things stand, then keep going -- stay on \"{kw}\" "
+                     f"unless you've already covered it well, in which case move on to the next keyword.")
+            else:
+                q = ("Check in: write a short paragraph on exactly what you've done since your last message "
+                     "and where things stand, then keep going with the task.")
+    except KeyboardInterrupt:
+        print(f"\n{DIM}  (autowork stopped early){RESET}")
+    finally:
+        hands.AUTO_SAFE = False
+        if stop_rw is not None:
+            stop_rw.set()
+            try:                                        # tell the research window to close, not just stop updating
+                elapsed = time.time() - start
+                idx, slice_len = _research_slice(plan, total_seconds, elapsed)
+                final = {"platforms": plan["platforms"], "keywords": plan["keywords"], "current": idx,
+                         "slice_elapsed": max(0.0, elapsed - idx * slice_len), "slice_len": slice_len,
+                         "elapsed": elapsed, "total_seconds": total_seconds, "running": False}
+                hands.RESEARCH_STATE.parent.mkdir(parents=True, exist_ok=True)
+                tmp = hands.RESEARCH_STATE.with_suffix(".tmp")
+                tmp.write_text(json.dumps(final))
+                tmp.replace(hands.RESEARCH_STATE)
+            except OSError:
+                pass
+
+
 def fit(history, budget=14000):
     """The newest messages that fit her memory window (about 4000 tokens), always starting with the person."""
     keep, used = [], 0
@@ -1012,7 +1224,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + hands.HOW_ASK + codex.HOW + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + hands.HOW_ASK + hands.HOW_TRUTH + codex.HOW + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)
@@ -1020,7 +1232,9 @@ def _main():
                 running=True)
     threading.Thread(target=_vitals_writer, daemon=True).start()
     open_her_window()
-    print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  type quit (or Ctrl+C) to leave{RESET}\n")
+    print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  "
+          f"/autowork [Nh] [Mm] has her work unattended, checking in on her own (menu includes a "
+          f"research mode: pick platforms, give keywords)  ·  type quit (or Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
 
     def _wake():
@@ -1069,6 +1283,15 @@ def _main():
             with OUT():
                 print(f"{LILAC}{diagnose(None, 'Her model would not wake: ' + (b.err or 'no model installed'), 'waking her model')}{RESET}\n")
             break
+        if q.lower().startswith("/autowork"):
+            hours, minutes, task = _parse_autowork(q)
+            plan = None
+            if not task:
+                task, plan = _autowork_setup()
+                if not task:
+                    continue
+            _autowork(b, history, system, uni, hours, minutes, task, plan)
+            continue
         history.append({"role": "user", "content": q})
         if WIN is not None:
             with OUT():

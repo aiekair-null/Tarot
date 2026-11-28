@@ -10,10 +10,13 @@ import json
 import os
 import pty
 import re
+import select
 import shlex
 import shutil
 import sys
+import termios
 import time
+import tty
 from collections import deque
 from pathlib import Path
 
@@ -286,12 +289,55 @@ def _wrap(text, width):
     return lines
 
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _vlen(s):
+    """Length of a string as it actually prints, ignoring ANSI color codes."""
+    return len(_ANSI_RE.sub("", s))
+
+
+def _pad(s, width):
+    """Pad a (possibly ANSI-colored) string with spaces out to a visible width, so a second column lines up
+    beside it regardless of how many color codes are buried in the first."""
+    return s + " " * max(1, width - _vlen(s))
+
+
+def _cpu_temp():
+    """Best-effort CPU temperature in Celsius, read straight from sysfs (no `sensors`/lm-sensors dependency).
+    Prefers a zone that's clearly the CPU package; falls back to the first sane-looking zone. None if nothing
+    readable."""
+    try:
+        zones = sorted(Path("/sys/class/thermal").glob("thermal_zone*"))
+    except OSError:
+        return None
+    best = None
+    for z in zones:
+        try:
+            kind = (z / "type").read_text().strip().lower()
+            raw = int((z / "temp").read_text().strip())
+        except (OSError, ValueError):
+            continue
+        c = raw / 1000.0
+        if not (-40 < c < 150):
+            continue
+        if any(w in kind for w in ("pkg", "cpu", "core")):
+            return c
+        if best is None:
+            best = c
+    return best
+
+
+# How often the vitals window redraws, in seconds -- shift+W cycles through these.
+_RESOLUTIONS = [0.25, 0.5, 1.0, 2.0, 4.0]
+
+
 def vitals_main(title, state_path):
     """A small htop-like window: live per-core CPU usage (every logical core, audited straight from
-    /proc/stat -- not just the one process doing her thinking) and a small scrolling graph of overall CPU and
-    token-rate history. Kept deliberately short (no token/uptime text lines) so every core stays visible even
-    in a window as short as the input box. Redraws in place every half second. Closes when the chat marks
-    itself no longer running, or on Ctrl+C."""
+    /proc/stat -- not just the one process doing her thinking), uptime/tokens/temp off to the side of the
+    core bars where there's room, and a small scrolling graph of overall CPU and token-rate history with the
+    model name and current refresh resolution underneath. Shift+W cycles the refresh resolution. Redraws in
+    place; closes when the chat marks itself no longer running, or on Ctrl+C."""
     state_path = Path(state_path)
     pidfile = state_path.with_suffix(".pid")
     if pidfile.exists():
@@ -308,6 +354,19 @@ def vitals_main(title, state_path):
     last_stat = {}
     last_tokens, last_tok_t = 0, time.time()
     cpu_hist, tok_hist = deque(maxlen=200), deque(maxlen=200)
+    res_idx = _RESOLUTIONS.index(0.5)
+    interval = _RESOLUTIONS[res_idx]
+
+    raw_fd = None
+    old_term = None
+    if sys.stdin.isatty():
+        try:
+            raw_fd = sys.stdin.fileno()
+            old_term = termios.tcgetattr(raw_fd)
+            tty.setcbreak(raw_fd)  # single keypresses, no Enter needed -- Ctrl+C still works (ISIG stays on)
+        except (termios.error, ValueError, OSError):
+            raw_fd = old_term = None
+
     try:
         while True:
             try:
@@ -336,12 +395,31 @@ def vitals_main(title, state_path):
             out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}vitals" +
                    (f" · {len(cores)} cores{V_RESET}" if cores else f"{V_RESET}")]
             bw = max(8, min(22, cols - 20))
+            core_lines = []
             if not cores:
-                out.append(f"  {V_DIM}cpu n/a (couldn't read /proc/stat){V_RESET}")
+                core_lines.append(f"  {V_DIM}cpu n/a (couldn't read /proc/stat){V_RESET}")
             else:
                 for c, pct in zip(cores, core_pcts):
-                    out.append(f"  {V_DIM}{c:<6}{V_RESET} {_bar(pct, bw)} "
-                               f"{V_WHITE}{(0.0 if pct is None else pct):5.1f}%{V_RESET}")
+                    core_lines.append(f"  {V_DIM}{c:<6}{V_RESET} {_bar(pct, bw)} "
+                                       f"{V_WHITE}{(0.0 if pct is None else pct):5.1f}%{V_RESET}")
+
+            # Uptime/tokens/temp ride in the open space to the right of the core bars -- only when there's
+            # actually room for them, so a narrow window just stays compact instead of wrapping.
+            temp = _cpu_temp()
+            side_lines = [
+                f"{V_DIM}uptime{V_RESET} {V_WHITE}{_fmt_time(now - st.get('start', now))}{V_RESET}",
+                f"{V_DIM}tokens{V_RESET} {V_WHITE}{tokens:,}{V_RESET} total",
+                f"{V_WHITE}{rate:.1f}{V_RESET} tok/s",
+                f"{V_DIM}temp{V_RESET}   {V_WHITE}{(f'{temp:.0f}C' if temp is not None else 'n/a')}{V_RESET}",
+            ]
+            panel_col = (max((_vlen(ln) for ln in core_lines), default=20) + 4) if core_lines else 20
+            if cols >= panel_col + 20:
+                for i in range(max(len(core_lines), len(side_lines))):
+                    left = core_lines[i] if i < len(core_lines) else ""
+                    right = side_lines[i] if i < len(side_lines) else ""
+                    out.append(_pad(left, panel_col) + right if right else left)
+            else:
+                out.extend(core_lines)
 
             gw = max(10, cols - 7)
             cpu_line = _sparkline(list(cpu_hist)[-gw:], scale_max=100)
@@ -349,12 +427,131 @@ def vitals_main(title, state_path):
             out.append(f"  {V_RED}cpu{V_RESET} {V_RED}{cpu_line}{V_RESET}")
             out.append(f"  {V_CYAN}tok{V_RESET} {V_CYAN}{tok_line}{V_RESET}")
 
+            model = st.get("model") or "n/a"
+            hz = 1 / interval
+            out.append(f"  {V_DIM}model{V_RESET} {V_WHITE}{model}{V_RESET}   "
+                       f"{V_DIM}res{V_RESET} {V_WHITE}{hz:g}/s{V_RESET} {V_DIM}(shift+w to change){V_RESET}")
+
             sys.stdout.write("\n".join(out))
             sys.stdout.flush()
 
             if not st.get("running", True) and st:
                 print(f"\n{V_DIM}(chat closed; this window closes too){V_RESET}")
                 time.sleep(1.2)
+                return
+
+            if raw_fd is not None:
+                try:
+                    r, _, _ = select.select([sys.stdin], [], [], interval)
+                except (OSError, ValueError):
+                    r = []
+                if r:
+                    try:
+                        ch = sys.stdin.read(1)
+                    except OSError:
+                        ch = ""
+                    if ch == "W":
+                        res_idx = (res_idx + 1) % len(_RESOLUTIONS)
+                        interval = _RESOLUTIONS[res_idx]
+            else:
+                time.sleep(interval)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if raw_fd is not None and old_term is not None:
+            try:
+                termios.tcsetattr(raw_fd, termios.TCSADRAIN, old_term)
+            except (termios.error, OSError):
+                pass
+        if pidfile.exists() and pidfile.read_text().strip() == str(os.getpid()):
+            pidfile.unlink(missing_ok=True)
+
+
+_RESEARCH_TIPS = [
+    "cross-check a claim across more than one source before trusting it",
+    "note where something came from as you go -- site, title, date if you can tell",
+    "a primary source beats someone's summary of it, when you can reach it",
+    "if a keyword stops producing anything new, say so and move on to the next one",
+    "broaden your terms when you're stuck, narrow them when you're drowning in noise",
+]
+
+
+def research_main(title, state_path):
+    """Her research control room for an /autowork research run (bidding.py): which public sites she's
+    searching, the keyword list with how far through each one's time slice she is, and overall progress
+    against the whole time budget. Redraws in place every half second. Closes once bidding.py marks the run
+    as no longer running (the budget ran out, or it was stopped early), or on Ctrl+C."""
+    state_path = Path(state_path)
+    pidfile = state_path.with_suffix(".pid")
+    if pidfile.exists():
+        try:
+            other = int(pidfile.read_text())
+            if other != os.getpid() and alive(other):
+                print(f"{title} is already open.")
+                time.sleep(2)
+                return
+        except Exception:
+            pass
+    pidfile.write_text(str(os.getpid()))
+    sys.stdout.write(f"\x1b]0;{title}\x07")
+    tip_i, last_tip = 0, 0.0
+    try:
+        while True:
+            try:
+                st = json.loads(state_path.read_text())
+            except Exception:
+                st = {}
+            if not st:
+                sys.stdout.write(f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}research · control room{V_RESET}\n"
+                                 f"  {V_DIM}(waiting for a research run to start...){V_RESET}")
+                sys.stdout.flush()
+                time.sleep(1)
+                continue
+
+            now = time.time()
+            if now - last_tip > 8:
+                tip_i, last_tip = (tip_i + 1) % len(_RESEARCH_TIPS), now
+
+            platforms = st.get("platforms", [])
+            keywords = st.get("keywords", [])
+            current = st.get("current", 0)
+            slice_elapsed = st.get("slice_elapsed", 0.0)
+            slice_len = st.get("slice_len", 0.0) or 1.0
+            elapsed = st.get("elapsed", 0.0)
+            total = st.get("total_seconds", 0.0) or 1.0
+
+            cols = max(50, shutil.get_terminal_size((70, 20)).columns)
+            bw = max(10, min(24, cols - 32))
+
+            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}research · control room{V_RESET}",
+                   f"  {V_DIM}sites{V_RESET}   {V_WHITE}{', '.join(platforms) or 'n/a'}{V_RESET}", ""]
+
+            for i, kw in enumerate(keywords):
+                if i < current:
+                    pct, label = 100.0, "done"
+                elif i == current:
+                    pct = 0.0 if slice_len <= 0 else max(0.0, min(100.0, slice_elapsed / slice_len * 100))
+                    label = "now"
+                else:
+                    pct, label = 0.0, "queued"
+                lead = V_WHITE if i == current else V_DIM
+                marker = ">" if i == current else " "
+                out.append(f"  {lead}{marker} {kw[:28]:<28}{V_RESET} {_bar(pct, bw)} "
+                           f"{V_WHITE}{pct:5.1f}%{V_RESET} {V_DIM}{label}{V_RESET}")
+
+            overall_pct = max(0.0, min(100.0, elapsed / total * 100))
+            out.append("")
+            out.append(f"  {V_RED}overall{V_RESET} {_bar(overall_pct, bw)} {V_WHITE}{overall_pct:5.1f}%{V_RESET}  "
+                       f"{V_DIM}{_fmt_time(elapsed)} / {_fmt_time(total)}{V_RESET}")
+            out.append("")
+            out.append(f"  {V_DIM}tip: {_RESEARCH_TIPS[tip_i]}{V_RESET}")
+
+            sys.stdout.write("\n".join(out))
+            sys.stdout.flush()
+
+            if not st.get("running", True):
+                print(f"\n{V_DIM}(research run finished; this window closes too){V_RESET}")
+                time.sleep(1.5)
                 return
             time.sleep(0.5)
     except KeyboardInterrupt:
@@ -369,5 +566,7 @@ if __name__ == "__main__":
         watch_main(sys.argv[2], sys.argv[3])
     elif len(sys.argv) >= 4 and sys.argv[1] == "vitals":
         vitals_main(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) >= 4 and sys.argv[1] == "research":
+        research_main(sys.argv[2], sys.argv[3])
     else:
         main()

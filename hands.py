@@ -55,6 +55,16 @@ HOW_ASK = ("\nIF SOMETHING IS BEYOND YOU, YOU CAN ASK CLAUDE. Write ONE line and
            "when you're genuinely stuck on something that needs a bigger model or a human's judgment -- not "
            "for things you could work out yourself, and never as a substitute for just answering.")
 
+HOW_TRUTH = ("\nNEVER SAY SOMETHING EXISTS OR HAPPENED UNLESS IT DID. A folder, file, or command result is "
+             "only real once you wrote RUN: or WRITE: on its own line, the person approved it, and a RESULT "
+             "line came back to you -- never before, and never just because you described doing it. If they "
+             "ask you to create a folder, your very next line is RUN: mkdir ... (or WRITE: for a file) -- not "
+             "a sentence about it, not 'done', not 'it's there now'. Wait for RESULT before you say whether "
+             "it worked. If you catch yourself about to write 'I made/created/wrote ...' with no RESULT yet "
+             "to back it up, that's a lie even if you don't mean it to be -- stop and issue the RUN:/WRITE: "
+             "line instead. And if a RESULT ever says something failed or isn't there, believe it over your "
+             "own last message -- it's not a typo on their end just because you expected otherwise.")
+
 REPO = "aiekair-null/Tarot"
 ASK_LABEL = "veyra-question"
 
@@ -93,6 +103,9 @@ def approve_open(target):
     """Ask before opening a window. Returns the target (maybe edited) or None."""
     kind = kind_of(target)
     risky = kind == "program" and bool(DANGER.search(target))
+    if AUTO_SAFE and not risky:
+        print(f"\n{BLUE}  ┌ she opens (auto-approved, unattended run) a {kind}:{RESET}\n{WHITE}  │ {target}{RESET}")
+        return target
     print(f"\n{BLUE}  ┌ she wants to open a {kind} on your screen:{RESET}\n{WHITE}  │ {target}{RESET}")
     while True:
         try:
@@ -172,6 +185,12 @@ DANGER = re.compile(r"\bsudo\b|\bsu\b|\brm\s+-\w*[rf]|\bmkfs|\bdd\b|\bshred\b|\b
                     r">\s*/dev/|\bchmod\s+-R|\bchown\s+-R|\bshutdown\b|\breboot\b|\bpoweroff\b|"
                     r"\bpacman\b|\bsystemctl\s+(stop|disable|mask)|:\(\)\s*\{|\bcurl\b[^|]*\|\s*(ba)?sh|"
                     r"\bgit\s+push\s+(-f|--force)|\biptables\s+-F|\bkill\s+-9\s+1\b", re.I)
+
+# Set True only by bidding._autowork(), for the length of an unattended run: lets a RUN/WRITE/OPEN that
+# isn't DANGER-flagged (or, for WRITE, isn't outside the home folder) go through without a prompt, since
+# nobody's there to answer one. Anything riskier still stops and waits for a real yes, however long that
+# takes -- this never widens what counts as risky, it only skips asking about what already counts as safe.
+AUTO_SAFE = False
 RED, BLUE, WHITE, DIM, RESET = "\x1b[38;5;203m", "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;245m", "\x1b[0m"
 
 ACTION_TITLE = "Veyra-action"
@@ -275,6 +294,34 @@ def open_vitals_window():
     return "couldn't open a window for her vitals"
 
 
+RESEARCH_TITLE = "Veyra-research"
+RESEARCH_STATE = runner.SPOOL.parent / "research.json"    # autowork's research mode writes her plan/progress here
+RESEARCH_PIDFILE = RESEARCH_STATE.with_suffix(".pid")
+
+
+def research_window_open():
+    try:
+        return runner.alive(int(RESEARCH_PIDFILE.read_text()))
+    except Exception:
+        return False
+
+
+def open_research_window():
+    """Make sure the Veyra-research window (her control room for an /autowork research run: platforms,
+    keywords, time budget per keyword, progress) is up."""
+    if research_window_open():
+        return ""
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return "no desktop session to open a window in"
+    argv = [sys.executable, str(HERE / "runner.py"), "research", RESEARCH_TITLE, str(RESEARCH_STATE)]
+    if _spawn_terminal(RESEARCH_TITLE, argv):
+        for _ in range(60):
+            if research_window_open():
+                return ""
+            time.sleep(0.2)
+    return "couldn't open a window for her research control room"
+
+
 def _write_target(path):
     """The real path a WRITE would land at: relative paths go under the home folder."""
     full = Path(os.path.expanduser(path))
@@ -302,6 +349,10 @@ def approve_write(path, content):
     risky = _write_risky(path)
     n = content.count("\n") + 1
     verb = "overwrite" if exists else "write"
+    if AUTO_SAFE and not risky:
+        print(f"\n{BLUE}  ┌ she {verb}s (auto-approved, unattended run) a file ({n} line{'s' if n != 1 else ''}):{RESET}\n"
+              f"{WHITE}  │ {target}{RESET}")
+        return True
     print(f"\n{BLUE}  ┌ she wants to {verb} a file ({n} line{'s' if n != 1 else ''}):{RESET}\n"
           f"{WHITE}  │ {target}{RESET}")
     if risky:
@@ -386,6 +437,9 @@ def ask_claude(question):
 def approve(cmd):
     """Ask the person. Returns the command to run (maybe edited) or None."""
     risky = bool(DANGER.search(cmd))
+    if AUTO_SAFE and not risky:
+        print(f"\n{BLUE}  ┌ she runs (auto-approved, unattended run):{RESET}\n{WHITE}  │ {cmd}{RESET}")
+        return cmd
     print(f"\n{BLUE}  ┌ she wants to run:{RESET}\n{WHITE}  │ {cmd}{RESET}")
     if risky:
         print(f"{RED}  │ careful: this can change or delete things, or needs root.{RESET}")
