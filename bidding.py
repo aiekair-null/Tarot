@@ -51,7 +51,8 @@ SHOW_THINK = os.environ.get("VEYRA_SHOW_THINK", "1") != "0"     # show her reaso
 CHAT_MODEL = "qwen3-8b-abl"                                # the abliterated Qwen3 8B is her chat brain
 MEMORY = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
 RED = "\x1b[38;5;196m"
-GOLD, LILAC, CYAN, DIM, RESET = "\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;245m", "\x1b[0m"
+GOLD, LILAC, CYAN, RED, DIM, RESET = ("\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;203m",
+                                       "\x1b[38;5;245m", "\x1b[0m")
 
 
 class _Win:
@@ -598,21 +599,18 @@ GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gain
 
 
 class Wave:
-    """While she thinks: a small arrow flies back and forth, growing a tiny bit every frame as it flies, getting
-    faster as it nears full width, until it fills the whole line; then it just shimmers there (deep purple,
-    sky blue and white)."""
+    """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
+    getting faster as it nears full width, until it fills the whole line."""
     SLOW = 4                                                  # 4x slower than the first version
-    RAMP = (53, 54, 55, 56, 57, 63, 69, 75, 111, 117, 153, 195, 231)   # deep purple -> sky blue -> white
 
     def __init__(self, unicode_ok):
         self.dash = "—" if unicode_ok else "-"
-        self.length, self.pos, self.dir, self.w, self.frame = 3.0, 0.0, 1, 0, 0.0
+        self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
         speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
-        self.frame += speed                                   # the shimmer quickens too
         self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
         L = int(self.length)
         full = L >= W
@@ -628,16 +626,7 @@ class Wave:
             elif self.pos <= 0:
                 self.pos, self.dir = 0.0, 1
             x = min(int(self.pos), span)
-        ramp, n = self.RAMP, len(self.RAMP)
-        out = []
-        fr = int(self.frame)
-        for i, ch in enumerate(arrow):                       # a bright glint travels along the arrow
-            j = (i - fr) % (n * 2) if right else (i + fr) % (n * 2)
-            shade = ramp[j if j < n else 2 * n - 1 - j]
-            if (i * 7 + fr) % 23 == 0:
-                shade = 231                                  # an occasional white sparkle
-            out.append(f"\x1b[38;5;{shade}m{ch}")
-        sys.stdout.write("\r" + " " * x + "".join(out) + RESET + " " * (W - x - L))
+        sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
         sys.stdout.flush()
 
     def clear(self):
