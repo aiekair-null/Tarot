@@ -9,11 +9,13 @@ import json
 import locale
 import os
 import queue
+import re
 import random
 import shutil
 import sys
 import threading
 import time
+import traceback
 from pathlib import Path
 
 import art
@@ -381,7 +383,64 @@ def speak(b, msgs, unicode_ok, rounds=4):
     return text, pr
 
 
+HINTS = [
+    (r"no \.gguf|no model|not downloaded|would not wake",
+     "No model file is loaded. Download her chat brain:  cd ~/Tarot && ~/.local/share/veyra/venv/bin/python "
+     "models.py download qwen3-8b-abl"),
+    (r"out of memory|failed to allocate|cannot allocate|bad_alloc|mmap|Killed|MemoryError",
+     "The laptop ran out of memory for the model. Close the browser and big apps, or shrink her working memory: "
+     "export TAROT_CTX=2048, or switch to a smaller model (models.py use medium)."),
+    (r"illegal instruction|0xc000001d|SIGILL",
+     "Her engine was built for a newer CPU. Rebuild it for this machine:  veyra setup  (or use Ollama instead)."),
+    (r"No module named '?([\w\.]+)",
+     "A Python piece is missing. Run  veyra setup  to reinstall her parts."),
+    (r"Connection|timed out|Name or service not known|Temporary failure|getaddrinfo|URLError|SSL",
+     "The network didn't answer. Check the Wi-Fi with  nmcli general status  and try again."),
+    (r"Permission denied",
+     "A file or folder isn't writable. Check who owns ~/Tarot:  ls -l ~/Tarot  (fix with chown if needed)."),
+    (r"No space left",
+     "The disk is full. Free some space (old models live in ~/Tarot/models)."),
+]
+ERRLOG = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "veyra" / "errors.log"
+
+
+def diagnose(b, err, where="chat"):
+    """Turn an error into a plain explanation and a suggested fix, in her voice when her model is awake."""
+    tb = err if isinstance(err, str) else "".join(traceback.format_exception(type(err), err, err.__traceback__))
+    last = (tb.strip().splitlines() or ["unknown error"])[-1]
+    try:
+        ERRLOG.parent.mkdir(parents=True, exist_ok=True)
+        with ERRLOG.open("a", encoding="utf-8") as f:
+            f.write(f"--- {time.strftime('%Y-%m-%d %H:%M:%S')} [{where}]\n{tb}\n")
+    except Exception:
+        pass
+    hint = next((fix for pat, fix in HINTS if re.search(pat, tb, re.I)), "")
+    said = ""
+    if b is not None and getattr(b, "kind", "none") != "none":
+        try:
+            ask = [{"role": "system", "content": "You are Veyra, a fortune teller who also knows Linux and Python. "
+                    "Explain errors plainly in at most 3 short sentences: what went wrong, then the exact fix."},
+                   {"role": "user", "content": f"While doing '{where}' this error happened:\n{tb[-1500:]}\n"
+                    + (f"A likely fix: {hint}\n" if hint else "") + "What happened, and how do I fix it?"}]
+            said = "".join(b.stream(ask, max_tokens=220, temperature=0.3)).strip()
+            said = re.sub(r"\n?(REMEMBER|NEXT):.*", "", said, flags=re.S | re.I).strip()
+        except Exception:
+            said = ""
+    msg = said or ("Something snagged, dear one: " + last + ("\nThe fix: " + hint if hint else
+                   "\nI couldn't tell the cause; the full report is in " + str(ERRLOG)))
+    return msg + f"\n(full error saved to {ERRLOG})"
+
+
 def main():
+    try:
+        _main()
+    except KeyboardInterrupt:
+        print()
+    except Exception as e:                                # never crash: explain instead
+        print(f"\n{LILAC}{diagnose(None, e, 'starting up')}{RESET}\n")
+
+
+def _main():
     try:
         sys.stdout.reconfigure(errors="replace")
     except Exception:
@@ -429,11 +488,16 @@ def main():
             ready.wait()
             print("\r" + " " * 22 + "\r", end="")
         if b.kind == "none":
-            print(f"{DIM}Her model would not wake: {b.err or 'no model installed (run: veyra model)'}{RESET}")
+            print(f"{LILAC}{diagnose(None, 'Her model would not wake: ' + (b.err or 'no model installed'), 'waking her model')}{RESET}\n")
             break
         history.append({"role": "user", "content": q})
         msgs = [{"role": "system", "content": system}] + history[-12:]
-        reply, pr = speak(b, msgs, uni)
+        try:
+            reply, pr = speak(b, msgs, uni)
+        except Exception as e:                            # a failed turn is explained, not fatal
+            print(RESET + f"\n{LILAC}{diagnose(b, e, 'answering')}{RESET}\n")
+            history.pop()
+            continue
         for note in pr.notes:
             try:
                 save_note(note)

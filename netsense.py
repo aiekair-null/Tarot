@@ -22,7 +22,7 @@ HOW = ("\nYOU CAN REACH THE INTERNET (read-only). When you need something curren
        "READ: <url>            (read a web page, text file or PDF)\n"
        "YOUTUBE: <url>         (read a YouTube video's captions; you see what is said, not the picture)\n"
        "The result comes back to you as RESULT. Then answer from it and name where it came from. "
-       "Never invent results; if a result is empty or an error, say so.")
+       "Never invent results; if a result is empty or an error, say what went wrong and suggest how to fix it.")
 
 
 class _Text(HTMLParser):
