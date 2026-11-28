@@ -7,6 +7,7 @@
 #   veyra-tv dark | light          just the dark-mode switch, on or off
 #   veyra-tv status                is it connected? what mode is it in?
 #   veyra-tv restore               undo the theme (back to light mode, default contrast)
+#   veyra-tv open <url>           open a web page on the TV (veyra web uses this)
 #   veyra-tv shell ...             run any adb shell command on the TV
 #   veyra-tv disconnect
 #
@@ -80,6 +81,17 @@ case "${1:-}" in
     sh settings put global window_animation_scale 1 >/dev/null 2>&1 || true
     sh settings put global transition_animation_scale 1 >/dev/null 2>&1 || true
     echo "restored: light mode, normal contrast (wallpaper stays until you change it)"
+    ;;
+  open)                                   # show a web page full-screen on the TV
+    url="${2:?usage: veyra-tv open <url>}"
+    "$ADB" devices | grep -q "$(tv)" || "$ADB" connect "$(tv)" >/dev/null
+    sh input keyevent KEYCODE_WAKEUP >/dev/null 2>&1 || true
+    out="$(sh am start -a android.intent.action.VIEW -d "$url" 2>&1 | tr -d '\r')"
+    if echo "$out" | grep -qi "error\|unable\|no activity"; then
+      echo "The TV has no web browser yet. On the TV open Google Play, install \"TV Bro\" (free), then run this again."
+      exit 1
+    fi
+    echo "opened on the TV: $url"
     ;;
   shell) shift; sh "$@" ;;
   disconnect) "$ADB" disconnect "$(tv)" ;;
