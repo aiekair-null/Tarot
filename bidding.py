@@ -465,17 +465,12 @@ def pick_model():
     return found.name if found else "none"
 
 
-GLYPHS = "░▒▓◇◆✦✧⌬⍟∴∵"
-
-
 class Wrap:
-    """Word-wraps her text so each line stops about six words short of the right edge. Each word arrives with a
-    small transmutation: a quick flicker of glyphs settling into the real letters, in colours that slide along
-    like her thinking arrow (deep purple -> sky blue -> white) -- the same shimmer the readings use."""
+    """Word-wraps her text so each line stops about six words short of the right edge. Plain cyan, no shimmer
+    or glyph flicker -- just her words, in the one colour the chat window already bracketed the answer in."""
     def __init__(self):
         self.limit = max(30, cols() - 36)                 # stops ~5-6 words short of the edge
         self.col, self.word = 0, ""
-        self.phase = 0
 
     def write(self, s):
         for ch in s:
@@ -488,7 +483,6 @@ class Wrap:
                 if 0 < self.col < self.limit:
                     print(" ", end="", flush=True)
                     self.col += 1
-                    self.phase += 1
             else:
                 self.word += ch
                 if len(self.word) >= self.limit:
@@ -500,28 +494,9 @@ class Wrap:
         if self.col and self.col + len(self.word) > self.limit:
             print(flush=True)
             self.col = 0
-        self._shimmer(self.word)
+        print(self.word, end="", flush=True)
         self.col += len(self.word)
         self.word = ""
-
-    def _shimmer(self, s):
-        """Print s left to right; off a real terminal, or with TAROT_FAST=1, just print it plainly."""
-        if os.environ.get("TAROT_FAST") == "1" or not sys.stdout.isatty():
-            print(s, end="", flush=True)
-            self.phase += len(s)
-            return
-        ramp, n = Wave.RAMP, len(Wave.RAMP)
-        for ch in s:
-            color = ramp[self.phase % n]
-            if random.random() < 0.3:                      # a brief glyph before the real letter settles in
-                sys.stdout.write(f"\x1b[38;5;{color}m{random.choice(GLYPHS)}")
-                sys.stdout.flush()
-                time.sleep(0.005)
-                sys.stdout.write("\b")
-            sys.stdout.write(f"\x1b[38;5;{color}m{ch}")
-            self.phase += 1
-        sys.stdout.write(RESET)
-        sys.stdout.flush()
 
 
 class Printer:
