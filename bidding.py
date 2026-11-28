@@ -142,6 +142,14 @@ def _display_size():
                 return int(m.group(1)), int(m.group(2))
     except Exception:
         pass
+    try:
+        if shutil.which("wmctrl"):                        # works even without xdotool or xrandr installed
+            m = re.search(r"DG:\s*(\d+)x(\d+)",
+                          subprocess.run(["wmctrl", "-d"], capture_output=True, text=True, timeout=2).stdout)
+            if m:
+                return int(m.group(1)), int(m.group(2))
+    except Exception:
+        pass
     return None
 
 
@@ -189,25 +197,29 @@ def _place(title, x, y, w, h):
 
 def _shape_before_opening():
     """Title and resize THIS window (to an exact 10-row height, by its own font) before her window opens, and
-    work out where both windows should sit. Needs wmctrl or xdotool (X11); harmless no-op otherwise."""
-    if os.environ.get("VEYRA_BIG") == "0" or not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
-        return
+    work out where both windows should sit. Needs wmctrl or xdotool (X11). Returns why it didn't happen, or
+    "" on success, so open_her_window() can tell you instead of silently doing nothing."""
+    if os.environ.get("VEYRA_BIG") == "0":
+        return "VEYRA_BIG=0"
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return "no desktop session"
     try:
         sys.stdout.write(f"\x1b]0;{INPUT_TITLE}\x07\x1b[8;{INPUT_ROWS};100t")
         sys.stdout.flush()
     except Exception:
         pass
     if not (shutil.which("wmctrl") or shutil.which("xdotool")):
-        return
+        return "neither wmctrl nor xdotool is installed"
     size = _display_size()
     if not size:
-        return
+        return "couldn't read the screen size"
     sw, sh = size
     time.sleep(0.3)                                          # let the row-resize above actually land
     g = _find_window(INPUT_TITLE)
     h_in = g[3] if g else max(150, sh // 6)                   # a reasonable guess if we can't measure it
     square = max(100, min(sw, sh - h_in))                     # the largest square that still leaves room below
     _shape.update(square=square, x=(sw - square) // 2, h_in=h_in)
+    return ""
 
 
 def _dock_rectangle_to_square(square, h_in):
@@ -286,8 +298,7 @@ def open_her_window():
     if not hands.ON or os.environ.get("VEYRA_ONEWIN") == "1":
         return False
     mine = not hands.window_open()
-    if mine:
-        _shape_before_opening()
+    shape_skip = _shape_before_opening() if mine else None
     err = hands.open_window()
     if err:
         print(f"   {DIM}(no second window: {err}; she will talk here){RESET}")
@@ -295,7 +306,10 @@ def open_her_window():
     WIN = _Win()
     WIN.mine = mine
     if mine:
-        _place_after_opening()
+        if shape_skip:
+            print(f"   {DIM}(her window won't be shaped into a square: {shape_skip}){RESET}")
+        else:
+            _place_after_opening()
     with OUT():
         print(f"{DIM}  ({time.strftime('%H:%M')} · chat opened){RESET}")
     print(f"   {DIM}her words appear in the Veyra-output window; type to her here{RESET}")
@@ -871,7 +885,6 @@ def _main():
         pass
     if os.name == "nt":
         os.system("")
-    maximize()
     print()
     for line in portrait(utf8()):
         print("   " + line)
