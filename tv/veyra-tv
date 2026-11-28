@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# veyra-tv : reach the Android TV over the network from the Arch desktop and flip it red/black.
+#
+#   veyra-tv connect <ip[:port]>   remember the TV and connect (approve the prompt on the TV once)
+#   veyra-tv theme                 the red/black look: dark mode, high-contrast text, neon wallpaper
+#   veyra-tv wallpaper [file.png]   push + set a wallpaper (default: the neon grid in this folder)
+#   veyra-tv dark | light          just the dark-mode switch, on or off
+#   veyra-tv status                is it connected? what mode is it in?
+#   veyra-tv restore               undo the theme (back to light mode, default contrast)
+#   veyra-tv shell ...             run any adb shell command on the TV
+#   veyra-tv disconnect
+#
+# The TV's own dashboard is left in place; this only changes system theme + wallpaper. A fully
+# red *dashboard* comes later with a themeable launcher (see README). Nothing here needs root.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/veyra-tv"
+WALL_DEFAULT="$HERE/neon_wallpaper.png"
+mkdir -p "$CFG"
+
+# find adb: PATH, the google platform-tools unzip, or tell them how to get it
+ADB="$(command -v adb || true)"
+[ -z "$ADB" ] && [ -x "$HOME/platform-tools/adb" ] && ADB="$HOME/platform-tools/adb"
+if [ -z "$ADB" ]; then
+  echo "adb not found. Get it without pacman:"
+  echo "  cd ~ && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
+  echo "  python3 -m zipfile -e platform-tools-latest-linux.zip ~"
+  echo "then run this again."
+  exit 1
+fi
+
+tv() {                                   # the saved TV address
+  [ -f "$CFG/tv" ] && cat "$CFG/tv" || { echo "No TV saved. Run: veyra-tv connect <ip>"; exit 1; }
+}
+sh() { "$ADB" -s "$(tv)" shell "$@"; }
+
+case "${1:-}" in
+  connect)
+    addr="${2:?usage: veyra-tv connect <ip[:port]>}"
+    [[ "$addr" == *:* ]] || addr="$addr:5555"
+    echo "$addr" > "$CFG/tv"
+    echo "Connecting to $addr ... (watch the TV for an 'Allow debugging?' box — tick Always allow)"
+    "$ADB" connect "$addr"
+    ;;
+  status)
+    "$ADB" devices | grep -q "$(tv)" && echo "connected: $(tv)" || { echo "not connected: $(tv) (run: veyra-tv connect $(tv))"; exit 1; }
+    echo -n "dark mode: "; sh cmd uimode night 2>/dev/null | tr -d '\r' || true
+    echo -n "model/mem: "; sh getprop ro.product.model 2>/dev/null | tr -d '\r'
+    sh cat /proc/meminfo 2>/dev/null | head -1 | tr -d '\r'
+    ;;
+  dark)   sh cmd uimode night yes >/dev/null && echo "dark mode on" ;;
+  light)  sh cmd uimode night no  >/dev/null && echo "dark mode off" ;;
+  theme)
+    echo "Applying the red/black look to $(tv) ..."
+    sh cmd uimode night yes >/dev/null && echo "  - dark mode on"
+    sh settings put secure high_text_contrast_enabled 1 >/dev/null && echo "  - high-contrast text on"
+    sh settings put global window_animation_scale 0.5 >/dev/null 2>&1 || true
+    sh settings put global transition_animation_scale 0.5 >/dev/null 2>&1 || true
+    "$0" wallpaper "$WALL_DEFAULT" || true
+    echo "Done. (A fully red dashboard needs a themeable launcher — see tv/README.md.)"
+    ;;
+  wallpaper)
+    img="${2:-$WALL_DEFAULT}"
+    [ -f "$img" ] || { echo "no such file: $img"; exit 1; }
+    echo "  - pushing wallpaper"
+    sh mkdir -p /sdcard/Pictures >/dev/null 2>&1 || true
+    "$ADB" -s "$(tv)" push "$img" /sdcard/Pictures/veyra_neon.png >/dev/null
+    # try to set it silently; many TV builds block this, so fall back to a one-tap picker
+    if sh cmd wallpaper set-image /sdcard/Pictures/veyra_neon.png >/dev/null 2>&1; then
+      echo "  - wallpaper set"
+    else
+      echo "  - pushed to the TV's Pictures. Set it once on the TV:"
+      echo "    Settings > Device Preferences > (Display/Wallpaper) > My photos > veyra_neon.png"
+    fi
+    ;;
+  restore)
+    sh cmd uimode night no >/dev/null
+    sh settings put secure high_text_contrast_enabled 0 >/dev/null
+    sh settings put global window_animation_scale 1 >/dev/null 2>&1 || true
+    sh settings put global transition_animation_scale 1 >/dev/null 2>&1 || true
+    echo "restored: light mode, normal contrast (wallpaper stays until you change it)"
+    ;;
+  shell) shift; sh "$@" ;;
+  disconnect) "$ADB" disconnect "$(tv)" ;;
+  *)
+    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+esac
