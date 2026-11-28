@@ -34,6 +34,7 @@ import hands
 import netsense
 import research
 import runner
+import tooling
 import x11
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
@@ -620,42 +621,65 @@ class Keys:
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
 
 
-GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gains every frame while it flies
+GROW = float(os.environ.get("VEYRA_WAVE_GROW", "2.5"))     # cells the arrow gains each time it returns from an edge
 
 
 class Wave:
-    """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
-    getting faster as it nears full width -- then loops back to a short arrow and keeps bouncing, rather than
-    freezing solid, so a slow model (a long wait for the first token) still shows visible motion the whole
-    time instead of going static partway through."""
+    """While she thinks: a small red arrow flies all the way off one edge of the window, vanishes
+    completely for a moment (as if it carried on into whatever's next to the window -- a program can only
+    ever draw inside its own window, so a true hand-off to a neighboring one isn't something this can
+    actually do; fully disappearing and popping back is the honest version of that idea), then returns from
+    that same edge heading the other way, a bit longer than before. It starts as just a tail and one dash to
+    the arrowhead and grows only at each return, not continuously mid-flight -- so a slow model (a long wait
+    for the first token) still shows a clearly changing animation the whole time instead of a static line."""
     SLOW = 4                                                  # 4x slower than the first version
+    MIN_LEN = 3                                               # tail + one dash + arrowhead, its starting shape
+    GONE_TICKS = 10                                           # ~0.3s fully blank before it reappears
+    TAIL = "o"                                                # plain ASCII stand-in for "*" -- same reason as
+                                                               # the dash below: an unsupported glyph draws as
+                                                               # an empty box on a font that lacks it.
 
     def __init__(self, unicode_ok):
         # Plain "-", unconditionally: unicode_ok only reflects the locale's encoding, not whether this
         # terminal's font actually has a glyph for the fancier em-dash -- on fonts that don't, it's drawn as
         # an empty "tofu" box instead of a clean line.
         self.dash = "-"
-        self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
+        self.length, self.x, self.dir, self.w = float(self.MIN_LEN), 0.0, 1, 0
+        self.state, self.gone_left = "flying", 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
-        if int(self.length) >= W:
-            # Reached full width -- loop back to a short arrow instead of sitting there static.
-            self.length, self.pos, self.dir = 3.0, 0.0, 1
-        speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
-        self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
+        if self.state == "gone":
+            sys.stdout.write("\r" + " " * W)
+            sys.stdout.flush()
+            self.gone_left -= 1
+            if self.gone_left <= 0:
+                self._reappear(W)
+            return
         L = int(self.length)
-        arrow = self.dash * (L - 1) + ">" if self.dir > 0 else "<" + self.dash * (L - 1)
-        span = max(0, W - L)
-        self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
-        if self.pos >= span:
-            self.pos, self.dir = float(span), -1
-        elif self.pos <= 0:
-            self.pos, self.dir = 0.0, 1
-        x = min(int(self.pos), span)
-        sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
+        arrow = (self.TAIL + self.dash * (L - 2) + ">") if self.dir > 0 else ("<" + self.dash * (L - 2) + self.TAIL)
+        speed = 1 + 3 * (L / W) ** 2                          # 1x when small, up to 4x as it nears full width
+        self.x += max(1, W // 45) / self.SLOW * speed * self.dir
+        xi = int(self.x)
+        left, right = max(0, xi), min(W, xi + L)
+        out = "\r" + " " * W
+        if right > left:
+            visible = arrow[left - xi:right - xi]
+            out = "\r" + " " * left + RED + visible + RESET
+        sys.stdout.write(out)
         sys.stdout.flush()
+        if (self.dir > 0 and xi >= W) or (self.dir < 0 and xi + L <= 0):
+            self.state, self.gone_left = "gone", self.GONE_TICKS
+
+    def _reappear(self, W):
+        """Grow a bit (or reset once it's spanned the full width -- a cap, not a freeze), flip direction, and
+        step back in from the same edge it vanished from, heading the other way."""
+        self.length = self.MIN_LEN if self.length >= W else min(float(W), self.length + GROW)
+        self.dir *= -1
+        L = int(self.length)
+        self.x = float(W) if self.dir < 0 else float(-L)      # back in from the right moving left, or vice versa
+        self.state = "flying"
 
     def clear(self):
         if self.w:
@@ -795,10 +819,28 @@ def _ask_ok(result):
 
 
 def speak(b, msgs, unicode_ok, rounds=8):
-    """Her answer, letting her search / read / watch / look / run / open up to `rounds` times before she replies."""
+    """Her answer, letting her search / read / watch / look / run / open up to `rounds` times before she
+    replies. Each round's RESULT can be a couple thousand characters (a search hit, a page of text), and
+    nothing here used to cap how big `msgs` could grow across rounds -- on a small context window (her
+    default is 8192 tokens), a handful of real search-and-read rounds in one turn could fill the whole
+    thing, crowding out room for her own reply and leaving a cut-off, truncated-looking answer. Now, once
+    `msgs` gets close to her actual context size, she's told plainly to wrap up with what she has instead of
+    looking anything else up, rather than silently running out of room."""
     msgs, looked, notes = list(msgs), [], []
     pr = None
+    ctx_tokens = None
+    try:
+        ctx_tokens = b.llm.n_ctx() if b is not None and b.llm is not None else None
+    except Exception:
+        ctx_tokens = None
     for n in range(rounds):
+        if ctx_tokens and sum(len(m["content"]) for m in msgs) / 3.3 > ctx_tokens * 0.7:
+            msgs.append({"role": "user", "content": "(You're close to running out of room to think -- answer "
+                                                     "now from what you already have, no more tool calls.)"})
+            doing("she's running low on room to think; wrapping up this round instead of looking up more")
+            text, pr, stopped = _pass(b, msgs, unicode_ok)
+            notes += pr.notes
+            break
         doing("she thinks over what you said" if n == 0 else "she thinks again about what came back")
         text, pr, stopped = _pass(b, msgs, unicode_ok)
         notes += pr.notes
@@ -950,6 +992,33 @@ def _pick_keywords():
     return kws or None
 
 
+def _slugify(text, maxlen=40):
+    """A filesystem-safe short slug from arbitrary text, for naming a research run's own folder."""
+    s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return (s or "research")[:maxlen]
+
+
+def _new_research_notes(keywords):
+    """A fresh notes file for a research run, in its own folder (named from the first keyword and the start
+    time, so two runs never collide or overwrite each other), seeded with a skeleton she can read before her
+    first real entry. Returns its path, or None if it couldn't be created."""
+    slug = _slugify(keywords[0]) if keywords else "research"
+    folder = Path.home() / "veyra_research" / f"{slug}-{time.strftime('%Y%m%d-%H%M%S')}"
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "notes.md"
+        path.write_text(
+            "# Research notes\n\n"
+            f"keywords: {'; '.join(keywords)}\n\n"
+            "Findings go below, one `## <keyword>` section per keyword, oldest first within each section. "
+            "WRITE: replaces the whole file -- read it first, then send back the complete file with your "
+            "new entry added at the end.\n"
+        )
+        return path
+    except OSError:
+        return None
+
+
 def _autowork_setup():
     """The /autowork mode menu: 1) a plain task, or 2) a research run across specific platforms and
     keywords. Returns (task, plan) where plan is {"platforms": [...], "keywords": [...]} for research mode
@@ -970,9 +1039,22 @@ def _autowork_setup():
         if not keywords:
             return None, None
         where = ", ".join(platforms)
+        notes_path = _new_research_notes(keywords)
+        if notes_path:
+            print(f"{DIM}  (her research notes: {notes_path}){RESET}")
+            notes_line = (f" Keep your running notes in {notes_path} for the whole session -- read it "
+                          f"before you continue anything (your memory of this chat gets trimmed over a long "
+                          f"run; that file does not), and write every real finding to it as you go, in the "
+                          f"exact format your instructions describe. Don't lose earlier findings: WRITE: "
+                          f"replaces the whole file, so always read it first, then send back the complete "
+                          f"file with your new entry added at the end.")
+        else:
+            notes_line = ""
         task = (f"Research the following keywords, searching {where} for each one: "
-                f"{'; '.join(keywords)}. Work through them one at a time, in the order given.")
-        return task, {"platforms": platforms, "keywords": keywords}
+                f"{'; '.join(keywords)}. Work through one keyword fully before moving to the next, unless "
+                f"it's genuinely stalled -- be precise and detail-oriented the whole way through: exact "
+                f"sources, exact claims, exact confidence, not vague gists.{notes_line}")
+        return task, {"platforms": platforms, "keywords": keywords, "notes_path": str(notes_path) if notes_path else None}
     try:
         task = input(hands.rl_safe(f"{LILAC}  what should she work on? {RESET}")).strip()
     except (EOFError, KeyboardInterrupt):
@@ -1038,14 +1120,14 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
           f"status check-in every {minutes:g}m, Ctrl+C to stop early. Safe commands and writes run without "
           f"asking; anything riskier still waits for you.){RESET}\n")
     hands.AUTO_SAFE = True
-    extra_system = ""
+    extra_system = tooling.HOW                            # tool/README discovery helps any unattended run
     stop_rw = None
     start = time.time()
     if plan is not None:
         err = hands.open_research_window()
         if err:
             print(f"{DIM}  (no research control room: {err}){RESET}")
-        extra_system = research.HOW
+        extra_system += research.HOW
         stop_rw = threading.Event()
         threading.Thread(target=_research_writer, args=(plan, start, total_seconds, stop_rw), daemon=True).start()
     q = task
@@ -1086,10 +1168,13 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
                 idx, _ = _research_slice(plan, total_seconds, now - start)
                 kw = plan["keywords"][idx]
                 where = ", ".join(plan["platforms"])
+                notes_path = plan.get("notes_path")
                 if due_checkin:
+                    reread = (f" Re-read {notes_path} first so nothing gets lost or repeated." if notes_path else "")
                     q = (f"Check in: write a short paragraph on exactly what you've found on \"{kw}\" so far "
                          f"(searching {where}) and where things stand, then keep going -- stay on \"{kw}\" "
-                         f"unless you've already covered it well, in which case move on to the next keyword.")
+                         f"unless you've already covered it well, in which case move on to the next "
+                         f"keyword.{reread}")
                 else:
                     q = f"Keep going on \"{kw}\" (searching {where})."
             else:
