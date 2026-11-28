@@ -265,3 +265,5 @@ She can ask to run shell commands with a `RUN:` line. You see the exact command 
 risky ones (sudo, rm -r, dd, pacman, reboot...) need the full word **yes**. Approved commands run in her
 **output window** (opened automatically, or `veyra out` in another terminal), where you can type into
 programs that ask for input; the output goes back to her. Refusing is always the default.
+She can also `OPEN:` a web page in your browser or start a desktop program in its own window (same approval).
+She can't see the screen or click in those windows; she reads pages with `READ:` instead.

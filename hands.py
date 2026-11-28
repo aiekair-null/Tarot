@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -24,6 +25,76 @@ HOW = ("\nYOU CAN USE PROGRAMS ON THIS COMPUTER (Arch Linux, the person's own ac
        "RESULT. Look before you change anything (ls, cat, ip, nmcli, etc.), explain what a change will do "
        "before you ask to run it, one command at a time, and never use sudo or pacman unless they ask. If "
        "they refuse, respect it and offer another way. If you need something only they know, just ask them.")
+
+HOW_OPEN = ("\nYOU CAN OPEN WINDOWS ON THEIR SCREEN. To show them a web page or start a program with a window, "
+            "write ONE line and stop:\n"
+            "OPEN: <url>              (opens it in their web browser)\n"
+            "OPEN: <program> [args]   (starts a desktop program, e.g. OPEN: wireshark)\n"
+            "They approve it first. The window is theirs to see and use; you cannot see the screen or click in "
+            "it, so say what they should look at, and use READ to read a page's text yourself. Use OPEN, not RUN, "
+            "for anything that opens a window.")
+BROWSERS = ["firefox", "librewolf", "chromium", "google-chrome-stable", "google-chrome", "brave", "vivaldi",
+            "qutebrowser", "falkon", "epiphany", "midori", "netsurf"]
+
+
+def _is_url(x):
+    return bool(re.match(r"(https?|file)://", x) or re.match(r"^[\w.-]+\.[a-z]{2,}(/\S*)?$", x, re.I))
+
+
+def approve_open(target):
+    """Ask before opening a window. Returns the target (maybe edited) or None."""
+    kind = "page" if _is_url(target) else "program"
+    risky = kind == "program" and bool(DANGER.search(target))
+    print(f"\n{BLUE}  ┌ she wants to open a {kind} on your screen:{RESET}\n{WHITE}  │ {target}{RESET}")
+    while True:
+        try:
+            a = input(f"{BLUE}  └ open it? {'type yes' if risky else '[y]es'} / [n]o / [e]dit: {RESET}").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return None
+        if a in ("e", "edit"):
+            try:
+                new = input(f"{DIM}    your version: {RESET}").strip()
+            except (EOFError, KeyboardInterrupt):
+                return None
+            if new:
+                target = new
+            continue
+        if a in ("n", "no", ""):
+            return None
+        if a == "yes" or (a == "y" and not risky):
+            return target
+
+
+def open_window_for(target):
+    """Open a page in the browser or start a GUI program, detached, so it stays on screen."""
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return "(not opened: there is no desktop session on this terminal)"
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
+                 start_new_session=True, cwd=str(Path.home()))
+    if _is_url(target):
+        url = target if "://" in target else "https://" + target
+        env_b = os.environ.get("BROWSER", "").split(":")[0]
+        for b in ([env_b] if env_b else []) + BROWSERS:
+            if b and shutil.which(b):
+                subprocess.Popen([shutil.which(b), url], **quiet)
+                return f"(opened {url} in {b} on their screen)"
+        if shutil.which("xdg-open"):
+            subprocess.Popen(["xdg-open", url], **quiet)
+            return f"(opened {url} with the default browser)"
+        return "(not opened: no web browser found; they could install firefox)"
+    try:
+        argv = shlex.split(target)
+    except ValueError as e:
+        return f"(not opened: {e})"
+    if not argv or not shutil.which(argv[0]):
+        return f"(not opened: there is no program called '{argv[0] if argv else target}' on this computer)"
+    p = subprocess.Popen(argv, **quiet)
+    time.sleep(1.5)
+    if p.poll() is not None and p.returncode != 0:
+        return f"({argv[0]} closed straight away with exit code {p.returncode}; it may need options or a terminal)"
+    return f"(started {argv[0]} in its own window on their screen, pid {p.pid})"
+
 
 DANGER = re.compile(r"\bsudo\b|\bsu\b|\brm\s+-\w*[rf]|\bmkfs|\bdd\b|\bshred\b|\bwipefs|\bfdisk|\bparted|"
                     r">\s*/dev/|\bchmod\s+-R|\bchown\s+-R|\bshutdown\b|\breboot\b|\bpoweroff\b|"

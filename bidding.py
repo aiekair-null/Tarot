@@ -171,7 +171,7 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:", "RUN:") + netsense.TOOLS
+    TAGS = ("REMEMBER:", "NEXT:", "RUN:", "OPEN:") + netsense.TOOLS
 
     def __init__(self):
         self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
@@ -205,6 +205,10 @@ class Printer:
         if u.startswith("REMEMBER:"):
             if s[9:].strip():
                 self.notes.append(s[9:].strip())
+        elif u.lstrip("*`").startswith("OPEN:") and hands.ON:
+            tgt = s.lstrip("*`")[5:].strip().strip("`<>")
+            if tgt:
+                self.tool = self.tool or ("OPEN", tgt)
         elif u.lstrip("*`").startswith("RUN:") and hands.ON:
             cmd = s.lstrip("*`")[4:].strip().strip("`")
             if cmd:
@@ -376,7 +380,17 @@ def speak(b, msgs, unicode_ok, rounds=8):
         if not pr.tool or stopped:
             break
         tool, arg = pr.tool
-        if tool == "RUN":
+        if tool == "OPEN":
+            tgt = hands.approve_open(arg)
+            if tgt is None:
+                result = "The person REFUSED to open that. Don't open it; offer another way."
+                print(f"{DIM}  (refused){RESET}")
+            else:
+                result = hands.open_window_for(tgt)
+                print(f"{DIM}  {result}{RESET}")
+                looked.append(f"opened {tgt}")
+                arg = tgt
+        elif tool == "RUN":
             cmd = hands.approve(arg)
             if cmd is None:
                 result = "The person REFUSED this command. Do not run it; offer another way or ask what they want."
@@ -496,7 +510,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + (hands.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)
