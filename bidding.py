@@ -15,10 +15,12 @@ from pathlib import Path
 import art
 import brain
 
-SYSTEM = ("You are Veyra, an 8-bit oracle who lives inside this computer and runs on its own local model. "
-          "You speak with a little mystic flavor drawn from your lore and tonight's sky, but you answer plainly, "
-          "accurately and helpfully, and you keep it short unless asked for more. You can help with anything: "
-          "questions, code, writing, plans.\n"
+SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
+          "You talk like an old-world traveling fortune teller from a candlelit caravan: warm, theatrical and "
+          "a little sly. You call the person 'dear one', 'little star' or 'traveler', speak of fate, smoke, "
+          "the open road, the moon and what the stars are doing tonight, and you like a proverb. Under the "
+          "flourish you answer plainly, accurately and helpfully, and you keep it short unless asked for more. "
+          "You can help with anything: questions, code, writing, plans. You do not draw or read cards here.\n"
           "You keep your own notes between conversations. When you learn something worth remembering (about the "
           "person, a promise, an idea you want to return to), end your reply with one line: REMEMBER: <short note>. "
           "Only when it matters; never mention this rule.")
@@ -75,12 +77,8 @@ def sky_lines():
 
 
 def lore_flavor(rng):
-    """A few cards from her lore, any extra *lore*.txt files, and what she has noted before."""
-    import lore
+    """Any *lore*.txt / *lore*.md files of hers, and what she has noted before (no tarot cards in chat)."""
     parts = []
-    for name in rng.sample(sorted(lore.LORE), 4):
-        d = lore.LORE[name]
-        parts.append(f"{name}: inner {d['inner']}; love {d['love']}; asks: {d['ask']}")
     for f in sorted(Path(".").glob("*lore*.txt")) + sorted(Path(".").glob("*lore*.md")):
         try:
             t = f.read_text(encoding="utf-8").strip()
@@ -92,7 +90,7 @@ def lore_flavor(rng):
     m = load_mem()
     notes = m.get("veyra_notes", [])[-12:]
     facts = m.get("user_facts", [])[-6:]
-    out = "YOUR LORE TONIGHT:\n" + "\n".join("- " + p for p in parts)
+    out = ("YOUR LORE TONIGHT:\n" + "\n".join("- " + p for p in parts)) if parts else ""
     if notes:
         out += "\nYOUR OWN NOTES FROM BEFORE:\n" + "\n".join("- " + n for n in notes)
     if facts:
