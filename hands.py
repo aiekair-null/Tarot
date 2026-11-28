@@ -219,6 +219,33 @@ def open_action_window():
     return "couldn't open a window for program output"
 
 
+VITALS_TITLE = "Veyra-vitals"
+VITALS_STATE = runner.SPOOL.parent / "vitals.json"       # chat writes her CPU/tokens/uptime/status here
+VITALS_PIDFILE = VITALS_STATE.with_suffix(".pid")
+
+
+def vitals_window_open():
+    try:
+        return runner.alive(int(VITALS_PIDFILE.read_text()))
+    except Exception:
+        return False
+
+
+def open_vitals_window():
+    """Make sure the Veyra-vitals window (CPU use, tokens, uptime, what she's doing right now) is up."""
+    if vitals_window_open():
+        return ""
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return "no desktop session to open a window in"
+    argv = [sys.executable, str(HERE / "runner.py"), "vitals", VITALS_TITLE, str(VITALS_STATE)]
+    if _spawn_terminal(VITALS_TITLE, argv):
+        for _ in range(60):
+            if vitals_window_open():
+                return ""
+            time.sleep(0.2)
+    return "couldn't open a window for her vitals"
+
+
 def approve(cmd):
     """Ask the person. Returns the command to run (maybe edited) or None."""
     risky = bool(DANGER.search(cmd))

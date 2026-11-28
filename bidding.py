@@ -110,8 +110,37 @@ def note(text):
         print(f"{DIM}{text}{RESET}", flush=True)
 
 
+VITALS = hands.VITALS_STATE
+_vit = {}
+
+
+def _write_vitals():
+    """Save her CPU-watcher state (atomically, so the vitals window never reads a half-written file)."""
+    if not _vit:
+        return
+    try:
+        VITALS.parent.mkdir(parents=True, exist_ok=True)
+        tmp = VITALS.with_suffix(".tmp")
+        tmp.write_text(json.dumps(_vit))
+        tmp.replace(VITALS)
+    except OSError:
+        pass
+
+
+def _status(what):
+    """Update what the Veyra-vitals window shows as her current action/thought, without printing anything."""
+    _vit["status"] = what
+
+
+def _vitals_writer():
+    while True:
+        time.sleep(0.4)
+        _write_vitals()
+
+
 def doing(what):
     """A little grey note, in parentheses, each time she starts a new thought or task."""
+    _status(what)
     note(f"  ({what})")
 
 
@@ -250,7 +279,7 @@ def _shape_before_opening():
     g = _find_window(INPUT_TITLE)
     h_in = g[3] if g else max(150, sh // 6)                   # a reasonable guess if we can't measure it
     square = max(100, min(sw, sh - h_in))                     # the largest square that still leaves room below
-    _shape.update(square=square, x=(sw - square) // 2, h_in=h_in)
+    _shape.update(square=square, x=(sw - square) // 2, h_in=h_in, sw=sw)
     return ""
 
 
@@ -274,6 +303,9 @@ def _place_after_opening():
     square, x, h_in = _shape["square"], _shape["x"], _shape["h_in"]
     _place(runner.TITLE, x, 0, square, square)
     _place(INPUT_TITLE, x, square, square, h_in)
+    sw = _shape.get("sw")
+    if sw and hands.vitals_window_open() and sw - (x + square) >= 160:
+        _place(hands.VITALS_TITLE, x + square, 0, sw - (x + square), square)
     threading.Thread(target=_dock_rectangle_to_square, args=(square, h_in), daemon=True).start()
 
 
@@ -338,6 +370,9 @@ def open_her_window():
     WIN = _Win()
     WIN.mine = mine
     if mine:
+        verr = hands.open_vitals_window()
+        if verr:
+            print(f"   {DIM}(no vitals window: {verr}){RESET}")
         if shape_skip:
             print(f"   {DIM}(her window won't be shaped into a square: {shape_skip}){RESET}")
         else:
@@ -699,6 +734,7 @@ def _pass_inner(b, msgs, unicode_ok, show_think):
             if isinstance(item, Exception):
                 failed = item
                 break
+            _vit["tokens"] = _vit.get("tokens", 0) + 1
             is_think, piece = item if show_think and isinstance(item, tuple) else (False, item)
             if not started:
                 wave.clear()
@@ -890,6 +926,8 @@ def sleep_model(b):
 
 
 def leave(b=None):
+    _vit["running"] = False
+    _write_vitals()                                       # so the vitals window closes itself promptly
     if b is not None:
         sleep_model(b)
     if WIN is not None:
@@ -936,10 +974,19 @@ def _main():
 
     b = brain.Brain(connect=False)
     _B.append(b)
+    _vit.update(status="waking up", tokens=0, start=time.time(), chat_pid=os.getpid(), kind="", model="",
+                running=True)
+    threading.Thread(target=_vitals_writer, daemon=True).start()
     open_her_window()
     print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  type quit (or Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
-    threading.Thread(target=lambda: (b.connect(), ready.set()), daemon=True).start()
+
+    def _wake():
+        b.connect()
+        _vit.update(kind=b.kind, model=b.label)
+        ready.set()
+
+    threading.Thread(target=_wake, daemon=True).start()
 
     history, prompt, uni = [], "What is thy bidding?", utf8()
     once = " ".join(sys.argv[1:]).strip()
@@ -947,6 +994,7 @@ def _main():
         if once:
             q = once
         else:
+            _status("waiting for your question")
             try:
                 q = input(hands.rl_safe(f"{LILAC}{prompt}{RESET} ")).strip()
             except (EOFError, KeyboardInterrupt):
@@ -961,6 +1009,7 @@ def _main():
                 a = input(hands.rl_safe(f"{DIM}  that one can change or delete things. type yes to run it: {RESET}")).strip().lower()
                 if a != "yes":
                     continue
+            _status(f"running your command: {cmd[:60]}")
             with Keys() as k:
                 result = hands.run(cmd, k.esc)
             history += [{"role": "user", "content": f"(I ran `{cmd}` myself in your output window.)\n{result}"},
