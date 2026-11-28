@@ -557,16 +557,23 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:", "RUN:", "OPEN:", "SCREEN:") + netsense.TOOLS
+    TAGS = ("REMEMBER:", "NEXT:", "RUN:", "OPEN:", "SCREEN:", "WRITE:") + netsense.TOOLS
 
     def __init__(self):
         self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
+        self.write_path, self.write_lines, self.write_fence = None, None, False
         self.w = Wrap()
 
     def feed(self, piece):
         for ch in piece:
             if self.tool:                                  # a lookup was asked for: ignore the rest
                 return
+            if self.write_lines is not None:               # a WRITE: is collecting its fenced content
+                if ch == "\n":
+                    self._write_line()
+                else:
+                    self.line += ch
+                continue
             if ch == "\n":
                 self._end()
                 continue
@@ -585,6 +592,21 @@ class Printer:
             self.w.write(self.line)
             self.line, self.mode = "", "text"
 
+    def _write_line(self):
+        """One line while collecting a WRITE:'s content -- verbatim, no word-wrap, looking only for its fence."""
+        s = self.line
+        if self.write_fence:
+            if s.strip() in ("```", "~~~"):
+                self.tool = ("WRITE", (self.write_path, "\n".join(self.write_lines)))
+                self.write_path, self.write_lines, self.write_fence = None, None, False
+            else:
+                self.write_lines.append(s)
+        elif s.strip().startswith(("```", "~~~")):            # the opening fence; a language tag after it is fine
+            self.write_fence = True
+        elif s.strip():                                       # anything else before the fence: give up quietly
+            self.write_path, self.write_lines, self.write_fence = None, None, False
+        self.line = ""
+
     def _end(self):
         s = self.line.strip()
         u = s.upper()
@@ -601,6 +623,10 @@ class Printer:
             cmd = s.lstrip("*`")[4:].strip().strip("`")
             if cmd:
                 self.tool = self.tool or ("RUN", cmd)
+        elif u.lstrip("*`").startswith("WRITE:") and hands.ON:
+            path = s.lstrip("*`")[6:].strip().strip("`<>*")
+            if path:
+                self.write_path, self.write_lines, self.write_fence = path, [], False
         elif any(u.lstrip("*`").startswith(t) for t in netsense.TOOLS):
             self.tool = self.tool or netsense.find_call(s)
         elif u.startswith("NEXT:"):
@@ -611,6 +637,8 @@ class Printer:
         self.line, self.mode = "", None
 
     def close(self):
+        if self.write_lines is not None:                      # cut off mid-file: nothing safe to do with it
+            self.write_path, self.write_lines, self.write_fence = None, None, False
         if self.line:
             self._end()
         self.w.flush()
@@ -813,6 +841,10 @@ def _net_ok(result):
     return "\n" in result                          # every failure message is one short parenthesized line
 
 
+def _write_ok(result):
+    return not result.startswith("(could not")
+
+
 def speak(b, msgs, unicode_ok, rounds=8):
     """Her answer, letting her search / read / watch / look / run / open up to `rounds` times before she replies."""
     msgs, looked, notes = list(msgs), [], []
@@ -849,6 +881,18 @@ def speak(b, msgs, unicode_ok, rounds=8):
                 looked.append(f"ran {cmd}")
                 summary = result.splitlines()[0][:70] if result else "(no result)"
                 (good if _run_ok(result) else bad)(summary)
+        elif tool == "WRITE":
+            path, content = arg
+            n = content.count("\n") + 1
+            doing(f"she asks leave to write {path} ({n} line{'s' if n != 1 else ''})")
+            if not hands.approve_write(path, content):
+                result = "The person REFUSED to let you write that file. Don't write it; offer another way or ask what they want."
+                bad("refused; she will find another way")
+            else:
+                result = hands.write_file(path, content)
+                looked.append(f"wrote {path}")
+                (good if _write_ok(result) else bad)(result.strip())
+            arg = path
         elif tool == "SCREEN":
             doing("she asks leave to look at your screen")
             if not eyes.approve(arg):
@@ -1014,7 +1058,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)

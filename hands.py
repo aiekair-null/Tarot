@@ -34,6 +34,18 @@ HOW_OPEN = ("\nYOU CAN OPEN WINDOWS ON THEIR SCREEN. To show them a web page or 
             "it, so say what they should look at, and use READ to read a page's text yourself. A program's own "
             "text output (not a GUI) appears live in a window called Veyra-action, so you can tell them to "
             "check there. Use OPEN, not RUN, for anything that opens a window.")
+
+HOW_WRITE = ("\nYOU CAN WRITE FILES ON THIS COMPUTER -- code, configs, notes, anything text. Write exactly this, "
+             "then stop:\n"
+             "WRITE: <path>\n"
+             "```\n"
+             "<the file's whole contents, exactly as it should be saved>\n"
+             "```\n"
+             "A relative path is saved under their home folder. They see the path and a preview of the content "
+             "and approve or refuse before anything touches disk; overwriting a file that already exists still "
+             "needs their yes. There is no partial edit yet -- write the whole file every time, even to change "
+             "one line. Use WRITE for files, RUN for commands and installs. If what they want needs both (write "
+             "a script, then run it), do one tool call at a time and wait for each RESULT.")
 BROWSERS = ["firefox", "librewolf", "chromium", "google-chrome-stable", "google-chrome", "brave", "vivaldi",
             "qutebrowser", "falkon", "epiphany", "midori", "netsurf"]
 
@@ -249,6 +261,74 @@ def open_vitals_window():
                 return ""
             time.sleep(0.2)
     return "couldn't open a window for her vitals"
+
+
+def _write_target(path):
+    """The real path a WRITE would land at: relative paths go under the home folder."""
+    full = Path(os.path.expanduser(path))
+    return full if full.is_absolute() else Path.home() / full
+
+
+def _write_risky(path):
+    """Outside the home folder entirely -- system files, other users, etc. -- needs the typed 'yes'."""
+    try:
+        home = os.path.realpath(Path.home())
+        target = os.path.realpath(_write_target(path))
+        return target != home and not target.startswith(home + os.sep)
+    except (OSError, ValueError):
+        return True
+
+
+def approve_write(path, content):
+    """Ask before writing a file. Returns True to write it, False to refuse."""
+    try:
+        target = _write_target(path)
+        exists = target.exists()
+    except (OSError, ValueError) as e:
+        print(f"\n{RED}  ┌ she wants to write a file, but that path is no good:{RESET}\n{WHITE}  │ {path}  ({e}){RESET}")
+        return False
+    risky = _write_risky(path)
+    n = content.count("\n") + 1
+    verb = "overwrite" if exists else "write"
+    print(f"\n{BLUE}  ┌ she wants to {verb} a file ({n} line{'s' if n != 1 else ''}):{RESET}\n"
+          f"{WHITE}  │ {target}{RESET}")
+    if risky:
+        print(f"{RED}  │ that's outside your home folder.{RESET}")
+    preview = content.splitlines()
+    shown, cut = preview[:20], max(0, len(preview) - 20)
+    for ln in shown:
+        print(f"{DIM}  │ {ln[:110]}{RESET}")
+    if cut:
+        print(f"{DIM}  │ ...({cut} more line{'s' if cut != 1 else ''}){RESET}")
+    while True:
+        try:
+            a = input(rl_safe(f"{BLUE}  └ {verb} it? {'type yes' if risky else '[y]es'} / [n]o"
+                              f"{'' if len(preview) <= 20 else ' / [v]iew full'}: {RESET}")).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        if a in ("v", "view") and len(preview) > 20:
+            print(f"{DIM}" + "\n".join(content.splitlines()) + f"{RESET}")
+            continue
+        if a in ("n", "no", ""):
+            return False
+        if a == "yes" or (a == "y" and not risky):
+            return True
+        if a == "y" and risky:
+            print(f"{RED}    this one needs the full word: yes{RESET}")
+
+
+def write_file(path, content):
+    """Actually write it, after approval. Returns a result line for her."""
+    try:
+        target = _write_target(path)
+        existed = target.exists()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+        n = content.count("\n") + 1
+        return f"(wrote {n} line{'s' if n != 1 else ''} to {target}{' (overwritten)' if existed else ''})"
+    except (OSError, ValueError) as e:                 # a bad path (null byte, etc.) raises ValueError, not OSError
+        return f"(could not write {path}: {e})"
 
 
 def approve(cmd):
