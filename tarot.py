@@ -2057,7 +2057,7 @@ def main():
                    "5) Make a video of your last reading   6) Live Reading   7) Switch local model   "
                    f"8) Psilocybin mode [{'ON' if psyche.active() else 'off'}]   9) Control room (Ctrl+W anywhere)   "
                    "10) Your stars (star chart + today's horoscope)   11) Make a promo video   "
-                   "12) Fortune reading (cast the items)   13) Chat with Veyra", "hope", "type")
+                   "12) Fortune reading (cast the items)   13) Chat with Veyra   14) Intuition oracle", "hope", "type")
             c = fx.prompt()
             if c == "1":
                 reading(reader)
@@ -2078,6 +2078,15 @@ def main():
             elif c == "13":
                 import fortune
                 fortune.chat_mode(reader)
+            elif c == "14":
+                import oracle
+                fx.say("1 card or 3? (Enter = 1)", "hope", "type")
+                spread = 3 if fx.prompt().strip().startswith("3") else 1
+                try:
+                    oracle.run(reader.brain, spread, ready=reader.brain_ready)
+                except SystemExit:
+                    pass
+                portrait(reader.label)
             elif c == "10":
                 stars_menu(reader)
             elif c in ("4", "q", "quit", "exit"):

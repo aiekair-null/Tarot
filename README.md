@@ -261,7 +261,37 @@ and uploads the full-length reading video instead, so this is parked until there
 - The 40 item sprites live in `items.py`.
 
 ## Veyra's hands (`veyra chat`, Linux)
+When you run `veyra chat`, her window opens as large as your desktop can make it, and a second window,
+**Veyra-output**, opens beside it automatically. You type to her in the first window; everything she says — her
+words, her thinking arrow, her grey notes — appears in Veyra-output instead, so your own window stays clear for
+typing. If a second window can't be opened (no desktop session, or no terminal emulator found), she just talks in
+the one window you have.
+
+You can also use that window yourself: type `!` followed by a command at her prompt (e.g. `!ls -la`) and it runs
+directly in Veyra-output, no asking required, in a terminal that remembers its folder between commands (`cd`
+sticks). A command matching her risk list (sudo, rm -r, dd, pacman, reboot...) still asks you to type **yes** first
+even when you run it yourself.
+
 She can ask to run shell commands with a `RUN:` line. You see the exact command and answer **y / n / e(dit)**;
-risky ones (sudo, rm -r, dd, pacman, reboot...) need the full word **yes**. Approved commands run in her
-**output window** (opened automatically, or `veyra out` in another terminal), where you can type into
-programs that ask for input; the output goes back to her. Refusing is always the default.
+risky ones need the full word **yes**. Approved commands run in Veyra-output (opened automatically, or `veyra out`
+in another terminal), where you can type into programs that ask for input; the output goes back to her. Refusing
+is always the default.
+She can also `OPEN:` a web page in your browser or start a desktop program in its own window (same approval).
+She can't click in those windows; she reads pages with `READ:` instead.
+
+**Reading the screen.** Ask her about something on screen ("what does that error box say?") and she asks with
+`SCREEN:`. After you answer **y**, a screenshot is taken, read on this computer by OCR (`mss` +
+`rapidocr-onnxruntime`, installed by `veyra setup`; or `grim`/`scrot` and `tesseract` if you have them) and
+deleted at once. She gets every piece of text with its place on the screen (y/x percent). Her model reads words, not
+pictures, so icons, photos and colours are invisible to her. Nothing is saved or sent anywhere.
+
+**Grey notes.** Whenever she starts a new thought or task she prints a small grey `(what she is doing)` line. While
+she thinks, the arrow now grows a little as it flies, speeds up as it nears full width, then shimmers.
+
+## The Moonlit Intuition oracle (`veyra oracle`)
+An original 32-card deck, drawn entirely in code (no scanned art, nothing from any published deck), for a quieter,
+intuition-first practice: you hold a question, she fans out 7 cards face down, **you** choose the ones that call to
+you, and you say what you notice in each picture before she says a word. She reads the cards together with your own
+impressions and asks you something back — it's framed throughout as a mirror for your own thinking, not a
+prediction. `veyra oracle` (asks 1 or 3 cards), or `veyra oracle 3 "should I take the job"` to skip the prompts.
+Also reachable from the main menu (**14**). Past readings are logged to `memory.json` (`oracle_log`).
