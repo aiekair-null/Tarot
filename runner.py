@@ -19,11 +19,15 @@ P, B, W, D, R = "\x1b[38;5;99m", "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;
 
 
 def alive(pid):
+    """Is that pid really the output window? (a stale pid file after a reboot may point at anything)"""
     try:
         os.kill(pid, 0)
-        return True
     except Exception:
         return False
+    try:
+        return b"runner.py" in Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return True                                    # no /proc here (macOS): trust the pid
 
 
 def run(job):
@@ -65,6 +69,12 @@ def main():
         except Exception:
             pass
     PIDFILE.write_text(str(os.getpid()))
+    for old in SPOOL.glob("*.done"):                  # results nobody collected
+        try:
+            if time.time() - old.stat().st_mtime > 3600:
+                old.unlink()
+        except OSError:
+            pass
     os.chdir(Path.home())
     print(f"{P}V E Y R A{R}  {D}output window · waiting for approved commands{R}")
     try:
@@ -80,7 +90,10 @@ def main():
                 j.unlink(missing_ok=True)
                 continue
             j.unlink(missing_ok=True)
-            out, code = run(job)
+            if time.time() - job.get("ts", time.time()) > 120:        # approved long ago: never run it late
+                out, code = "(expired: it waited too long to start, so it was not run)", 124
+            else:
+                out, code = run(job)
             res = SPOOL / f"{job['id']}.done"
             tmp = res.with_suffix(".tmp")
             tmp.write_text(json.dumps({"code": code, "out": out}))

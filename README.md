@@ -266,4 +266,13 @@ risky ones (sudo, rm -r, dd, pacman, reboot...) need the full word **yes**. Appr
 **output window** (opened automatically, or `veyra out` in another terminal), where you can type into
 programs that ask for input; the output goes back to her. Refusing is always the default.
 She can also `OPEN:` a web page in your browser or start a desktop program in its own window (same approval).
-She can't see the screen or click in those windows; she reads pages with `READ:` instead.
+She can't click in those windows; she reads pages with `READ:` instead.
+
+**Reading the screen.** Ask her about something on screen ("what does that error box say?") and she asks with
+`SCREEN:`. After you answer **y**, a screenshot is taken, read on this computer by OCR (`mss` +
+`rapidocr-onnxruntime`, installed by `veyra setup`; or `grim`/`scrot` and `tesseract` if you have them) and
+deleted at once. She gets every piece of text with its place on the screen (y/x percent). Her model reads words, not
+pictures, so icons, photos and colours are invisible to her. Nothing is saved or sent anywhere.
+
+**Grey notes.** Whenever she starts a new thought or task she prints a small grey `(what she is doing)` line. While
+she thinks, the arrow now grows a little as it flies, speeds up as it nears full width, then shimmers.

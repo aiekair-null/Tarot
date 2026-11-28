@@ -56,7 +56,7 @@ input::placeholder{color:#a8323c}button{background:var(--r);color:#000;border:0;
 let n=-1;const L=document.getElementById('log');
 async function poll(){try{const r=await fetch('/state');const j=await r.json();
 document.getElementById('m').textContent=j.model;document.getElementById('s').textContent=j.sky;
-document.getElementById('st').textContent=j.status==='ready'?'':j.status;
+document.getElementById('st').textContent=j.status==='ready'?'':'('+j.status+')';
 document.getElementById('q').placeholder=j.next||'What is thy bidding?';
 const key=JSON.stringify(j.log)+j.busy;if(key!==n){n=key;const atEnd=L.scrollTop+L.clientHeight>L.scrollHeight-40;L.innerHTML='';
 for(const e of j.log){const d=document.createElement('div');d.className=e.role==='user'?'u':'a';d.textContent=e.text;
@@ -75,6 +75,7 @@ def answer(q):
         reply = {"role": "assistant", "text": "", "notes": []}
         state["log"].append(reply)
         state["busy"] = True
+        state["status"] = "she thinks over what you said"
     try:
         if B.kind == "none":
             reply["text"] = bidding.diagnose(None, "Her model would not wake: " + (B.err or "no model installed"),
@@ -85,6 +86,7 @@ def answer(q):
         msgs = [{"role": "system", "content": SYSTEM}] + hist
         raw = ""
         for piece in B.stream(msgs, max_tokens=700, temperature=0.7):
+            state["status"] = "she is speaking"
             raw += piece
             reply["text"] = re.sub(r"\n?(REMEMBER|NEXT):.*", "", raw, flags=re.S | re.I).rstrip()  # hide tag lines
         m = re.search(r"NEXT:\s*(.+)", raw, re.I)
@@ -98,9 +100,11 @@ def answer(q):
                 except Exception:
                     pass
     except Exception as e:                                # explain, don't crash
+        state["status"] = "something snagged; she works out what went wrong"
         reply["text"] = bidding.diagnose(B, e, "answering on the TV")
     finally:
         state["busy"] = False
+        state["status"] = "ready" if B.kind != "none" else "no model"
 
 
 class H(BaseHTTPRequestHandler):

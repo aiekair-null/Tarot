@@ -38,6 +38,7 @@ setup() {
   "$PY" -m pip install -q --upgrade pip
   "$PY" -m pip install -q ddgs youtube-transcript-api pypdf || say "(web tools skipped: search/YouTube/PDF reading are off)"
   "$PY" -m pip install -q numpy pillow huggingface_hub imageio-ffmpeg   # no system packages needed
+  "$PY" -m pip install -q mss rapidocr-onnxruntime || say "(screen reading skipped: she can't read the screen)"
   "$PY" -m pip install -q cmake ninja                                    # in case llama.cpp has to compile
   export PATH="$VENV/bin:$PATH"
 

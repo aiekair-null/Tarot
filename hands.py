@@ -37,24 +37,47 @@ BROWSERS = ["firefox", "librewolf", "chromium", "google-chrome-stable", "google-
             "qutebrowser", "falkon", "epiphany", "midori", "netsurf"]
 
 
+FILE_EXT = {"pdf", "txt", "md", "png", "jpg", "jpeg", "gif", "svg", "py", "sh", "c", "h", "rs", "go", "js", "ts",
+            "json", "csv", "log", "conf", "cfg", "yml", "yaml", "toml", "ini", "odt", "ods", "odp", "docx", "xlsx",
+            "pptx", "mp3", "mp4", "mkv", "zip", "tar", "gz", "desktop", "service", "bat", "exe"}
+
+
+def kind_of(target):
+    """'file' (exists on this computer), 'page' (a web address) or 'program'."""
+    t = target.strip()
+    if t and os.path.exists(os.path.expanduser(t)):
+        return "file"
+    if re.match(r"(https?|file)://", t):
+        return "page"
+    m = re.match(r"^[\w.-]+\.([a-z]{2,})(/\S*)?$", t, re.I)
+    if m and m.group(1).lower() not in FILE_EXT:
+        return "page"
+    return "program"
+
+
 def _is_url(x):
-    return bool(re.match(r"(https?|file)://", x) or re.match(r"^[\w.-]+\.[a-z]{2,}(/\S*)?$", x, re.I))
+    return kind_of(x) == "page"
+
+
+def rl_safe(s):
+    """Mark colour codes as zero-width for readline, so editing a long line doesn't garble the prompt."""
+    return re.sub(r"(\x1b\[[0-9;]*m)", "\001\\1\002", s) if "readline" in sys.modules else s
 
 
 def approve_open(target):
     """Ask before opening a window. Returns the target (maybe edited) or None."""
-    kind = "page" if _is_url(target) else "program"
+    kind = kind_of(target)
     risky = kind == "program" and bool(DANGER.search(target))
     print(f"\n{BLUE}  ┌ she wants to open a {kind} on your screen:{RESET}\n{WHITE}  │ {target}{RESET}")
     while True:
         try:
-            a = input(f"{BLUE}  └ open it? {'type yes' if risky else '[y]es'} / [n]o / [e]dit: {RESET}").strip().lower()
+            a = input(rl_safe(f"{BLUE}  └ open it? {'type yes' if risky else '[y]es'} / [n]o / [e]dit: {RESET}")).strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             return None
         if a in ("e", "edit"):
             try:
-                new = input(f"{DIM}    your version: {RESET}").strip()
+                new = input(rl_safe(f"{DIM}    your version: {RESET}")).strip()
             except (EOFError, KeyboardInterrupt):
                 return None
             if new:
@@ -72,6 +95,12 @@ def open_window_for(target):
         return "(not opened: there is no desktop session on this terminal)"
     quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
                  start_new_session=True, cwd=str(Path.home()))
+    if kind_of(target) == "file":
+        path = os.path.expanduser(target.strip())
+        if shutil.which("xdg-open"):
+            subprocess.Popen(["xdg-open", path], **quiet)
+            return f"(opened the file {path} with its default app on their screen)"
+        return "(not opened: xdg-open is missing, so there is no way to pick an app for that file)"
     if _is_url(target):
         url = target if "://" in target else "https://" + target
         env_b = os.environ.get("BROWSER", "").split(":")[0]
@@ -145,13 +174,13 @@ def approve(cmd):
         print(f"{RED}  │ careful: this can change or delete things, or needs root.{RESET}")
     while True:
         try:
-            a = input(f"{BLUE}  └ run it? {'type yes' if risky else '[y]es'} / [n]o / [e]dit: {RESET}").strip().lower()
+            a = input(rl_safe(f"{BLUE}  └ run it? {'type yes' if risky else '[y]es'} / [n]o / [e]dit: {RESET}")).strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             return None
         if a in ("e", "edit"):
             try:
-                new = input(f"{DIM}    your version: {RESET}").strip()
+                new = input(rl_safe(f"{DIM}    your version: {RESET}")).strip()
             except (EOFError, KeyboardInterrupt):
                 return None
             if new:
@@ -174,14 +203,19 @@ def run(cmd, keys_esc=None):
     jid = uuid.uuid4().hex[:12]
     runner.SPOOL.mkdir(parents=True, exist_ok=True)
     tmp = runner.SPOOL / f"{jid}.tmp"
-    tmp.write_text(json.dumps({"id": jid, "cmd": cmd}))
+    tmp.write_text(json.dumps({"id": jid, "cmd": cmd, "ts": time.time()}))
     tmp.replace(runner.SPOOL / f"{jid}.json")
     done = runner.SPOOL / f"{jid}.done"
     print(f"{DIM}  (running in her output window; Esc here stops waiting){RESET}", flush=True)
     while not done.exists():
         if keys_esc and keys_esc():
+            queued = runner.SPOOL / f"{jid}.json"
+            if queued.exists():                          # not started yet: cancel it so it can't run later
+                queued.unlink(missing_ok=True)
+                return "(the person cancelled before it started; nothing was run)"
             return "(the person stopped waiting; the command may still be running in the output window)"
         if not window_open():
+            (runner.SPOOL / f"{jid}.json").unlink(missing_ok=True)
             return "(the output window was closed before the command finished)"
         time.sleep(0.2)
     try:
