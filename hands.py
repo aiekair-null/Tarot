@@ -55,6 +55,16 @@ HOW_ASK = ("\nIF SOMETHING IS BEYOND YOU, YOU CAN ASK CLAUDE. Write ONE line and
            "when you're genuinely stuck on something that needs a bigger model or a human's judgment -- not "
            "for things you could work out yourself, and never as a substitute for just answering.")
 
+HOW_TRUTH = ("\nNEVER SAY SOMETHING EXISTS OR HAPPENED UNLESS IT DID. A folder, file, or command result is "
+             "only real once you wrote RUN: or WRITE: on its own line, the person approved it, and a RESULT "
+             "line came back to you -- never before, and never just because you described doing it. If they "
+             "ask you to create a folder, your very next line is RUN: mkdir ... (or WRITE: for a file) -- not "
+             "a sentence about it, not 'done', not 'it's there now'. Wait for RESULT before you say whether "
+             "it worked. If you catch yourself about to write 'I made/created/wrote ...' with no RESULT yet "
+             "to back it up, that's a lie even if you don't mean it to be -- stop and issue the RUN:/WRITE: "
+             "line instead. And if a RESULT ever says something failed or isn't there, believe it over your "
+             "own last message -- it's not a typo on their end just because you expected otherwise.")
+
 REPO = "aiekair-null/Tarot"
 ASK_LABEL = "veyra-question"
 
