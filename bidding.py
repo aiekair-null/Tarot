@@ -624,32 +624,35 @@ GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gain
 
 class Wave:
     """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
-    getting faster as it nears full width, until it fills the whole line."""
+    getting faster as it nears full width -- then loops back to a short arrow and keeps bouncing, rather than
+    freezing solid, so a slow model (a long wait for the first token) still shows visible motion the whole
+    time instead of going static partway through."""
     SLOW = 4                                                  # 4x slower than the first version
 
     def __init__(self, unicode_ok):
-        self.dash = "—" if unicode_ok else "-"
+        # Plain "-", unconditionally: unicode_ok only reflects the locale's encoding, not whether this
+        # terminal's font actually has a glyph for the fancier em-dash -- on fonts that don't, it's drawn as
+        # an empty "tofu" box instead of a clean line.
+        self.dash = "-"
         self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
+        if int(self.length) >= W:
+            # Reached full width -- loop back to a short arrow instead of sitting there static.
+            self.length, self.pos, self.dir = 3.0, 0.0, 1
         speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
         self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
         L = int(self.length)
-        full = L >= W
-        right = self.dir > 0 or full
-        arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
+        arrow = self.dash * (L - 1) + ">" if self.dir > 0 else "<" + self.dash * (L - 1)
         span = max(0, W - L)
-        if full:
-            x = 0
-        else:
-            self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
-            if self.pos >= span:
-                self.pos, self.dir = float(span), -1
-            elif self.pos <= 0:
-                self.pos, self.dir = 0.0, 1
-            x = min(int(self.pos), span)
+        self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
+        if self.pos >= span:
+            self.pos, self.dir = float(span), -1
+        elif self.pos <= 0:
+            self.pos, self.dir = 0.0, 1
+        x = min(int(self.pos), span)
         sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
         sys.stdout.flush()
 
