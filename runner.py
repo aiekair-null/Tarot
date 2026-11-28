@@ -14,6 +14,7 @@ import shlex
 import shutil
 import sys
 import time
+from collections import deque
 from pathlib import Path
 
 SPOOL = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "veyra" / "jobs"
@@ -169,6 +170,8 @@ def watch_main(title, stream_path):
     sys.stdout.write(f"\x1b]0;{title}\x07")
     print(f"{P}V E Y R A{R}  {D}{title} · output from programs she opens appears here{R}\n")
     pos = stream_path.stat().st_size if stream_path.exists() else 0
+    standby, blink_on, last_blink = True, True, 0.0
+    label = f"{D}  ● standby — nothing opened yet{R}"
     try:
         while True:
             try:
@@ -182,6 +185,9 @@ def watch_main(title, stream_path):
                     pos = n
                     quit_now = QUIT in data
                     data = data.replace(QUIT, b"")
+                    if standby and data.strip():
+                        sys.stdout.write("\r" + " " * (len(label) - len(D) - len(R)) + "\r")
+                        standby = False
                     os.write(1, data)
                     if quit_now:
                         print(f"\n{D}(chat closed; this window closes too){R}")
@@ -189,6 +195,12 @@ def watch_main(title, stream_path):
                         return
             except OSError:
                 pass
+            if standby and time.time() - last_blink > 0.6:
+                last_blink = time.time()
+                blink_on = not blink_on
+                pad = " " * (len(label) - len(D) - len(R))
+                sys.stdout.write("\r" + (label if blink_on else pad))
+                sys.stdout.flush()
             time.sleep(0.1)
     except KeyboardInterrupt:
         pass
@@ -197,44 +209,50 @@ def watch_main(title, stream_path):
             pidfile.unlink(missing_ok=True)
 
 
-CLK_TCK = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
-SERVER_NAME = {"ollama": "ollama", "openai": "llama-server"}   # kind -> process name to find, when she isn't in-process
 V_GOLD, V_CYAN, V_RED, V_DIM, V_WHITE, V_RESET = ("\x1b[38;5;220m", "\x1b[38;5;51m", "\x1b[38;5;203m",
                                                    "\x1b[38;5;245m", "\x1b[38;5;231m", "\x1b[0m")
+BLOCKS = " ▁▂▃▄▅▆▇█"          # 9 levels, for sparkline graphs
 
 
-def _cpu_ticks(pid):
-    """utime+stime, in clock ticks, for pid -- or None if it's gone, or this isn't Linux."""
+def _cpu_snapshot():
+    """{'cpu': (idle, total), 'cpu0': (idle, total), ...} read fresh from /proc/stat -- one entry for the
+    system overall plus one per logical core -- or {} off-Linux or on any error."""
+    out = {}
     try:
-        parts = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[-1].split()
-        return int(parts[11]) + int(parts[12])             # fields 14 & 15 of /proc/pid/stat
-    except Exception:
-        return None
-
-
-def _find_pid_by_name(name):
-    """First living pid whose /proc/pid/comm is exactly `name` (Linux only), or None."""
-    try:
-        for p in Path("/proc").iterdir():
-            if p.name.isdigit():
+        for ln in Path("/proc/stat").read_text().splitlines():
+            parts = ln.split()
+            if parts and parts[0].startswith("cpu"):
                 try:
-                    if (p / "comm").read_text().strip() == name:
-                        return int(p.name)
-                except OSError:
+                    nums = [int(x) for x in parts[1:]]
+                except ValueError:
                     continue
+                if len(nums) >= 4:
+                    idle = nums[3] + (nums[4] if len(nums) > 4 else 0)   # idle + iowait
+                    out[parts[0]] = (idle, sum(nums))
     except OSError:
         pass
-    return None
+    return out
 
 
-def _brain_pid(state):
-    """Whichever process is actually doing her thinking right now: her own chat process when the model runs
-    in-process (kind "llama"), or the local server's process when it's external (ollama, a llama.cpp server)."""
-    kind = state.get("kind", "")
-    if kind == "llama":
-        return state.get("chat_pid")
-    name = SERVER_NAME.get(kind)
-    return _find_pid_by_name(name) if name else None
+def _core_pct(prev, cur):
+    """Percent busy between two (idle, total) snapshots of the same core/overall line, or None without a
+    usable delta (first reading, or the counters didn't move)."""
+    if not prev or not cur:
+        return None
+    d_total = cur[1] - prev[1]
+    if d_total <= 0:
+        return None
+    d_idle = cur[0] - prev[0]
+    return max(0.0, min(100.0, (1 - d_idle / d_total) * 100))
+
+
+def _sparkline(values, scale_max=None):
+    """A one-line string of block characters, one per value (oldest first), for a tiny history graph.
+    Self-scales to the loudest value seen unless `scale_max` pins the ceiling (e.g. 100 for a percentage)."""
+    if not values:
+        return ""
+    m = scale_max if scale_max else (max(values) or 1)
+    return "".join(BLOCKS[max(0, min(8, round(v / m * 8)))] for v in values)
 
 
 def _bar(pct, width):
@@ -264,9 +282,10 @@ def _wrap(text, width):
 
 
 def vitals_main(title, state_path):
-    """A small htop-like window: how much CPU she's using, tokens generated and their rate, how long she's
-    been awake, and a live block showing whatever she's doing or thinking right now. Redraws in place every
-    half second. Closes when the chat marks itself no longer running, or on Ctrl+C."""
+    """A small htop-like window: live per-core CPU usage (every logical core, audited straight from
+    /proc/stat -- not just the one process doing her thinking), tokens generated and their rate, how long
+    she's been awake, and a small scrolling graph of overall CPU and token-rate history. Redraws in place
+    every half second. Closes when the chat marks itself no longer running, or on Ctrl+C."""
     state_path = Path(state_path)
     pidfile = state_path.with_suffix(".pid")
     if pidfile.exists():
@@ -280,8 +299,9 @@ def vitals_main(title, state_path):
             pass
     pidfile.write_text(str(os.getpid()))
     sys.stdout.write(f"\x1b]0;{title}\x07")
-    last_ticks = last_tick_t = None
+    last_stat = {}
     last_tokens, last_tok_t = 0, time.time()
+    cpu_hist, tok_hist = deque(maxlen=200), deque(maxlen=200)
     try:
         while True:
             try:
@@ -289,45 +309,47 @@ def vitals_main(title, state_path):
             except Exception:
                 st = {}
             now = time.time()
-            pid = _brain_pid(st)
-            ticks = _cpu_ticks(pid) if pid else None
-            cpu_pct = None
-            if ticks is not None and last_ticks is not None and last_tick_t is not None:
-                dt = now - last_tick_t
-                if dt > 0:
-                    cpu_pct = (ticks - last_ticks) / CLK_TCK / dt * 100
-            last_ticks, last_tick_t = ticks, now
+
+            cur_stat = _cpu_snapshot()
+            cores = sorted((k for k in cur_stat if k != "cpu" and k[3:].isdigit()), key=lambda k: int(k[3:]))
+            core_pcts = [_core_pct(last_stat.get(c), cur_stat.get(c)) for c in cores]
+            overall_pct = _core_pct(last_stat.get("cpu"), cur_stat.get("cpu"))
+            last_stat = cur_stat
 
             tokens = st.get("tokens", 0)
             dt2 = now - last_tok_t
-            rate = (tokens - last_tokens) / dt2 if dt2 > 0 else 0.0
+            rate = max(0.0, (tokens - last_tokens) / dt2 if dt2 > 0 else 0.0)
             last_tokens, last_tok_t = tokens, now
+
+            if overall_pct is not None:
+                cpu_hist.append(overall_pct)
+            tok_hist.append(rate)
 
             uptime = now - st.get("start", now)
             cols = max(44, shutil.get_terminal_size((60, 20)).columns)
-            who = {"llama": "built-in model", "ollama": "Ollama", "openai": "local server",
-                   "hf": "Hugging Face (cloud)", "none": "", "": ""}.get(st.get("kind", ""), st.get("kind", ""))
             model = st.get("model", "")
 
-            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET}  {V_DIM}vitals{V_RESET}"]
-            if cpu_pct is None:
-                cpu_line = f"{V_DIM}n/a" + (f" ({who} process not found){V_RESET}" if who else f"{V_RESET}")
+            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET}  {V_DIM}vitals{V_RESET}\n"]
+            bw = max(8, min(22, cols - 20))
+            if not cores:
+                out.append(f"  {V_DIM}cpu{V_RESET}      {V_DIM}n/a (couldn't read /proc/stat){V_RESET}")
             else:
-                bw = max(10, min(30, cols - 26))
-                cpu_line = f"{_bar(cpu_pct, bw)} {V_WHITE}{cpu_pct:5.1f}%{V_RESET}  {V_DIM}{who}{V_RESET}"
-            out.append(f"\n  {V_DIM}cpu{V_RESET}     {cpu_line}")
-            out.append(f"  {V_DIM}tokens{V_RESET}  {V_WHITE}{tokens:,}{V_RESET} total  {V_DIM}·{V_RESET} "
+                out.append(f"  {V_DIM}cpu -- {len(cores)} cores{V_RESET}")
+                for c, pct in zip(cores, core_pcts):
+                    out.append(f"  {V_DIM}{c:<6}{V_RESET} {_bar(pct, bw)} "
+                               f"{V_WHITE}{(0.0 if pct is None else pct):5.1f}%{V_RESET}")
+            out.append(f"\n  {V_DIM}tokens{V_RESET}  {V_WHITE}{tokens:,}{V_RESET} total  {V_DIM}·{V_RESET} "
                         f"{V_CYAN}{rate:.1f}{V_RESET} tok/s")
             out.append(f"  {V_DIM}uptime{V_RESET}  {V_WHITE}{_fmt_time(uptime)}{V_RESET}" +
                        (f"  {V_DIM}· {model}{V_RESET}" if model else ""))
-            bw2 = cols - 4
-            out.append(f"\n  {V_DIM}┌─ what she's doing right now " + "─" * max(0, bw2 - 28) + f"┐{V_RESET}")
-            lines = _wrap(st.get("status", "waking up") or "...", bw2 - 2)[:4]
-            for ln in lines:
-                out.append(f"  {V_DIM}│{V_RESET} {V_CYAN}{ln.ljust(bw2 - 2)}{V_RESET} {V_DIM}│{V_RESET}")
-            for _ in range(4 - len(lines)):
-                out.append(f"  {V_DIM}│{V_RESET} {' ' * (bw2 - 2)} {V_DIM}│{V_RESET}")
-            out.append(f"  {V_DIM}└" + "─" * bw2 + f"┘{V_RESET}\n")
+
+            gw = max(10, cols - 11)
+            cpu_line = _sparkline(list(cpu_hist)[-gw:], scale_max=100)
+            tok_line = _sparkline(list(tok_hist)[-gw:])
+            out.append(f"\n  {V_DIM}graph{V_RESET}")
+            out.append(f"  {V_RED}cpu{V_RESET}  {V_RED}{cpu_line}{V_RESET}")
+            out.append(f"  {V_CYAN}tok{V_RESET}  {V_CYAN}{tok_line}{V_RESET}\n")
+
             sys.stdout.write("\n".join(out))
             sys.stdout.flush()
 
