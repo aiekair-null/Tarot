@@ -1020,17 +1020,23 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
     """Keeps her working on `task` for up to `hours`, feeding her an automatic check-in turn every
     `minutes` -- no one has to type anything. This is the same process, the same windows, just not
     returning to the input prompt: it keeps its own clock, so the chat session (and the machine) has to
-    stay running the whole time. While it runs, safe RUN/WRITE/OPEN calls go through without a prompt
-    (hands.AUTO_SAFE); anything DANGER-flagged, or a write outside the home folder, still stops and waits
-    for a real yes, however long that takes. With a research `plan` (platforms + keywords), opens the
-    Veyra-research control room, adds research.HOW to her instructions for this run, and keeps each
-    check-in focused on whichever keyword the time budget says is current. Stops early on Ctrl+C."""
+    stay running the whole time. She is re-prompted back-to-back, with no idle gap between replies -- only
+    the FLAVOR of the prompt changes on a timer: most rounds just say "keep going", and every `minutes`
+    she's asked to stop and write an actual status paragraph before continuing. (An earlier version of this
+    put the chat to sleep for the whole `minutes` interval after every single reply, which meant the model
+    sat there not even running for most of the run -- that was the bug where she'd answer once and then
+    just stop. Fixed: now she only ever pauses for a one-second breather between rounds.) While it runs,
+    safe RUN/WRITE/OPEN calls go through without a prompt (hands.AUTO_SAFE); anything DANGER-flagged, or a
+    write outside the home folder, still stops and waits for a real yes, however long that takes. With a
+    research `plan` (platforms + keywords), opens the Veyra-research control room, adds research.HOW to her
+    instructions for this run, and keeps every prompt focused on whichever keyword the time budget says is
+    current. Stops early on Ctrl+C."""
     deadline = time.time() + hours * 3600
     total_seconds = hours * 3600
     interval = max(60.0, minutes * 60)
-    print(f"\n{DIM}  (autowork: running for up to {hours:g}h, checking in every {minutes:g}m -- Ctrl+C to "
-          f"stop early. Safe commands and writes run without asking; anything riskier still waits for "
-          f"you.){RESET}\n")
+    print(f"\n{DIM}  (autowork: running for up to {hours:g}h, she keeps working with no idle gap -- a real "
+          f"status check-in every {minutes:g}m, Ctrl+C to stop early. Safe commands and writes run without "
+          f"asking; anything riskier still waits for you.){RESET}\n")
     hands.AUTO_SAFE = True
     extra_system = ""
     stop_rw = None
@@ -1043,6 +1049,7 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
         stop_rw = threading.Event()
         threading.Thread(target=_research_writer, args=(plan, start, total_seconds, stop_rw), daemon=True).start()
     q = task
+    last_checkin = start
     try:
         while True:
             history.append({"role": "user", "content": q})
@@ -1071,19 +1078,27 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
             if remaining <= 0:
                 print(f"\n{DIM}  (autowork: {hours:g}h is up){RESET}")
                 break
-            wait = min(interval, remaining)
-            print(f"{DIM}  (autowork: next check-in in {wait / 60:.0f}m; Ctrl+C to stop){RESET}")
-            time.sleep(wait)
+            now = time.time()
+            due_checkin = now - last_checkin >= interval
+            if due_checkin:
+                last_checkin = now
             if plan is not None:
-                idx, _ = _research_slice(plan, total_seconds, time.time() - start)
+                idx, _ = _research_slice(plan, total_seconds, now - start)
                 kw = plan["keywords"][idx]
                 where = ", ".join(plan["platforms"])
-                q = (f"Check in: write a short paragraph on exactly what you've found on \"{kw}\" so far "
-                     f"(searching {where}) and where things stand, then keep going -- stay on \"{kw}\" "
-                     f"unless you've already covered it well, in which case move on to the next keyword.")
+                if due_checkin:
+                    q = (f"Check in: write a short paragraph on exactly what you've found on \"{kw}\" so far "
+                         f"(searching {where}) and where things stand, then keep going -- stay on \"{kw}\" "
+                         f"unless you've already covered it well, in which case move on to the next keyword.")
+                else:
+                    q = f"Keep going on \"{kw}\" (searching {where})."
             else:
-                q = ("Check in: write a short paragraph on exactly what you've done since your last message "
-                     "and where things stand, then keep going with the task.")
+                if due_checkin:
+                    q = ("Check in: write a short paragraph on exactly what you've done since your last "
+                         "message and where things stand, then keep going with the task.")
+                else:
+                    q = "Keep going with the task."
+            time.sleep(1.0)                                 # a one-second breather, not a 20-minute nap
     except KeyboardInterrupt:
         print(f"\n{DIM}  (autowork stopped early){RESET}")
     finally:
