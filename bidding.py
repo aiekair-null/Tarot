@@ -32,6 +32,7 @@ import eyes
 import hands
 import netsense
 import runner
+import x11
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
           "You talk like an old-world traveling fortune teller from a candlelit caravan: warm, theatrical and "
@@ -169,101 +170,24 @@ INPUT_ROWS = int(os.environ.get("VEYRA_INPUT_ROWS", "10"))
 _shape = {}
 
 
-def _wm_run(cmd, timeout=3):
-    try:
-        return subprocess.run(cmd, capture_output=True, timeout=timeout).returncode == 0
-    except Exception:
-        return False
-
-
 def _display_size():
-    """(width, height) of the screen in pixels, or None."""
-    try:
-        if shutil.which("xdotool"):
-            w, h = subprocess.run(["xdotool", "getdisplaygeometry"], capture_output=True, text=True,
-                                  timeout=2).stdout.split()
-            return int(w), int(h)
-    except Exception:
-        pass
-    try:
-        if shutil.which("xrandr"):
-            m = re.search(r"current (\d+) x (\d+)",
-                          subprocess.run(["xrandr"], capture_output=True, text=True, timeout=2).stdout)
-            if m:
-                return int(m.group(1)), int(m.group(2))
-    except Exception:
-        pass
-    try:
-        if shutil.which("wmctrl"):                        # works even without xdotool or xrandr installed
-            m = re.search(r"DG:\s*(\d+)x(\d+)",
-                          subprocess.run(["wmctrl", "-d"], capture_output=True, text=True, timeout=2).stdout)
-            if m:
-                return int(m.group(1)), int(m.group(2))
-    except Exception:
-        pass
-    return None
+    """(width, height) of the screen in pixels, or None. Talks to X11 directly via python-xlib -- see x11.py."""
+    return x11.display_size()
 
 
 def _find_window(title):
-    """(x, y, w, h) of the window whose title contains `title`, via wmctrl (preferred, no window id needed)
-    or xdotool, or None if neither is installed or no such window is up yet."""
-    if shutil.which("wmctrl"):
-        try:
-            for ln in subprocess.run(["wmctrl", "-lG"], capture_output=True, text=True, timeout=2).stdout.splitlines():
-                parts = ln.split(None, 7)
-                if len(parts) >= 8 and title in parts[7]:
-                    return int(parts[2]), int(parts[3]), int(parts[4]), int(parts[5])
-        except Exception:
-            pass
-    if shutil.which("xdotool"):
-        try:
-            ids = subprocess.run(["xdotool", "search", "--name", title], capture_output=True, text=True,
-                                 timeout=2).stdout.split()
-            if ids:
-                g = dict(ln.split("=", 1) for ln in subprocess.run(
-                    ["xdotool", "getwindowgeometry", "--shell", ids[-1]], capture_output=True, text=True,
-                    timeout=2).stdout.splitlines() if "=" in ln)
-                return int(g["X"]), int(g["Y"]), int(g["WIDTH"]), int(g["HEIGHT"])
-        except Exception:
-            pass
-    return None
+    """(x, y, w, h) of the window whose title contains `title`, or None if there's no such window (yet)."""
+    return x11.find_window(title)
 
 
 def _place(title, x, y, w, h):
-    """Move and resize the window with this title. wmctrl first (works by title alone); xdotool as a fallback."""
-    if shutil.which("wmctrl") and _wm_run(["wmctrl", "-r", title, "-e", f"0,{x},{y},{w},{h}"]):
-        return True
-    ok = False
-    if shutil.which("xdotool"):
-        try:
-            for wid in subprocess.run(["xdotool", "search", "--name", title], capture_output=True, text=True,
-                                      timeout=2).stdout.split():
-                _wm_run(["xdotool", "windowmove", wid, str(x), str(y)])
-                _wm_run(["xdotool", "windowsize", wid, str(w), str(h)])
-                ok = True
-        except Exception:
-            pass
-    return ok
+    """Move and resize the window with this title."""
+    return x11.place(title, x, y, w, h)
 
 
 def _focus(title):
     """Raise and give keyboard focus to the window with this title, so you can type without clicking it first."""
-    if shutil.which("wmctrl"):
-        try:
-            if subprocess.run(["wmctrl", "-a", title], capture_output=True, timeout=2).returncode == 0:
-                return True
-        except Exception:
-            pass
-    if shutil.which("xdotool"):
-        try:
-            ids = subprocess.run(["xdotool", "search", "--name", title], capture_output=True, text=True,
-                                 timeout=2).stdout.split()
-            if ids:
-                _wm_run(["xdotool", "windowactivate", ids[-1]])
-                return True
-        except Exception:
-            pass
-    return False
+    return x11.focus(title)
 
 
 def _keep_input_focused(title):
@@ -278,19 +202,19 @@ def _keep_input_focused(title):
 
 def _shape_before_opening():
     """Title and resize THIS window (to an exact 10-row height, by its own font) before her window opens, and
-    work out where both windows should sit. Needs wmctrl or xdotool (X11). Returns why it didn't happen, or
-    "" on success, so open_her_window() can tell you instead of silently doing nothing."""
+    work out where both windows should sit. Needs an X11 display, talked to directly via python-xlib (x11.py
+    -- a plain `pip install`, never pacman). Returns why it didn't happen, or "" on success, so
+    open_her_window() can tell you instead of silently doing nothing."""
     if os.environ.get("VEYRA_BIG") == "0":
         return "VEYRA_BIG=0"
-    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
-        return "no desktop session"
     try:
         sys.stdout.write(f"\x1b]0;{INPUT_TITLE}\x07\x1b[8;{INPUT_ROWS};100t")
         sys.stdout.flush()
     except Exception:
         pass
-    if not (shutil.which("wmctrl") or shutil.which("xdotool")):
-        return "neither wmctrl nor xdotool is installed"
+    reason = x11.ensure(why="Arranging her windows into a grid")
+    if reason:
+        return reason
     size = _display_size()
     if not size:
         return "couldn't read the screen size"
@@ -432,25 +356,23 @@ def utf8():
 
 
 def maximize():
-    """Make her window as big as it can be: maximize the terminal (works in xterm-style terminals, and through
-    wmctrl / xdotool / sway / i3 when they are installed). VEYRA_BIG=0 turns this off."""
+    """Make her window as big as it can be: maximize the terminal (works in xterm-style terminals), plus a
+    window-manager-level maximize -- sway/i3's own IPC when one of those is running (a true fullscreen, which
+    those window managers do better than EWMH maximize), otherwise straight X11 via python-xlib (x11.py).
+    VEYRA_BIG=0 turns this off."""
     if os.environ.get("VEYRA_BIG", "1") == "0" or not sys.stdout.isatty() or os.name == "nt":
         return
     try:
         sys.stdout.write("\x1b[9;1t")                      # the xterm "maximize window" request
         sys.stdout.flush()
-        import subprocess
-        tried = [["wmctrl", "-r", ":ACTIVE:", "-b", "add,maximized_vert,maximized_horz"],
-                 ["xdotool", "getactivewindow", "windowstate", "--add", "MAXIMIZED_VERT", "--add", "MAXIMIZED_HORZ"]]
-        if os.environ.get("SWAYSOCK"):
-            tried.insert(0, ["swaymsg", "fullscreen", "enable"])
-        elif os.environ.get("I3SOCK"):
-            tried.insert(0, ["i3-msg", "fullscreen", "enable"])
-        if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
-            for cmd in tried:
-                if shutil.which(cmd[0]):
-                    subprocess.run(cmd, capture_output=True, timeout=3)
-                    break
+        if os.environ.get("SWAYSOCK") and shutil.which("swaymsg"):
+            subprocess.run(["swaymsg", "fullscreen", "enable"], capture_output=True, timeout=3)
+        elif os.environ.get("I3SOCK") and shutil.which("i3-msg"):
+            subprocess.run(["i3-msg", "fullscreen", "enable"], capture_output=True, timeout=3)
+        elif os.environ.get("DISPLAY"):
+            if not x11.available():
+                x11.ensure(why="Maximizing her window")
+            x11.maximize_active()
         time.sleep(0.35)                                      # let the window settle before we measure it
     except Exception:
         pass
