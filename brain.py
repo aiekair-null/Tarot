@@ -152,6 +152,61 @@ class NoThink:
         text, self.buf = ("" if self.inside else self.buf), ""
         return [text] if text and (self.started or text.strip()) else []
 
+
+class ThinkTap:
+    """Same tag-finding as NoThink, but tags each piece (is_think, text) instead of dropping the <think>
+    content -- so a caller that wants to show her reasoning live can, while one that doesn't still gets a
+    clean answer out of the (False, text) pieces."""
+    OPEN, CLOSE = NoThink.OPEN, NoThink.CLOSE
+    _partial = staticmethod(NoThink._partial)
+
+    def __init__(self):
+        self.buf, self.inside, self.started = "", False, False
+
+    def feed(self, piece):
+        self.buf += piece
+        out = []
+        while True:
+            tag = self.CLOSE if self.inside else self.OPEN
+            if self.inside:
+                i = self.buf.find(self.CLOSE)
+                if i < 0:
+                    keep = len(self.CLOSE) - 1
+                    text, self.buf = self.buf[:-keep] if keep else self.buf, self.buf[-keep:] if keep else ""
+                    if text:
+                        out.append((True, text))
+                    break
+                think, self.buf = self.buf[:i], self.buf[i + len(self.CLOSE):]
+                if think:
+                    out.append((True, think))
+                self.inside = False
+                if not self.started:
+                    self.buf = self.buf.lstrip()
+                continue
+            i, j = self.buf.find(self.OPEN), self.buf.find(self.CLOSE)
+            if j >= 0 and (i < 0 or j < i):          # a stray closing tag: just remove it
+                self.buf = self.buf[:j] + self.buf[j + len(self.CLOSE):]
+                continue
+            if i >= 0:
+                if self.buf[:i]:
+                    out.append((False, self.buf[:i]))
+                self.buf, self.inside = self.buf[i + len(self.OPEN):], True
+                continue
+            keep = max(self._partial(self.buf, self.OPEN), self._partial(self.buf, self.CLOSE))
+            text, self.buf = (self.buf[:-keep], self.buf[-keep:]) if keep else (self.buf, "")
+            if not self.started:
+                text = text.lstrip()
+            if text:
+                self.started = True
+                out.append((False, text))
+            break
+        return out
+
+    def flush(self):
+        text, self.buf = self.buf, ""
+        return [(self.inside, text)] if text else []
+
+
 class Brain:
     def __init__(self, connect=True):
         self.lock = threading.RLock()
@@ -247,10 +302,14 @@ class Brain:
         name = (getattr(self, "label", "") + " " + str(getattr(self, "model", ""))).lower()
         return any(k in name for k in ("qwen3", "qwq", "deepseek-r1", "-r1"))
 
-    def stream(self, msgs, max_tokens=600, temperature=0.8, wait=True, _control=False):
+    def stream(self, msgs, max_tokens=600, temperature=0.8, wait=True, _control=False, show_think=False):
         """Yield text pieces as they are generated. wait=False yields nothing if the model is busy.
         The control room (Ctrl+W) can pause it between tokens and tunes how it samples;
-        _control=True is the control room's own agent talking, which is never paused or tuned."""
+        _control=True is the control room's own agent talking, which is never paused or tuned.
+        show_think=True leaves her reasoning (Qwen3's <think> block) turned on and yields (is_think, text)
+        tuples instead of plain strings, so a caller that wants to show her thinking process live can;
+        leave it False (the default, unchanged for every other caller) for a plain string stream with the
+        reasoning stripped out before you ever see it."""
         if not self.online:
             return
         if not self.lock.acquire(blocking=wait):
@@ -264,19 +323,19 @@ class Brain:
             elif note:
                 msgs.insert(0, {"role": "system", "content": note.strip()})
             max_tokens = control.max_tokens(max_tokens)
-        if self.thinks():                           # Qwen3: answer straight away, no reasoning out loud
+        if self.thinks() and not show_think:         # Qwen3: answer straight away, no reasoning out loud
             msgs = [dict(m) for m in msgs]
             if msgs and msgs[0].get("role") == "system":
                 msgs[0]["content"] = msgs[0]["content"].rstrip() + "\n/no_think"
             else:
                 msgs.insert(0, {"role": "system", "content": "/no_think"})
         tune = {} if _control else control.sampling(self.kind)
-        flt = NoThink()
+        flt = ThinkTap() if show_think else NoThink()
 
         def out(piece):
             if not _control:
                 control.gate()                      # Ctrl+W: hold here until the control room closes
-                control.saw(piece)
+                control.saw(piece if isinstance(piece, str) else piece[1])
             return piece
         try:
             if self.kind == "llama":
@@ -301,7 +360,7 @@ class Brain:
                 body = {"model": self.model, "messages": msgs, "max_tokens": max_tokens,
                         "temperature": temperature, "stream": True, **tune}
                 if self.kind == "ollama" and self.thinks():
-                    body["think"] = False
+                    body["think"] = show_think
                 req = urllib.request.Request(self.url + "/chat/completions", json.dumps(body).encode(),
                                              {"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=600) as r:
