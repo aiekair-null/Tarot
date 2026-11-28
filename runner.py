@@ -169,6 +169,8 @@ def watch_main(title, stream_path):
     sys.stdout.write(f"\x1b]0;{title}\x07")
     print(f"{P}V E Y R A{R}  {D}{title} · output from programs she opens appears here{R}\n")
     pos = stream_path.stat().st_size if stream_path.exists() else 0
+    standby, blink_on, last_blink = True, True, 0.0
+    label = f"{D}  ● standby — nothing opened yet{R}"
     try:
         while True:
             try:
@@ -182,6 +184,9 @@ def watch_main(title, stream_path):
                     pos = n
                     quit_now = QUIT in data
                     data = data.replace(QUIT, b"")
+                    if standby and data.strip():
+                        sys.stdout.write("\r" + " " * (len(label) - len(D) - len(R)) + "\r")
+                        standby = False
                     os.write(1, data)
                     if quit_now:
                         print(f"\n{D}(chat closed; this window closes too){R}")
@@ -189,6 +194,12 @@ def watch_main(title, stream_path):
                         return
             except OSError:
                 pass
+            if standby and time.time() - last_blink > 0.6:
+                last_blink = time.time()
+                blink_on = not blink_on
+                pad = " " * (len(label) - len(D) - len(R))
+                sys.stdout.write("\r" + (label if blink_on else pad))
+                sys.stdout.flush()
             time.sleep(0.1)
     except KeyboardInterrupt:
         pass

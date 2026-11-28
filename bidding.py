@@ -298,34 +298,45 @@ def _shape_before_opening():
     time.sleep(0.3)                                          # let the row-resize above actually land
     g = _find_window(INPUT_TITLE)
     h_in = g[3] if g else max(150, sh // 6)                   # a reasonable guess if we can't measure it
-    square = max(100, min(sw, sh - h_in))                     # the largest square that still leaves room below
-    _shape.update(square=square, x=(sw - square) // 2, h_in=h_in, sw=sw)
+    # a 2x2 grid: output + action squares on top, input + vitals (both h_in tall) underneath them
+    square = max(100, min(sh - h_in, sw // 2))
+    _shape.update(square=square, x=(sw - 2 * square) // 2, h_in=h_in, sw=sw)
     return ""
 
 
 def _dock_rectangle_to_square(square, h_in):
-    """While chat runs: if Veyra-output (the square) moves, slide the input rectangle to stay docked right
-    beneath it. Moving the input rectangle on its own never moves the square back."""
+    """While chat runs: if Veyra-output (the top-left square) moves, slide the other three windows (input,
+    action, vitals) to stay docked in a grid around it. Moving any of the other three on its own never moves
+    the rest back."""
     last = None
     while WIN is not None:
         time.sleep(0.4)
         g = _find_window(runner.TITLE)
         if g and (g[0], g[1]) != last:
             last = (g[0], g[1])
-            _place(INPUT_TITLE, g[0], g[1] + g[3], g[2], h_in)
+            x, y = g[0], g[1]
+            _place(INPUT_TITLE, x, y + g[3], g[2], h_in)
+            ax = x + g[2]
+            if hands.action_window_open():
+                _place(hands.ACTION_TITLE, ax, y, square, square)
+            if hands.vitals_window_open():
+                _place(hands.VITALS_TITLE, ax, y + square, square, h_in)
 
 
 def _place_after_opening():
-    """Her window exists now: put it in the square up top, and the input window in the rectangle right below
-    it, same width, then start watching so the rectangle follows if the square is moved."""
+    """Her window exists now: lay out the 2x2 grid -- output (top-left) and action (top-right) as matching
+    squares, input (bottom-left) and vitals (bottom-right) as matching h_in-tall rectangles beneath them --
+    then start watching so the other three follow if the output square is moved."""
     if "square" not in _shape:
         return
     square, x, h_in = _shape["square"], _shape["x"], _shape["h_in"]
     _place(runner.TITLE, x, 0, square, square)
     _place(INPUT_TITLE, x, square, square, h_in)
-    sw = _shape.get("sw")
-    if sw and hands.vitals_window_open() and sw - (x + square) >= 160:
-        _place(hands.VITALS_TITLE, x + square, 0, sw - (x + square), square)
+    ax = x + square
+    if hands.action_window_open():
+        _place(hands.ACTION_TITLE, ax, 0, square, square)
+    if hands.vitals_window_open():
+        _place(hands.VITALS_TITLE, ax, square, square, h_in)
     threading.Thread(target=_dock_rectangle_to_square, args=(square, h_in), daemon=True).start()
 
 
@@ -390,6 +401,9 @@ def open_her_window():
     WIN = _Win()
     WIN.mine = mine
     if mine:
+        aerr = hands.open_action_window()
+        if aerr:
+            print(f"   {DIM}(no action window: {aerr}){RESET}")
         verr = hands.open_vitals_window()
         if verr:
             print(f"   {DIM}(no vitals window: {verr}){RESET}")
