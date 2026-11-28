@@ -46,6 +46,18 @@ HOW_WRITE = ("\nYOU CAN WRITE FILES ON THIS COMPUTER -- code, configs, notes, an
              "needs their yes. There is no partial edit yet -- write the whole file every time, even to change "
              "one line. Use WRITE for files, RUN for commands and installs. If what they want needs both (write "
              "a script, then run it), do one tool call at a time and wait for each RESULT.")
+
+HOW_ASK = ("\nIF SOMETHING IS BEYOND YOU, YOU CAN ASK CLAUDE. Write ONE line and stop:\n"
+           "ASK: <your question, with enough context to be answered without seeing this chat>\n"
+           "The person approves it first -- it's posted as a public GitHub issue on this project's repo, "
+           "labeled so Claude can find it. Claude does not watch for these as they come in; the person has to "
+           "go ask Claude to check, in a session of their own, before an answer appears. Use this rarely, only "
+           "when you're genuinely stuck on something that needs a bigger model or a human's judgment -- not "
+           "for things you could work out yourself, and never as a substitute for just answering.")
+
+REPO = "aiekair-null/Tarot"
+ASK_LABEL = "veyra-question"
+
 BROWSERS = ["firefox", "librewolf", "chromium", "google-chrome-stable", "google-chrome", "brave", "vivaldi",
             "qutebrowser", "falkon", "epiphany", "midori", "netsurf"]
 
@@ -329,6 +341,46 @@ def write_file(path, content):
         return f"(wrote {n} line{'s' if n != 1 else ''} to {target}{' (overwritten)' if existed else ''})"
     except (OSError, ValueError) as e:                 # a bad path (null byte, etc.) raises ValueError, not OSError
         return f"(could not write {path}: {e})"
+
+
+def approve_ask(question):
+    """Ask before posting a question to Claude as a GitHub issue. Returns True to post it, False to refuse."""
+    print(f"\n{BLUE}  ┌ she wants to ask Claude a question (a public GitHub issue on {REPO}):{RESET}\n"
+          f"{WHITE}  │ {question.strip()[:300]}{RESET}")
+    print(f"{RED}  │ the repo is public -- anyone can read this once it's posted.{RESET}")
+    while True:
+        try:
+            a = input(rl_safe(f"{BLUE}  └ post it? [y]es / [n]o: {RESET}")).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        if a in ("y", "yes"):
+            return True
+        if a in ("n", "no", ""):
+            return False
+
+
+def ask_claude(question):
+    """Post the question as a labeled GitHub issue on the project repo, for Claude to find and answer the
+    next time the person asks it to look. Needs `gh` installed and authenticated on this machine (whatever
+    account was used to set the project up). Returns a result line for her."""
+    question = question.strip()
+    if not question:
+        return "(couldn't ask Claude: no question)"
+    if not shutil.which("gh"):
+        return "(couldn't ask Claude: the `gh` command isn't installed)"
+    title = question.splitlines()[0][:70]
+    body = (f"{question}\n\n---\nAsked by Veyra, on Daniel's machine. Claude: answer with a comment on this "
+            f"issue, then close it.")
+    try:
+        r = subprocess.run(["gh", "issue", "create", "--repo", REPO, "--title", title, "--body", body,
+                            "--label", ASK_LABEL], capture_output=True, text=True, timeout=30)
+    except Exception as e:
+        return f"(couldn't ask Claude: {e})"
+    if r.returncode != 0:
+        return f"(couldn't ask Claude: {(r.stderr or 'unknown error').strip()[:200]})"
+    url = r.stdout.strip() or "(posted, but gh didn't return a link)"
+    return f"(asked Claude: {url})"
 
 
 def approve(cmd):

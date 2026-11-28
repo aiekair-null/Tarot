@@ -494,7 +494,7 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:", "RUN:", "OPEN:", "SCREEN:", "WRITE:") + netsense.TOOLS
+    TAGS = ("REMEMBER:", "NEXT:", "RUN:", "OPEN:", "SCREEN:", "WRITE:", "ASK:") + netsense.TOOLS
 
     def __init__(self):
         self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
@@ -564,6 +564,10 @@ class Printer:
             path = s.lstrip("*`")[6:].strip().strip("`<>*")
             if path:
                 self.write_path, self.write_lines, self.write_fence = path, [], False
+        elif u.lstrip("*`").startswith("ASK:") and hands.ON:
+            q = s.lstrip("*`")[4:].strip().strip("`<>*")
+            if q:
+                self.tool = self.tool or ("ASK", q)
         elif any(u.lstrip("*`").startswith(t) for t in netsense.TOOLS):
             self.tool = self.tool or netsense.find_call(s)
         elif u.startswith("NEXT:"):
@@ -782,6 +786,10 @@ def _write_ok(result):
     return not result.startswith("(could not")
 
 
+def _ask_ok(result):
+    return result.startswith("(asked Claude:") and "couldn't" not in result
+
+
 def speak(b, msgs, unicode_ok, rounds=8):
     """Her answer, letting her search / read / watch / look / run / open up to `rounds` times before she replies."""
     msgs, looked, notes = list(msgs), [], []
@@ -830,6 +838,15 @@ def speak(b, msgs, unicode_ok, rounds=8):
                 looked.append(f"wrote {path}")
                 (good if _write_ok(result) else bad)(result.strip())
             arg = path
+        elif tool == "ASK":
+            doing(f"she asks leave to ask Claude: {arg[:60]}")
+            if not hands.approve_ask(arg):
+                result = "The person REFUSED to let you ask Claude. Don't post it; try answering yourself or ask what they want."
+                bad("refused; she will answer it herself")
+            else:
+                result = hands.ask_claude(arg)
+                looked.append("asked Claude a question")
+                (good if _ask_ok(result) else bad)(result.strip())
         elif tool == "SCREEN":
             doing("she asks leave to look at your screen")
             if not eyes.approve(arg):
@@ -995,7 +1012,7 @@ def _main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + codex.HOW + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + (hands.HOW + hands.HOW_OPEN + hands.HOW_WRITE + hands.HOW_ASK + codex.HOW + eyes.HOW if hands.ON else "") + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
     _B.append(b)
