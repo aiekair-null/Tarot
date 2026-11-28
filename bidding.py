@@ -1204,7 +1204,10 @@ def _autowork(b, history, system, unicode_ok, hours, minutes, task, plan=None):
                 pass
 
 
-def fit(history, budget=14000):
+FIT_BUDGET = 14000                                   # ~4000 tokens she's guaranteed to still see, every turn
+
+
+def fit(history, budget=FIT_BUDGET):
     """The newest messages that fit her memory window (about 4000 tokens), always starting with the person."""
     keep, used = [], 0
     for m in reversed(history):
@@ -1334,7 +1337,8 @@ def _main():
     open_her_window()
     print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  "
           f"/autowork [Nh] [Mm] has her work unattended, checking in on her own (menu includes a "
-          f"research mode: pick platforms, give keywords)  ·  type quit (or Ctrl+C) to leave{RESET}\n")
+          f"research mode: pick platforms, give keywords)  ·  /summarize sums up the chat so you can start "
+          f"fresh without losing it  ·  type quit (or Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
 
     def _wake():
@@ -1345,6 +1349,7 @@ def _main():
     threading.Thread(target=_wake, daemon=True).start()
 
     history, prompt, uni = [], "What is thy bidding?", utf8()
+    low_room_warned = False                          # so the "my head's getting full" nudge fires once, not every turn
     once = " ".join(sys.argv[1:]).strip()
     while True:
         if once:
@@ -1374,6 +1379,7 @@ def _main():
             continue
         if q == "/clear":
             history = []
+            low_room_warned = False
             print(f"{DIM}(forgotten){RESET}")
             continue
         if not ready.is_set():
@@ -1391,6 +1397,38 @@ def _main():
                 if not task:
                     continue
             _autowork(b, history, system, uni, hours, minutes, task, plan)
+            continue
+        if q.lower() in ("/summarize", "/summary"):
+            if not history:
+                print(f"{DIM}  (nothing to sum up yet){RESET}")
+                continue
+            _status("she writes down everything so far, for a fresh chat to pick up")
+            try:
+                ctx_tokens = b.llm.n_ctx() if b.llm is not None else None
+            except Exception:
+                ctx_tokens = None
+            # this is a one-shot pass with no tool rounds to leave room for, so it can draw on far more of
+            # her actual context window than the normal per-turn FIT_BUDGET allows
+            budget = max(FIT_BUDGET, int(ctx_tokens * 3.3 * 0.6)) if ctx_tokens else FIT_BUDGET
+            ask = ("Sum up this whole conversation for yourself in a brand new chat that will remember none of "
+                   "it: who the person is and what they're working on, decisions already settled, anything "
+                   "still open or pending, and whatever you'd need so you don't repeat yourself or contradict "
+                   "something already agreed. Write it plainly as a note your future self will read cold -- "
+                   "complete and specific, not a performance, no need to stay in character for this one.")
+            msgs = [{"role": "system", "content": system}] + fit(history, budget=budget) + \
+                   [{"role": "user", "content": ask}]
+            try:
+                print(f"\n{GOLD}{'-' * max(20, min(60, cols()))}{RESET}")
+                speak(b, msgs, uni)
+            except Exception as e:
+                doing("something snagged; she works out what went wrong")
+                with OUT():
+                    print(RESET + f"\n{LILAC}{diagnose(b, e, 'summarizing')}{RESET}\n")
+                continue
+            print(f"{GOLD}{'-' * max(20, min(60, cols()))}{RESET}")
+            print(f"{DIM}  copy everything above this line into your first message in a new chat, then "
+                  f"/clear (or restart her) here.{RESET}\n")
+            low_room_warned = False
             continue
         history.append({"role": "user", "content": q})
         if WIN is not None:
@@ -1416,6 +1454,14 @@ def _main():
                 pass
         prompt = pr.next or "What is thy bidding?"
         history.append({"role": "assistant", "content": reply})
+        # once she's carrying more than fit() will hand her next turn, she's starting to lose the edges of
+        # this chat -- say so once, in her own voice, rather than let it go on quietly dropping older turns
+        if not low_room_warned and sum(len(m["content"]) for m in history) > FIT_BUDGET:
+            low_room_warned = True
+            with OUT():
+                print(f"\n{LILAC}My head's getting full, dear one -- I'm starting to lose the edges of what "
+                      f"we've said. Say {GOLD}/summarize{LILAC} and I'll write it all down so you can start a "
+                      f"new chat without us losing the thread.{RESET}\n")
         if once:
             break
 
