@@ -211,7 +211,8 @@ def watch_main(title, stream_path):
 
 V_GOLD, V_CYAN, V_RED, V_DIM, V_WHITE, V_RESET = ("\x1b[38;5;220m", "\x1b[38;5;51m", "\x1b[38;5;203m",
                                                    "\x1b[38;5;245m", "\x1b[38;5;231m", "\x1b[0m")
-BLOCKS = " ▁▂▃▄▅▆▇█"          # 9 levels, for sparkline graphs
+# 5 levels for sparkline graphs -- plain ASCII, same reasoning as _bar(): no Unicode glyph to go missing.
+BLOCKS = " .:+#"
 
 
 def _cpu_snapshot():
@@ -251,14 +252,18 @@ def _sparkline(values, scale_max=None):
     Self-scales to the loudest value seen unless `scale_max` pins the ceiling (e.g. 100 for a percentage)."""
     if not values:
         return ""
+    top = len(BLOCKS) - 1
     m = scale_max if scale_max else (max(values) or 1)
-    return "".join(BLOCKS[max(0, min(8, round(v / m * 8)))] for v in values)
+    return "".join(BLOCKS[max(0, min(top, round(v / m * top)))] for v in values)
 
 
 def _bar(pct, width):
+    """Plain ASCII, on purpose -- Unicode block-drawing characters fall back to an empty "tofu" box on a
+    font that's missing that glyph, and there's no reliable way from here to know what font a window is
+    using, so this sticks to characters every monospace font has."""
     pct = 0 if pct is None else max(0.0, min(100.0, pct))
     fill = int(round(width * pct / 100))
-    return V_RED + "█" * fill + V_DIM + "░" * (width - fill) + V_RESET
+    return V_RED + "#" * fill + V_DIM + "-" * (width - fill) + V_RESET
 
 
 def _fmt_time(secs):
@@ -283,9 +288,10 @@ def _wrap(text, width):
 
 def vitals_main(title, state_path):
     """A small htop-like window: live per-core CPU usage (every logical core, audited straight from
-    /proc/stat -- not just the one process doing her thinking), tokens generated and their rate, how long
-    she's been awake, and a small scrolling graph of overall CPU and token-rate history. Redraws in place
-    every half second. Closes when the chat marks itself no longer running, or on Ctrl+C."""
+    /proc/stat -- not just the one process doing her thinking) and a small scrolling graph of overall CPU and
+    token-rate history. Kept deliberately short (no token/uptime text lines) so every core stays visible even
+    in a window as short as the input box. Redraws in place every half second. Closes when the chat marks
+    itself no longer running, or on Ctrl+C."""
     state_path = Path(state_path)
     pidfile = state_path.with_suffix(".pid")
     if pidfile.exists():
@@ -325,30 +331,23 @@ def vitals_main(title, state_path):
                 cpu_hist.append(overall_pct)
             tok_hist.append(rate)
 
-            uptime = now - st.get("start", now)
             cols = max(44, shutil.get_terminal_size((60, 20)).columns)
-            model = st.get("model", "")
 
-            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET}  {V_DIM}vitals{V_RESET}\n"]
+            out = [f"\x1b[H\x1b[J{V_GOLD}V E Y R A{V_RESET} {V_DIM}vitals" +
+                   (f" · {len(cores)} cores{V_RESET}" if cores else f"{V_RESET}")]
             bw = max(8, min(22, cols - 20))
             if not cores:
-                out.append(f"  {V_DIM}cpu{V_RESET}      {V_DIM}n/a (couldn't read /proc/stat){V_RESET}")
+                out.append(f"  {V_DIM}cpu n/a (couldn't read /proc/stat){V_RESET}")
             else:
-                out.append(f"  {V_DIM}cpu -- {len(cores)} cores{V_RESET}")
                 for c, pct in zip(cores, core_pcts):
                     out.append(f"  {V_DIM}{c:<6}{V_RESET} {_bar(pct, bw)} "
                                f"{V_WHITE}{(0.0 if pct is None else pct):5.1f}%{V_RESET}")
-            out.append(f"\n  {V_DIM}tokens{V_RESET}  {V_WHITE}{tokens:,}{V_RESET} total  {V_DIM}·{V_RESET} "
-                        f"{V_CYAN}{rate:.1f}{V_RESET} tok/s")
-            out.append(f"  {V_DIM}uptime{V_RESET}  {V_WHITE}{_fmt_time(uptime)}{V_RESET}" +
-                       (f"  {V_DIM}· {model}{V_RESET}" if model else ""))
 
-            gw = max(10, cols - 11)
+            gw = max(10, cols - 7)
             cpu_line = _sparkline(list(cpu_hist)[-gw:], scale_max=100)
             tok_line = _sparkline(list(tok_hist)[-gw:])
-            out.append(f"\n  {V_DIM}graph{V_RESET}")
-            out.append(f"  {V_RED}cpu{V_RESET}  {V_RED}{cpu_line}{V_RESET}")
-            out.append(f"  {V_CYAN}tok{V_RESET}  {V_CYAN}{tok_line}{V_RESET}\n")
+            out.append(f"  {V_RED}cpu{V_RESET} {V_RED}{cpu_line}{V_RESET}")
+            out.append(f"  {V_CYAN}tok{V_RESET} {V_CYAN}{tok_line}{V_RESET}")
 
             sys.stdout.write("\n".join(out))
             sys.stdout.flush()
