@@ -31,8 +31,9 @@ HOW_OPEN = ("\nYOU CAN OPEN WINDOWS ON THEIR SCREEN. To show them a web page or 
             "OPEN: <url>              (opens it in their web browser)\n"
             "OPEN: <program> [args]   (starts a desktop program, e.g. OPEN: wireshark)\n"
             "They approve it first. The window is theirs to see and use; you cannot see the screen or click in "
-            "it, so say what they should look at, and use READ to read a page's text yourself. Use OPEN, not RUN, "
-            "for anything that opens a window.")
+            "it, so say what they should look at, and use READ to read a page's text yourself. A program's own "
+            "text output (not a GUI) appears live in a window called Veyra-action, so you can tell them to "
+            "check there. Use OPEN, not RUN, for anything that opens a window.")
 BROWSERS = ["firefox", "librewolf", "chromium", "google-chrome-stable", "google-chrome", "brave", "vivaldi",
             "qutebrowser", "falkon", "epiphany", "midori", "netsurf"]
 
@@ -118,11 +119,24 @@ def open_window_for(target):
         return f"(not opened: {e})"
     if not argv or not shutil.which(argv[0]):
         return f"(not opened: there is no program called '{argv[0] if argv else target}' on this computer)"
-    p = subprocess.Popen(argv, **quiet)
+    err = open_action_window()                            # so its own text output has somewhere to be seen
+    log = None
+    if not err:
+        try:
+            ACTION_STREAM.parent.mkdir(parents=True, exist_ok=True)
+            log = open(ACTION_STREAM, "ab", buffering=0)
+            log.write(f"\n--- {argv[0]} ---\n".encode())
+        except OSError:
+            log = None
+    out = dict(quiet, stdout=log or subprocess.DEVNULL, stderr=log or subprocess.DEVNULL)
+    p = subprocess.Popen(argv, **out)
+    if log:
+        log.close()                                       # the child already has its own dup of the fd
     time.sleep(1.5)
     if p.poll() is not None and p.returncode != 0:
         return f"({argv[0]} closed straight away with exit code {p.returncode}; it may need options or a terminal)"
-    return f"(started {argv[0]} in its own window on their screen, pid {p.pid})"
+    where = " -- its text output appears in the Veyra-action window" if log else ""
+    return f"(started {argv[0]} in its own window on their screen, pid {p.pid}{where})"
 
 
 DANGER = re.compile(r"\bsudo\b|\bsu\b|\brm\s+-\w*[rf]|\bmkfs|\bdd\b|\bshred\b|\bwipefs|\bfdisk|\bparted|"
@@ -131,11 +145,35 @@ DANGER = re.compile(r"\bsudo\b|\bsu\b|\brm\s+-\w*[rf]|\bmkfs|\bdd\b|\bshred\b|\b
                     r"\bgit\s+push\s+(-f|--force)|\biptables\s+-F|\bkill\s+-9\s+1\b", re.I)
 RED, BLUE, WHITE, DIM, RESET = "\x1b[38;5;203m", "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;245m", "\x1b[0m"
 
-TERMS = [("alacritty", ["-T", "Veyra-output", "-e"]), ("kitty", ["--title", "Veyra-output"]),
-         ("urxvt", ["-title", "Veyra-output", "-e"]), ("xfce4-terminal", ["-T", "Veyra-output", "-x"]),
-         ("gnome-terminal", ["--title", "Veyra-output", "--"]), ("konsole", ["-e"]),
-         ("terminator", ["-T", "Veyra-output", "-x"]), ("st", ["-t", "Veyra-output", "-e"]),
-         ("uxterm", ["-T", "Veyra-output", "-e"]), ("xterm", ["-T", "Veyra-output", "-e"])]
+ACTION_TITLE = "Veyra-action"
+ACTION_STREAM = runner.SPOOL.parent / "action.log"
+ACTION_PIDFILE = ACTION_STREAM.with_suffix(".pid")
+
+
+def _terms_for(title):
+    """Each known terminal emulator's launch args for opening with this exact window title."""
+    return [("alacritty", ["-T", title, "-e"]), ("kitty", ["--title", title]),
+            ("urxvt", ["-title", title, "-e"]), ("xfce4-terminal", ["-T", title, "-x"]),
+            ("gnome-terminal", ["--title", title, "--"]), ("konsole", ["-e"]),
+            ("terminator", ["-T", title, "-x"]), ("st", ["-t", title, "-e"]),
+            ("uxterm", ["-T", title, "-e"]), ("xterm", ["-T", title, "-e"])]
+
+
+TERMS = _terms_for("Veyra-output")             # kept for anything that still reads this name directly
+
+
+def _spawn_terminal(title, argv):
+    """Try each known terminal emulator in turn, launching argv inside one titled `title`. True once
+    something launches (not proof it stays open or that argv ran without error)."""
+    prefer = os.environ.get("TERMINAL", "").split("/")[-1]
+    order = sorted(_terms_for(title), key=lambda t: t[0] != prefer)
+    for name, args in order:
+        path = shutil.which(name)
+        if path:
+            subprocess.Popen([path, *args, *argv], cwd=str(Path.home()),
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True
+    return False
 
 
 def window_open():
@@ -151,19 +189,34 @@ def open_window():
         return ""
     if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
         return "no desktop session to open a window in; open another terminal and run:  veyra out"
-    prefer = os.environ.get("TERMINAL", "").split("/")[-1]
-    order = sorted(TERMS, key=lambda t: t[0] != prefer)
-    for name, args in order:
-        path = shutil.which(name)
-        if path:
-            subprocess.Popen([path, *args, sys.executable, str(HERE / "runner.py")], cwd=str(Path.home()),
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-            for _ in range(60):
-                if window_open():
-                    return ""
-                time.sleep(0.2)
-            break
+    if _spawn_terminal("Veyra-output", [sys.executable, str(HERE / "runner.py")]):
+        for _ in range(60):
+            if window_open():
+                return ""
+            time.sleep(0.2)
     return "couldn't open a terminal window; open another terminal and run:  veyra out"
+
+
+def action_window_open():
+    try:
+        return runner.alive(int(ACTION_PIDFILE.read_text()))
+    except Exception:
+        return False
+
+
+def open_action_window():
+    """Make sure the Veyra-action window (a program's own text output) is up; error text if it can't be."""
+    if action_window_open():
+        return ""
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return "no desktop session to open a window in"
+    argv = [sys.executable, str(HERE / "runner.py"), "watch", ACTION_TITLE, str(ACTION_STREAM)]
+    if _spawn_terminal(ACTION_TITLE, argv):
+        for _ in range(60):
+            if action_window_open():
+                return ""
+            time.sleep(0.2)
+    return "couldn't open a window for program output"
 
 
 def approve(cmd):

@@ -51,7 +51,8 @@ SHOW_THINK = os.environ.get("VEYRA_SHOW_THINK", "1") != "0"     # show her reaso
 CHAT_MODEL = "qwen3-8b-abl"                                # the abliterated Qwen3 8B is her chat brain
 MEMORY = Path(os.environ.get("TAROT_MEMORY", "memory.json"))
 RED = "\x1b[38;5;196m"
-GOLD, LILAC, CYAN, DIM, RESET = "\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;245m", "\x1b[0m"
+GOLD, LILAC, CYAN, RED, DIM, RESET = ("\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;203m",
+                                       "\x1b[38;5;245m", "\x1b[0m")
 
 
 class _Win:
@@ -465,17 +466,12 @@ def pick_model():
     return found.name if found else "none"
 
 
-GLYPHS = "░▒▓◇◆✦✧⌬⍟∴∵"
-
-
 class Wrap:
-    """Word-wraps her text so each line stops about six words short of the right edge. Each word arrives with a
-    small transmutation: a quick flicker of glyphs settling into the real letters, in colours that slide along
-    like her thinking arrow (deep purple -> sky blue -> white) -- the same shimmer the readings use."""
+    """Word-wraps her text so each line stops about six words short of the right edge. Plain cyan, no shimmer
+    or glyph flicker -- just her words, in the one colour the chat window already bracketed the answer in."""
     def __init__(self):
         self.limit = max(30, cols() - 36)                 # stops ~5-6 words short of the edge
         self.col, self.word = 0, ""
-        self.phase = 0
 
     def write(self, s):
         for ch in s:
@@ -488,7 +484,6 @@ class Wrap:
                 if 0 < self.col < self.limit:
                     print(" ", end="", flush=True)
                     self.col += 1
-                    self.phase += 1
             else:
                 self.word += ch
                 if len(self.word) >= self.limit:
@@ -500,28 +495,9 @@ class Wrap:
         if self.col and self.col + len(self.word) > self.limit:
             print(flush=True)
             self.col = 0
-        self._shimmer(self.word)
+        print(self.word, end="", flush=True)
         self.col += len(self.word)
         self.word = ""
-
-    def _shimmer(self, s):
-        """Print s left to right; off a real terminal, or with TAROT_FAST=1, just print it plainly."""
-        if os.environ.get("TAROT_FAST") == "1" or not sys.stdout.isatty():
-            print(s, end="", flush=True)
-            self.phase += len(s)
-            return
-        ramp, n = Wave.RAMP, len(Wave.RAMP)
-        for ch in s:
-            color = ramp[self.phase % n]
-            if random.random() < 0.3:                      # a brief glyph before the real letter settles in
-                sys.stdout.write(f"\x1b[38;5;{color}m{random.choice(GLYPHS)}")
-                sys.stdout.flush()
-                time.sleep(0.005)
-                sys.stdout.write("\b")
-            sys.stdout.write(f"\x1b[38;5;{color}m{ch}")
-            self.phase += 1
-        sys.stdout.write(RESET)
-        sys.stdout.flush()
 
 
 class Printer:
@@ -623,21 +599,18 @@ GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gain
 
 
 class Wave:
-    """While she thinks: a small arrow flies back and forth, growing a tiny bit every frame as it flies, getting
-    faster as it nears full width, until it fills the whole line; then it just shimmers there (deep purple,
-    sky blue and white)."""
+    """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
+    getting faster as it nears full width, until it fills the whole line."""
     SLOW = 4                                                  # 4x slower than the first version
-    RAMP = (53, 54, 55, 56, 57, 63, 69, 75, 111, 117, 153, 195, 231)   # deep purple -> sky blue -> white
 
     def __init__(self, unicode_ok):
         self.dash = "—" if unicode_ok else "-"
-        self.length, self.pos, self.dir, self.w, self.frame = 3.0, 0.0, 1, 0, 0.0
+        self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
         speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
-        self.frame += speed                                   # the shimmer quickens too
         self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
         L = int(self.length)
         full = L >= W
@@ -653,16 +626,7 @@ class Wave:
             elif self.pos <= 0:
                 self.pos, self.dir = 0.0, 1
             x = min(int(self.pos), span)
-        ramp, n = self.RAMP, len(self.RAMP)
-        out = []
-        fr = int(self.frame)
-        for i, ch in enumerate(arrow):                       # a bright glint travels along the arrow
-            j = (i - fr) % (n * 2) if right else (i + fr) % (n * 2)
-            shade = ramp[j if j < n else 2 * n - 1 - j]
-            if (i * 7 + fr) % 23 == 0:
-                shade = 231                                  # an occasional white sparkle
-            out.append(f"\x1b[38;5;{shade}m{ch}")
-        sys.stdout.write("\r" + " " * x + "".join(out) + RESET + " " * (W - x - L))
+        sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
         sys.stdout.flush()
 
     def clear(self):
@@ -822,11 +786,20 @@ def speak(b, msgs, unicode_ok, rounds=8):
                 looked.append("looked at the screen")
             guard = OUTSIDE
         else:
-            what = {"SEARCH": "she searches the web for", "READ": "she reads the page", "YOUTUBE": "she reads the captions of"}[tool]
-            doing(f"{what}: {arg[:70]}")
-            result = netsense.run(pr.tool)
-            looked.append(f"{tool} {arg}")
-            guard = OUTSIDE
+            doing(f"she asks leave to go online: {netsense.LABEL[tool]} {arg[:60]}")
+            allowed = netsense.approve(tool, arg)
+            if allowed is None:
+                result = "The person REFUSED to let you go online for this. Don't look it up; ask them " \
+                         "what they'd like instead or answer from what you already know."
+                doing("refused; she will answer without it")
+            else:
+                arg = allowed
+                what = {"SEARCH": "she searches the web for", "READ": "she reads the page",
+                        "YOUTUBE": "she reads the captions of"}[tool]
+                doing(f"{what}: {arg[:70]}")
+                result = netsense.run((tool, arg))
+                looked.append(f"{tool} {arg}")
+                guard = OUTSIDE
         msgs += [{"role": "assistant", "content": text},
                  {"role": "user", "content": f"RESULT of {tool}: {arg}\n{result}\n\n{guard}(Now answer me from this. "
                                              "Look something else up only if you truly need to.)"}]
