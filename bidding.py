@@ -252,17 +252,15 @@ class Keys:
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
 
 
+GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.02"))   # each pass adds ~2% of the line
+
+
 class Wave:
-    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes),
-    slowly, shimmering as it flies, in a new color every time it starts over."""
+    """While she thinks: an arrow sweeps across and back many times, a little longer each pass,
+    slowly, shimmering deep purple, sky blue and white as it flies."""
     PASSES = 10
     SLOW = 4                                                  # 4x longer than the first version
-    RAMPS = [(52, 88, 124, 160, 196, 203, 210, 217),          # neon red
-             (53, 90, 127, 164, 201, 207, 213, 219),          # magenta
-             (23, 30, 37, 44, 51, 87, 123, 159),              # cyan
-             (94, 130, 166, 172, 208, 214, 220, 228),         # gold
-             (54, 55, 56, 57, 93, 99, 141, 183),              # violet
-             (22, 28, 34, 40, 46, 83, 120, 157)]              # green
+    RAMPS = [(53, 54, 55, 56, 57, 63, 69, 75, 111, 117, 153, 195, 231)]   # deep purple -> sky blue -> white
 
     def __init__(self, unicode_ok):
         self.dash = "—" if unicode_ok else "-"
@@ -272,7 +270,9 @@ class Wave:
         W = max(20, shutil.get_terminal_size((80, 20)).columns - 2)
         self.w = W
         self.frame += 1
-        L = int(3 + (W * 0.92 - 3) * self.k / (self.PASSES - 1))
+        grow = max(1, round(W * GROW))                      # only a little longer each pass
+        top = int(W * 0.92)
+        L = min(top, 3 + grow * self.k)
         right = self.k % 2 == 0
         arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
         span = max(0, W - L)
@@ -292,7 +292,7 @@ class Wave:
         self.pos += max(1, W // 45) / self.SLOW
         if self.pos > span:
             self.pos, self.k = 0.0, self.k + 1
-            if self.k >= self.PASSES:                        # starts over small, in a new color
+            if 3 + grow * self.k > top:                      # nearly full width: start over small, new color
                 self.k, self.color = 0, self.color + 1
 
     def clear(self):
