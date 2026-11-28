@@ -621,42 +621,65 @@ class Keys:
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old)
 
 
-GROW = float(os.environ.get("VEYRA_WAVE_GROW", "0.06"))   # cells the arrow gains every frame while it flies
+GROW = float(os.environ.get("VEYRA_WAVE_GROW", "2.5"))     # cells the arrow gains each time it returns from an edge
 
 
 class Wave:
-    """While she thinks: a small red arrow flies back and forth, growing a tiny bit every frame as it flies,
-    getting faster as it nears full width -- then loops back to a short arrow and keeps bouncing, rather than
-    freezing solid, so a slow model (a long wait for the first token) still shows visible motion the whole
-    time instead of going static partway through."""
+    """While she thinks: a small red arrow flies all the way off one edge of the window, vanishes
+    completely for a moment (as if it carried on into whatever's next to the window -- a program can only
+    ever draw inside its own window, so a true hand-off to a neighboring one isn't something this can
+    actually do; fully disappearing and popping back is the honest version of that idea), then returns from
+    that same edge heading the other way, a bit longer than before. It starts as just a tail and one dash to
+    the arrowhead and grows only at each return, not continuously mid-flight -- so a slow model (a long wait
+    for the first token) still shows a clearly changing animation the whole time instead of a static line."""
     SLOW = 4                                                  # 4x slower than the first version
+    MIN_LEN = 3                                               # tail + one dash + arrowhead, its starting shape
+    GONE_TICKS = 10                                           # ~0.3s fully blank before it reappears
+    TAIL = "o"                                                # plain ASCII stand-in for "*" -- same reason as
+                                                               # the dash below: an unsupported glyph draws as
+                                                               # an empty box on a font that lacks it.
 
     def __init__(self, unicode_ok):
         # Plain "-", unconditionally: unicode_ok only reflects the locale's encoding, not whether this
         # terminal's font actually has a glyph for the fancier em-dash -- on fonts that don't, it's drawn as
         # an empty "tofu" box instead of a clean line.
         self.dash = "-"
-        self.length, self.pos, self.dir, self.w = 3.0, 0.0, 1, 0
+        self.length, self.x, self.dir, self.w = float(self.MIN_LEN), 0.0, 1, 0
+        self.state, self.gone_left = "flying", 0
 
     def tick(self):
         W = max(20, cols() - 2)
         self.w = W
-        if int(self.length) >= W:
-            # Reached full width -- loop back to a short arrow instead of sitting there static.
-            self.length, self.pos, self.dir = 3.0, 0.0, 1
-        speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
-        self.length = min(float(W), self.length + GROW)       # grows as it flies, not at the walls
+        if self.state == "gone":
+            sys.stdout.write("\r" + " " * W)
+            sys.stdout.flush()
+            self.gone_left -= 1
+            if self.gone_left <= 0:
+                self._reappear(W)
+            return
         L = int(self.length)
-        arrow = self.dash * (L - 1) + ">" if self.dir > 0 else "<" + self.dash * (L - 1)
-        span = max(0, W - L)
-        self.pos += max(1, W // 45) / self.SLOW * speed * self.dir
-        if self.pos >= span:
-            self.pos, self.dir = float(span), -1
-        elif self.pos <= 0:
-            self.pos, self.dir = 0.0, 1
-        x = min(int(self.pos), span)
-        sys.stdout.write("\r" + " " * x + RED + arrow + RESET + " " * (W - x - L))
+        arrow = (self.TAIL + self.dash * (L - 2) + ">") if self.dir > 0 else ("<" + self.dash * (L - 2) + self.TAIL)
+        speed = 1 + 3 * (L / W) ** 2                          # 1x when small, up to 4x as it nears full width
+        self.x += max(1, W // 45) / self.SLOW * speed * self.dir
+        xi = int(self.x)
+        left, right = max(0, xi), min(W, xi + L)
+        out = "\r" + " " * W
+        if right > left:
+            visible = arrow[left - xi:right - xi]
+            out = "\r" + " " * left + RED + visible + RESET
+        sys.stdout.write(out)
         sys.stdout.flush()
+        if (self.dir > 0 and xi >= W) or (self.dir < 0 and xi + L <= 0):
+            self.state, self.gone_left = "gone", self.GONE_TICKS
+
+    def _reappear(self, W):
+        """Grow a bit (or reset once it's spanned the full width -- a cap, not a freeze), flip direction, and
+        step back in from the same edge it vanished from, heading the other way."""
+        self.length = self.MIN_LEN if self.length >= W else min(float(W), self.length + GROW)
+        self.dir *= -1
+        L = int(self.length)
+        self.x = float(W) if self.dir < 0 else float(-L)      # back in from the right moving left, or vice versa
+        self.state = "flying"
 
     def clear(self):
         if self.w:
