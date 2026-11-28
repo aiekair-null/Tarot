@@ -261,11 +261,22 @@ and uploads the full-length reading video instead, so this is parked until there
 - The 40 item sprites live in `items.py`.
 
 ## Veyra's hands (`veyra chat`, Linux)
-When you run `veyra chat`, her window opens as large as your desktop can make it, and a second window,
-**Veyra-output**, opens beside it automatically. You type to her in the first window; everything she says — her
-words, her thinking arrow, her grey notes — appears in Veyra-output instead, so your own window stays clear for
-typing. If a second window can't be opened (no desktop session, or no terminal emulator found), she just talks in
-the one window you have.
+When you run `veyra chat`, a second window, **Veyra-output**, opens beside it automatically. You type to her in
+your own window; everything she says — her words, her thinking arrow, her grey notes — appears in Veyra-output
+instead, so your own window stays clear for typing. If a second window can't be opened (no desktop session, or no
+terminal emulator found), she just talks in the one window you have.
+
+**Layout.** Veyra-output takes the largest square your screen allows, up top. Your own window becomes a short,
+wide rectangle of about 10 lines, docked directly beneath it. The two are connected one way: if you move the
+square, the rectangle slides to stay docked under it; if you drag the rectangle on its own, the square is left
+alone. This needs `wmctrl` or `xdotool` installed (either works; `wmctrl` is enough on its own). Without either,
+the windows just open at whatever size and place your window manager gives them. `VEYRA_BIG=0` turns off all of
+this; `VEYRA_INPUT_ROWS` changes the rectangle's height (default 10).
+
+**Her title card.** Above every answer in Veyra-output, she shows a small title card — a dithered starry sky, the
+gold VEYRA wordmark, and her pixel portrait — the same framing her promo videos open on. Her words themselves
+shimmer into place: each one flickers briefly through a few glyphs before settling, in colours that slide from
+deep purple to sky blue to white, the same shimmer a reading uses. A thin gold rule closes out each answer.
 
 You can also use that window yourself: type `!` followed by a command at her prompt (e.g. `!ls -la`) and it runs
 directly in Veyra-output, no asking required, in a terminal that remembers its folder between commands (`cd`

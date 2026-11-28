@@ -197,6 +197,7 @@ def run(b, spread=1, question="", ready=None):
             {"role": "user", "content": describe(spread, cards, impressions, question)}]
     uni = bidding.utf8()
     for turn in range(40):
+        bidding.show_face(uni)
         doing("she studies the cards and what you noticed" if turn == 0 else "she thinks over what you said")
         try:
             text, pr, stopped = bidding._pass(b, msgs, uni)
@@ -211,6 +212,7 @@ def run(b, spread=1, question="", ready=None):
             except Exception:
                 pass
         msgs.append({"role": "assistant", "content": text})
+        bidding.closing_rule()
         if turn == 0:
             print(f"{DIM}   Ask yourself:{RESET}")
             for c in cards:
