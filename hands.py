@@ -131,11 +131,11 @@ DANGER = re.compile(r"\bsudo\b|\bsu\b|\brm\s+-\w*[rf]|\bmkfs|\bdd\b|\bshred\b|\b
                     r"\bgit\s+push\s+(-f|--force)|\biptables\s+-F|\bkill\s+-9\s+1\b", re.I)
 RED, BLUE, WHITE, DIM, RESET = "\x1b[38;5;203m", "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;245m", "\x1b[0m"
 
-TERMS = [("alacritty", ["-T", "Veyra output", "-e"]), ("kitty", ["--title", "Veyra output"]),
-         ("urxvt", ["-title", "Veyra output", "-e"]), ("xfce4-terminal", ["-T", "Veyra output", "-x"]),
-         ("gnome-terminal", ["--title", "Veyra output", "--"]), ("konsole", ["-e"]),
-         ("terminator", ["-T", "Veyra output", "-x"]), ("st", ["-t", "Veyra output", "-e"]),
-         ("uxterm", ["-T", "Veyra output", "-e"]), ("xterm", ["-T", "Veyra output", "-e"])]
+TERMS = [("alacritty", ["-T", "Veyra-output", "-e"]), ("kitty", ["--title", "Veyra-output"]),
+         ("urxvt", ["-title", "Veyra-output", "-e"]), ("xfce4-terminal", ["-T", "Veyra-output", "-x"]),
+         ("gnome-terminal", ["--title", "Veyra-output", "--"]), ("konsole", ["-e"]),
+         ("terminator", ["-T", "Veyra-output", "-x"]), ("st", ["-t", "Veyra-output", "-e"]),
+         ("uxterm", ["-T", "Veyra-output", "-e"]), ("xterm", ["-T", "Veyra-output", "-e"])]
 
 
 def window_open():

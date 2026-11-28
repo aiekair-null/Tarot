@@ -1,5 +1,7 @@
-"""Veyra's output window. Commands you approve in `veyra chat` run here, in a real terminal, so you can see
-everything and type into programs that ask for input (passwords, y/n, menus). Their output goes back to her.
+"""Veyra-output: her own window. When you open `veyra chat`, this window opens beside it. You type in the chat
+window; everything she says (and her thinking arrow, and her grey notes) appears HERE. Commands you approve run
+here too, in a real terminal that remembers its folder (cd sticks), so you can see everything and type into
+programs that ask for input (passwords, y/n, menus). Their output goes back to her.
 
     veyra out      open this window yourself (veyra chat opens it for you when it can)
 
@@ -8,12 +10,18 @@ import json
 import os
 import pty
 import re
+import shlex
 import sys
 import time
 from pathlib import Path
 
 SPOOL = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "veyra" / "jobs"
 PIDFILE = SPOOL.parent / "runner.pid"
+STREAM = SPOOL.parent / "stream.log"       # what chat wants shown here (raw terminal text)
+SIZE = SPOOL.parent / "size.json"          # this window's size, so her text wraps to it
+CWDFILE = SPOOL.parent / "cwd"             # the folder this terminal is "in"
+QUIT = b"\x00VEYRA-QUIT\x00"
+TITLE = "Veyra-output"
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07|\r")
 P, B, W, D, R = "\x1b[38;5;99m", "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;245m", "\x1b[0m"
 
@@ -32,7 +40,15 @@ def alive(pid):
 
 def run(job):
     cmd = job["cmd"]
-    print(f"\n{P}━━━ {W}Veyra runs:{R} {B}{cmd}{R}")
+    try:
+        cwd = CWDFILE.read_text().strip() or str(Path.home())
+        if not os.path.isdir(cwd):
+            cwd = str(Path.home())
+    except OSError:
+        cwd = str(Path.home())
+    shown = cwd.replace(str(Path.home()), "~", 1)
+    script = (f"cd {shlex.quote(cwd)} 2>/dev/null || cd ~\n{cmd}\n__rc=$?\npwd > {shlex.quote(str(CWDFILE))}\nexit $__rc\n")
+    print(f"\n{P}━━━ {W}Veyra runs{R} {D}in {shown}:{R} {B}{cmd}{R}")
     print(f"{D}    (type here if it asks for anything · Ctrl+C stops it){R}\n")
     buf = []
 
@@ -43,7 +59,7 @@ def run(job):
 
     start = time.time()
     try:
-        status = pty.spawn(["bash", "-lc", cmd], read)
+        status = pty.spawn(["bash", "-lc", script], read)
         code = os.waitstatus_to_exitcode(status) if hasattr(os, "waitstatus_to_exitcode") else status >> 8
     except KeyboardInterrupt:
         code = 130
@@ -76,12 +92,40 @@ def main():
         except OSError:
             pass
     os.chdir(Path.home())
-    print(f"{P}V E Y R A{R}  {D}output window · waiting for approved commands{R}")
+    CWDFILE.write_text(str(Path.home()))
+    sys.stdout.write(f"\x1b]0;{TITLE}\x07")
+    print(f"{P}V E Y R A{R}  {D}{TITLE} · her words and your approved commands appear here{R}\n")
+    pos, last_size = (STREAM.stat().st_size if STREAM.exists() else 0), None
     try:
         while True:
+            try:                                           # keep chat told how wide this window is
+                sz = os.get_terminal_size()
+                if (sz.columns, sz.lines) != last_size:
+                    last_size = (sz.columns, sz.lines)
+                    SIZE.write_text(json.dumps({"cols": sz.columns, "rows": sz.lines}))
+            except OSError:
+                pass
+            try:                                           # show what chat wrote for her
+                n = STREAM.stat().st_size if STREAM.exists() else 0
+                if n < pos:
+                    pos = 0
+                if n > pos:
+                    with STREAM.open("rb") as f:
+                        f.seek(pos)
+                        data = f.read(n - pos)
+                    pos = n
+                    quit_now = QUIT in data
+                    data = data.replace(QUIT, b"")
+                    os.write(1, data)
+                    if quit_now:
+                        print(f"\n{D}(chat closed; this window closes too){R}")
+                        time.sleep(1.2)
+                        return
+            except OSError:
+                pass
             jobs = sorted(SPOOL.glob("*.json"))
             if not jobs:
-                time.sleep(0.25)
+                time.sleep(0.05)
                 continue
             j = jobs[0]
             try:

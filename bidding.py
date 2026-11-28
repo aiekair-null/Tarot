@@ -23,11 +23,14 @@ try:
 except ImportError:
     pass
 
+import contextlib
+
 import art
 import brain
 import eyes
 import hands
 import netsense
+import runner
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
           "You talk like an old-world traveling fortune teller from a candlelit caravan: warm, theatrical and "
@@ -49,9 +52,82 @@ RED = "\x1b[38;5;196m"
 GOLD, LILAC, CYAN, DIM, RESET = "\x1b[38;5;220m", "\x1b[38;5;183m", "\x1b[38;5;51m", "\x1b[38;5;245m", "\x1b[0m"
 
 
+class _Win:
+    """Her own window (Veyra-output): text written here appears there instead of in the prompt window."""
+    def __init__(self):
+        runner.STREAM.parent.mkdir(parents=True, exist_ok=True)
+        if runner.STREAM.exists() and runner.STREAM.stat().st_size > 2_000_000:
+            runner.STREAM.write_bytes(b"")
+        self.f = open(runner.STREAM, "ab", buffering=0)
+
+    def write(self, s):
+        self.f.write(s.encode("utf-8", "replace"))
+        return len(s)
+
+    def flush(self):
+        pass
+
+    def isatty(self):
+        return True
+
+
+WIN = None                                       # set once her output window is up
+_size = [0.0, 80]
+
+
+@contextlib.contextmanager
+def OUT():
+    """Everything printed inside goes to her window when it is open, else to this one."""
+    if WIN is None:
+        yield
+        return
+    old = sys.stdout
+    sys.stdout = WIN
+    try:
+        yield
+    finally:
+        sys.stdout = old
+
+
+def cols():
+    """How wide to wrap: her window's width when she has one, else this terminal's."""
+    if WIN is not None:
+        if time.time() - _size[0] > 0.5:
+            _size[0] = time.time()
+            try:
+                _size[1] = int(json.loads(runner.SIZE.read_text())["cols"])
+            except Exception:
+                pass
+        return _size[1]
+    return shutil.get_terminal_size((80, 20)).columns
+
+
+def note(text):
+    with OUT():
+        print(f"{DIM}{text}{RESET}", flush=True)
+
+
 def doing(what):
     """A little grey note, in parentheses, each time she starts a new thought or task."""
-    print(f"{DIM}  ({what}){RESET}", flush=True)
+    note(f"  ({what})")
+
+
+def open_her_window():
+    """Open Veyra-output beside this window; her words go there. Falls back to this window if it can't."""
+    global WIN
+    if not hands.ON or os.environ.get("VEYRA_ONEWIN") == "1":
+        return False
+    mine = not hands.window_open()
+    err = hands.open_window()
+    if err:
+        print(f"   {DIM}(no second window: {err}; she will talk here){RESET}")
+        return False
+    WIN = _Win()
+    WIN.mine = mine
+    with OUT():
+        print(f"{DIM}  ({time.strftime('%H:%M')} · chat opened){RESET}")
+    print(f"   {DIM}her words appear in the Veyra-output window; type to her here{RESET}")
+    return True
 
 
 def utf8():
@@ -65,6 +141,31 @@ def utf8():
         return "utf" in locale.nl_langinfo(locale.CODESET).lower().replace("-", "") or os.name == "nt"
     except Exception:
         return True
+
+
+def maximize():
+    """Make her window as big as it can be: maximize the terminal (works in xterm-style terminals, and through
+    wmctrl / xdotool / sway / i3 when they are installed). VEYRA_BIG=0 turns this off."""
+    if os.environ.get("VEYRA_BIG", "1") == "0" or not sys.stdout.isatty() or os.name == "nt":
+        return
+    try:
+        sys.stdout.write("\x1b[9;1t")                      # the xterm "maximize window" request
+        sys.stdout.flush()
+        import subprocess
+        tried = [["wmctrl", "-r", ":ACTIVE:", "-b", "add,maximized_vert,maximized_horz"],
+                 ["xdotool", "getactivewindow", "windowstate", "--add", "MAXIMIZED_VERT", "--add", "MAXIMIZED_HORZ"]]
+        if os.environ.get("SWAYSOCK"):
+            tried.insert(0, ["swaymsg", "fullscreen", "enable"])
+        elif os.environ.get("I3SOCK"):
+            tried.insert(0, ["i3-msg", "fullscreen", "enable"])
+        if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+            for cmd in tried:
+                if shutil.which(cmd[0]):
+                    subprocess.run(cmd, capture_output=True, timeout=3)
+                    break
+        time.sleep(0.35)                                      # let the window settle before we measure it
+    except Exception:
+        pass
 
 
 def portrait(unicode_ok):
@@ -149,8 +250,7 @@ def pick_model():
 class Wrap:
     """Word-wraps her text so each line stops about six words short of the right edge."""
     def __init__(self):
-        cols = shutil.get_terminal_size((80, 20)).columns
-        self.limit = max(40, cols - 36)
+        self.limit = max(30, cols() - 36)                 # stops ~5-6 words short of the edge
         self.col, self.word = 0, ""
 
     def write(self, s):
@@ -290,7 +390,7 @@ class Wave:
         self.length, self.pos, self.dir, self.w, self.frame = 3.0, 0.0, 1, 0, 0.0
 
     def tick(self):
-        W = max(20, shutil.get_terminal_size((80, 20)).columns - 2)
+        W = max(20, cols() - 2)
         self.w = W
         speed = 1 + 3 * (self.length / W) ** 2                # 1x when small, up to 4x as it nears the full line
         self.frame += speed                                   # the shimmer quickens too
@@ -328,6 +428,11 @@ class Wave:
 
 
 def _pass(b, msgs, unicode_ok):
+    with OUT():                                            # her words, arrow and notes go to her window
+        return _pass_inner(b, msgs, unicode_ok)
+
+
+def _pass_inner(b, msgs, unicode_ok):
     """Stream one reply with the thinking wave until the first word; Esc stops her; a tool line ends it."""
     q, stop = queue.Queue(), threading.Event()
 
@@ -416,7 +521,7 @@ def speak(b, msgs, unicode_ok, rounds=8):
                 doing("refused; she will find another way")
             else:
                 result = hands.open_window_for(tgt)
-                print(f"{DIM}  {result}{RESET}")
+                note(f"  {result}")
                 looked.append(f"opened {tgt}")
                 arg = tgt
         elif tool == "RUN":
@@ -537,6 +642,11 @@ def sleep_model(b):
 def leave(b=None):
     if b is not None:
         sleep_model(b)
+    if WIN is not None:
+        with OUT():
+            print(f"\n{DIM}  She closes her eyes. The model is asleep and its memory is free.{RESET}")
+            if getattr(WIN, "mine", False):                 # close the window chat opened
+                sys.stdout.write(runner.QUIT.decode())
     print(f"\n{DIM}She closes her eyes. The model is asleep and its memory is free.{RESET}")
     sys.stdout.flush()
     os._exit(0)                                          # no lingering threads holding the model
@@ -561,6 +671,7 @@ def _main():
         pass
     if os.name == "nt":
         os.system("")
+    maximize()
     print()
     for line in portrait(utf8()):
         print("   " + line)
@@ -576,7 +687,8 @@ def _main():
 
     b = brain.Brain(connect=False)
     _B.append(b)
-    print(f"   {DIM}Esc hushes her mid-answer  ·  type quit (or press Ctrl+C) to leave{RESET}\n")
+    open_her_window()
+    print(f"   {DIM}Esc hushes her mid-answer  ·  !command runs it in her window  ·  type quit (or Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
     threading.Thread(target=lambda: (b.connect(), ready.set()), daemon=True).start()
 
@@ -594,6 +706,18 @@ def _main():
             continue
         if q.lower() in ("exit", "quit", "q", "bye", "/exit", "/quit", ":q") or q.startswith("\x1b"):
             leave(b)
+        if q.startswith("!") and q[1:].strip() and hands.ON:      # your own command, run in her terminal
+            cmd = q[1:].strip()
+            if hands.DANGER.search(cmd):
+                a = input(hands.rl_safe(f"{DIM}  that one can change or delete things. type yes to run it: {RESET}")).strip().lower()
+                if a != "yes":
+                    continue
+            with Keys() as k:
+                result = hands.run(cmd, k.esc)
+            history += [{"role": "user", "content": f"(I ran `{cmd}` myself in your output window.)\n{result}"},
+                        {"role": "assistant", "content": "Noted, dear one."}]
+            print(f"{DIM}  (done; ask her about it if you like){RESET}")
+            continue
         if q == "/clear":
             history = []
             print(f"{DIM}(forgotten){RESET}")
@@ -602,15 +726,21 @@ def _main():
             doing("she is waking her model; one moment")
             ready.wait()
         if b.kind == "none":
-            print(f"{LILAC}{diagnose(None, 'Her model would not wake: ' + (b.err or 'no model installed'), 'waking her model')}{RESET}\n")
+            with OUT():
+                print(f"{LILAC}{diagnose(None, 'Her model would not wake: ' + (b.err or 'no model installed'), 'waking her model')}{RESET}\n")
             break
         history.append({"role": "user", "content": q})
+        if WIN is not None:
+            with OUT():
+                print(f"\n{LILAC}you:{RESET} {q}\n")
+            print(f"{DIM}  (she answers in the Veyra-output window){RESET}")
         msgs = [{"role": "system", "content": system}] + fit(history)
         try:
             reply, pr = speak(b, msgs, uni)
         except Exception as e:                            # a failed turn is explained, not fatal
             doing("something snagged; she works out what went wrong")
-            print(RESET + f"\n{LILAC}{diagnose(b, e, 'answering')}{RESET}\n")
+            with OUT():
+                print(RESET + f"\n{LILAC}{diagnose(b, e, 'answering')}{RESET}\n")
             history.pop()
             if once:
                 break
