@@ -149,5 +149,55 @@ def main():
             PIDFILE.unlink(missing_ok=True)
 
 
+def watch_main(title, stream_path):
+    """A plain tailing window, no job queue or pty -- used for Veyra-action, where a program she opened writes
+    its own output straight into stream_path and this just shows it. Closes on the QUIT sentinel like the
+    main window does, or on Ctrl+C."""
+    stream_path = Path(stream_path)
+    pidfile = stream_path.with_suffix(".pid")
+    if pidfile.exists():
+        try:
+            other = int(pidfile.read_text())
+            if other != os.getpid() and alive(other):
+                print(f"{title} is already open.")
+                time.sleep(2)
+                return
+        except Exception:
+            pass
+    pidfile.write_text(str(os.getpid()))
+    sys.stdout.write(f"\x1b]0;{title}\x07")
+    print(f"{P}V E Y R A{R}  {D}{title} · output from programs she opens appears here{R}\n")
+    pos = stream_path.stat().st_size if stream_path.exists() else 0
+    try:
+        while True:
+            try:
+                n = stream_path.stat().st_size if stream_path.exists() else 0
+                if n < pos:
+                    pos = 0
+                if n > pos:
+                    with stream_path.open("rb") as f:
+                        f.seek(pos)
+                        data = f.read(n - pos)
+                    pos = n
+                    quit_now = QUIT in data
+                    data = data.replace(QUIT, b"")
+                    os.write(1, data)
+                    if quit_now:
+                        print(f"\n{D}(chat closed; this window closes too){R}")
+                        time.sleep(1.2)
+                        return
+            except OSError:
+                pass
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if pidfile.exists() and pidfile.read_text().strip() == str(os.getpid()):
+            pidfile.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) >= 4 and sys.argv[1] == "watch":
+        watch_main(sys.argv[2], sys.argv[3])
+    else:
+        main()

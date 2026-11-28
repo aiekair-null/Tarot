@@ -797,11 +797,20 @@ def speak(b, msgs, unicode_ok, rounds=8):
                 looked.append("looked at the screen")
             guard = OUTSIDE
         else:
-            what = {"SEARCH": "she searches the web for", "READ": "she reads the page", "YOUTUBE": "she reads the captions of"}[tool]
-            doing(f"{what}: {arg[:70]}")
-            result = netsense.run(pr.tool)
-            looked.append(f"{tool} {arg}")
-            guard = OUTSIDE
+            doing(f"she asks leave to go online: {netsense.LABEL[tool]} {arg[:60]}")
+            allowed = netsense.approve(tool, arg)
+            if allowed is None:
+                result = "The person REFUSED to let you go online for this. Don't look it up; ask them " \
+                         "what they'd like instead or answer from what you already know."
+                doing("refused; she will answer without it")
+            else:
+                arg = allowed
+                what = {"SEARCH": "she searches the web for", "READ": "she reads the page",
+                        "YOUTUBE": "she reads the captions of"}[tool]
+                doing(f"{what}: {arg[:70]}")
+                result = netsense.run((tool, arg))
+                looked.append(f"{tool} {arg}")
+                guard = OUTSIDE
         msgs += [{"role": "assistant", "content": text},
                  {"role": "user", "content": f"RESULT of {tool}: {arg}\n{result}\n\n{guard}(Now answer me from this. "
                                              "Look something else up only if you truly need to.)"}]

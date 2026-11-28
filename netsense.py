@@ -8,6 +8,7 @@ import html
 import io
 import json
 import re
+import sys
 import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
@@ -15,14 +16,45 @@ from html.parser import HTMLParser
 LIMIT = 2500                                           # characters of each result she gets to read
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Veyra/1.0"}
 TOOLS = ("SEARCH:", "READ:", "YOUTUBE:")
+LABEL = {"SEARCH": "search the web for", "READ": "read the page", "YOUTUBE": "read the captions of"}
+BLUE, WHITE, DIM, RESET = "\x1b[38;5;117m", "\x1b[38;5;231m", "\x1b[38;5;245m", "\x1b[0m"
 
 HOW = ("\nYOU CAN REACH THE INTERNET (read-only). When you need something current, a page, a file or a "
        "video, write ONE line on its own and then stop and wait:\n"
        "SEARCH: <words>        (web search)\n"
        "READ: <url>            (read a web page, text file or PDF)\n"
        "YOUTUBE: <url>         (read a YouTube video's captions; you see what is said, not the picture)\n"
-       "The result comes back to you as RESULT. Then answer from it and name where it came from. "
-       "Never invent results; if a result is empty or an error, say what went wrong and suggest how to fix it.")
+       "The person approves each one before it happens. The result comes back to you as RESULT. Then answer "
+       "from it and name where it came from. Never invent results; if a result is empty or an error, say what "
+       "went wrong and suggest how to fix it.")
+
+
+def _rl_safe(s):
+    """Mark colour codes as zero-width for readline, so editing a long line doesn't garble the prompt."""
+    return re.sub(r"(\x1b\[[0-9;]*m)", "\001\\1\002", s) if "readline" in sys.modules else s
+
+
+def approve(tool, arg):
+    """Ask before going online. Returns the argument (maybe edited) or None if refused."""
+    print(f"\n{BLUE}  ┌ she wants to go online to {LABEL[tool]}:{RESET}\n{WHITE}  │ {arg}{RESET}")
+    while True:
+        try:
+            a = input(_rl_safe(f"{BLUE}  └ allow it? [y]es / [n]o / [e]dit: {RESET}")).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return None
+        if a in ("e", "edit"):
+            try:
+                new = input(_rl_safe(f"{DIM}    your version: {RESET}")).strip()
+            except (EOFError, KeyboardInterrupt):
+                return None
+            if new:
+                arg = new
+            continue
+        if a in ("n", "no", ""):
+            return None
+        if a in ("y", "yes"):
+            return arg
 
 
 class _Text(HTMLParser):
