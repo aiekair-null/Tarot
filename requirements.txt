@@ -3,3 +3,5 @@ huggingface_hub>=0.34   # only used to download the free model file (no paid inf
 numpy                   # reading videos: audio and frames
 pillow                  # reading videos: drawing the pixel art
 ddgs                    # optional: lets Veyra research cards on the web while studying
+youtube-transcript-api  # optional: lets Veyra read YouTube captions in chat
+pypdf                   # optional: lets Veyra read PDFs in chat

@@ -77,7 +77,8 @@ def answer(q):
         state["busy"] = True
     try:
         if B.kind == "none":
-            reply["text"] = "Her model would not wake: " + (B.err or "no model installed (run: veyra model)")
+            reply["text"] = bidding.diagnose(None, "Her model would not wake: " + (B.err or "no model installed"),
+                                             "waking her model")
             return
         hist = [{"role": "user" if e["role"] == "user" else "assistant", "content": e["text"]}
                 for e in state["log"][:-1][-12:]]
@@ -96,6 +97,8 @@ def answer(q):
                     bidding.save_note(note)
                 except Exception:
                     pass
+    except Exception as e:                                # explain, don't crash
+        reply["text"] = bidding.diagnose(B, e, "answering on the TV")
     finally:
         state["busy"] = False
 

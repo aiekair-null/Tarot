@@ -9,15 +9,18 @@ import json
 import locale
 import os
 import queue
+import re
 import random
 import shutil
 import sys
 import threading
 import time
+import traceback
 from pathlib import Path
 
 import art
 import brain
+import netsense
 
 SYSTEM = ("You are Veyra, an 8-bit seer who lives inside this computer and runs on its own local model. "
           "You talk like an old-world traveling fortune teller from a candlelit caravan: warm, theatrical and "
@@ -167,14 +170,16 @@ class Wrap:
 
 class Printer:
     """Streams her words, holding back REMEMBER: and NEXT: lines (saved / used as the next prompt)."""
-    TAGS = ("REMEMBER:", "NEXT:")
+    TAGS = ("REMEMBER:", "NEXT:") + netsense.TOOLS
 
     def __init__(self):
-        self.line, self.mode, self.notes, self.next = "", None, [], None
+        self.line, self.mode, self.notes, self.next, self.tool = "", None, [], None, None
         self.w = Wrap()
 
     def feed(self, piece):
         for ch in piece:
+            if self.tool:                                  # a lookup was asked for: ignore the rest
+                return
             if ch == "\n":
                 self._end()
                 continue
@@ -199,6 +204,8 @@ class Printer:
         if u.startswith("REMEMBER:"):
             if s[9:].strip():
                 self.notes.append(s[9:].strip())
+        elif any(u.lstrip("*`").startswith(t) for t in netsense.TOOLS):
+            self.tool = self.tool or netsense.find_call(s)
         elif u.startswith("NEXT:"):
             if s[5:].strip():
                 self.next = s[5:].strip().strip('"')[:90]
@@ -246,26 +253,47 @@ class Keys:
 
 
 class Wave:
-    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes)."""
+    """While she thinks: an arrow sweeps across, back, and across, a little longer each pass (10 passes),
+    slowly, shimmering as it flies, in a new color every time it starts over."""
     PASSES = 10
+    SLOW = 4                                                  # 4x longer than the first version
+    RAMPS = [(52, 88, 124, 160, 196, 203, 210, 217),          # neon red
+             (53, 90, 127, 164, 201, 207, 213, 219),          # magenta
+             (23, 30, 37, 44, 51, 87, 123, 159),              # cyan
+             (94, 130, 166, 172, 208, 214, 220, 228),         # gold
+             (54, 55, 56, 57, 93, 99, 141, 183),              # violet
+             (22, 28, 34, 40, 46, 83, 120, 157)]              # green
 
     def __init__(self, unicode_ok):
         self.dash = "—" if unicode_ok else "-"
-        self.k, self.pos, self.w = 0, 0, 0
+        self.k, self.pos, self.w, self.frame, self.color = 0, 0.0, 0, 0, 0
 
     def tick(self):
         W = max(20, shutil.get_terminal_size((80, 20)).columns - 2)
         self.w = W
+        self.frame += 1
         L = int(3 + (W * 0.92 - 3) * self.k / (self.PASSES - 1))
         right = self.k % 2 == 0
         arrow = self.dash * (L - 1) + ">" if right else "<" + self.dash * (L - 1)
         span = max(0, W - L)
-        x = self.pos if right else span - self.pos
-        sys.stdout.write("\r" + RED + (" " * x + arrow).ljust(W) + RESET)
+        p = int(self.pos)
+        x = p if right else span - p
+        ramp = self.RAMPS[self.color % len(self.RAMPS)]
+        n = len(ramp)
+        out = []
+        for i, ch in enumerate(arrow):                       # a bright glint travels along the arrow
+            j = (i - self.frame) % (n * 2) if right else (i + self.frame) % (n * 2)
+            shade = ramp[j if j < n else 2 * n - 1 - j]
+            if (i * 7 + self.frame) % 23 == 0:
+                shade = 231                                  # an occasional white sparkle
+            out.append(f"\x1b[38;5;{shade}m{ch}")
+        sys.stdout.write("\r" + " " * x + "".join(out) + RESET + " " * (W - x - L))
         sys.stdout.flush()
-        self.pos += max(1, W // 45)
+        self.pos += max(1, W // 45) / self.SLOW
         if self.pos > span:
-            self.pos, self.k = 0, (self.k + 1) % self.PASSES
+            self.pos, self.k = 0.0, self.k + 1
+            if self.k >= self.PASSES:                        # starts over small, in a new color
+                self.k, self.color = 0, self.color + 1
 
     def clear(self):
         if self.w:
@@ -273,8 +301,8 @@ class Wave:
             sys.stdout.flush()
 
 
-def speak(b, msgs, unicode_ok):
-    """Stream one reply with the thinking wave until the first word; Esc stops her."""
+def _pass(b, msgs, unicode_ok):
+    """Stream one reply with the thinking wave until the first word; Esc stops her; a tool line ends it."""
     q, stop = queue.Queue(), threading.Event()
 
     def run():
@@ -314,9 +342,16 @@ def speak(b, msgs, unicode_ok):
                 break
             out.append(item)
             pr.feed(item)
+            if pr.tool:                                    # she asked to look something up: stop and fetch it
+                stop.set()
+                break
     if not started:
         wave.clear()
     pr.close()
+    if pr.tool:
+        print(RESET, end="")
+        t.join(timeout=5)
+        return "".join(out).strip(), pr, stopped
     if stopped:
         print(f"{DIM} ...(hushed){RESET}", end="")
         out.append(" ...")
@@ -325,10 +360,109 @@ def speak(b, msgs, unicode_ok):
         print(f"{DIM}\n(she ran out of breath mid-thought; type 'go on' for the rest){RESET}", end="")
     print(RESET + "\n")
     t.join(timeout=5)
-    return "".join(out).strip(), pr
+    return "".join(out).strip(), pr, stopped
+
+
+def speak(b, msgs, unicode_ok, rounds=4):
+    """Her answer, letting her search / read / watch up to `rounds` times before she replies."""
+    msgs, looked = list(msgs), []
+    for _ in range(rounds):
+        text, pr, stopped = _pass(b, msgs, unicode_ok)
+        if not pr.tool or stopped:
+            break
+        tool, arg = pr.tool
+        verb = {"SEARCH": "searches", "READ": "reads", "YOUTUBE": "watches"}[tool]
+        print(f"{DIM}  (she {verb}: {arg[:70]}){RESET}", flush=True)
+        result = netsense.run(pr.tool)
+        looked.append(f"{tool} {arg}")
+        msgs += [{"role": "assistant", "content": text},
+                 {"role": "user", "content": f"RESULT of {tool}: {arg}\n{result}\n\n(Now answer me from this. "
+                                             "Look something else up only if you truly need to.)"}]
+    if looked:
+        text = "(I looked up: " + "; ".join(looked) + ")\n" + text
+    return text, pr
+
+
+HINTS = [
+    (r"no \.gguf|no model|not downloaded|would not wake",
+     "No model file is loaded. Download her chat brain:  cd ~/Tarot && ~/.local/share/veyra/venv/bin/python "
+     "models.py download qwen3-8b-abl"),
+    (r"out of memory|failed to allocate|cannot allocate|bad_alloc|mmap|Killed|MemoryError",
+     "The laptop ran out of memory for the model. Close the browser and big apps, or shrink her working memory: "
+     "export TAROT_CTX=2048, or switch to a smaller model (models.py use medium)."),
+    (r"illegal instruction|0xc000001d|SIGILL",
+     "Her engine was built for a newer CPU. Rebuild it for this machine:  veyra setup  (or use Ollama instead)."),
+    (r"No module named '?([\w\.]+)",
+     "A Python piece is missing. Run  veyra setup  to reinstall her parts."),
+    (r"Connection|timed out|Name or service not known|Temporary failure|getaddrinfo|URLError|SSL",
+     "The network didn't answer. Check the Wi-Fi with  nmcli general status  and try again."),
+    (r"Permission denied",
+     "A file or folder isn't writable. Check who owns ~/Tarot:  ls -l ~/Tarot  (fix with chown if needed)."),
+    (r"No space left",
+     "The disk is full. Free some space (old models live in ~/Tarot/models)."),
+]
+ERRLOG = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "veyra" / "errors.log"
+
+
+def diagnose(b, err, where="chat"):
+    """Turn an error into a plain explanation and a suggested fix, in her voice when her model is awake."""
+    tb = err if isinstance(err, str) else "".join(traceback.format_exception(type(err), err, err.__traceback__))
+    last = (tb.strip().splitlines() or ["unknown error"])[-1]
+    try:
+        ERRLOG.parent.mkdir(parents=True, exist_ok=True)
+        with ERRLOG.open("a", encoding="utf-8") as f:
+            f.write(f"--- {time.strftime('%Y-%m-%d %H:%M:%S')} [{where}]\n{tb}\n")
+    except Exception:
+        pass
+    hint = next((fix for pat, fix in HINTS if re.search(pat, tb, re.I)), "")
+    said = ""
+    if b is not None and getattr(b, "kind", "none") != "none":
+        try:
+            ask = [{"role": "system", "content": "You are Veyra, a fortune teller who also knows Linux and Python. "
+                    "Explain errors plainly in at most 3 short sentences: what went wrong, then the exact fix."},
+                   {"role": "user", "content": f"While doing '{where}' this error happened:\n{tb[-1500:]}\n"
+                    + (f"A likely fix: {hint}\n" if hint else "") + "What happened, and how do I fix it?"}]
+            said = "".join(b.stream(ask, max_tokens=220, temperature=0.3)).strip()
+            said = re.sub(r"\n?(REMEMBER|NEXT):.*", "", said, flags=re.S | re.I).strip()
+        except Exception:
+            said = ""
+    msg = said or ("Something snagged, dear one: " + last + ("\nThe fix: " + hint if hint else
+                   "\nI couldn't tell the cause; the full report is in " + str(ERRLOG)))
+    return msg + f"\n(full error saved to {ERRLOG})"
+
+
+def sleep_model(b):
+    """Close her model and free its memory."""
+    try:
+        llm = getattr(b, "llm", None)
+        if llm is not None and hasattr(llm, "close"):
+            llm.close()
+        b.llm, b.kind = None, "none"
+    except Exception:
+        pass
+
+
+def leave(b=None):
+    if b is not None:
+        sleep_model(b)
+    print(f"\n{DIM}She closes her eyes. The model is asleep and its memory is free.{RESET}")
+    sys.stdout.flush()
+    os._exit(0)                                          # no lingering threads holding the model
 
 
 def main():
+    try:
+        _main()
+    except KeyboardInterrupt:
+        leave(_B[0] if _B else None)
+    except Exception as e:                                # never crash: explain instead
+        print(f"\n{LILAC}{diagnose(None, e, 'starting up')}{RESET}\n")
+
+
+_B = []
+
+
+def _main():
     try:
         sys.stdout.reconfigure(errors="replace")
     except Exception:
@@ -346,9 +480,11 @@ def main():
         print(f"   {DIM}sky:{RESET}   {LILAC}{short}{RESET}")
     print()
     rng = random.SystemRandom()
-    system = SYSTEM + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
+    system = SYSTEM + netsense.HOW + "\nTONIGHT'S SKY: " + (full or "unknown") + "\n" + lore_flavor(rng)
 
     b = brain.Brain(connect=False)
+    _B.append(b)
+    print(f"   {DIM}Esc hushes her mid-answer  ·  type quit (or press Ctrl+C) to leave{RESET}\n")
     ready = threading.Event()
     threading.Thread(target=lambda: (b.connect(), ready.set()), daemon=True).start()
 
@@ -361,12 +497,11 @@ def main():
             try:
                 q = input(f"{LILAC}{prompt}{RESET} ").strip()
             except (EOFError, KeyboardInterrupt):
-                print()
-                break
+                leave(b)
         if not q:
             continue
-        if q.lower() in ("exit", "quit", "bye", "/exit", "/quit"):
-            break
+        if q.lower() in ("exit", "quit", "q", "bye", "/exit", "/quit", ":q") or q.startswith("\x1b"):
+            leave(b)
         if q == "/clear":
             history = []
             print(f"{DIM}(forgotten){RESET}")
@@ -376,11 +511,16 @@ def main():
             ready.wait()
             print("\r" + " " * 22 + "\r", end="")
         if b.kind == "none":
-            print(f"{DIM}Her model would not wake: {b.err or 'no model installed (run: veyra model)'}{RESET}")
+            print(f"{LILAC}{diagnose(None, 'Her model would not wake: ' + (b.err or 'no model installed'), 'waking her model')}{RESET}\n")
             break
         history.append({"role": "user", "content": q})
         msgs = [{"role": "system", "content": system}] + history[-12:]
-        reply, pr = speak(b, msgs, uni)
+        try:
+            reply, pr = speak(b, msgs, uni)
+        except Exception as e:                            # a failed turn is explained, not fatal
+            print(RESET + f"\n{LILAC}{diagnose(b, e, 'answering')}{RESET}\n")
+            history.pop()
+            continue
         for note in pr.notes:
             try:
                 save_note(note)
