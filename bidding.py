@@ -195,6 +195,36 @@ def _place(title, x, y, w, h):
     return ok
 
 
+def _focus(title):
+    """Raise and give keyboard focus to the window with this title, so you can type without clicking it first."""
+    if shutil.which("wmctrl"):
+        try:
+            if subprocess.run(["wmctrl", "-a", title], capture_output=True, timeout=2).returncode == 0:
+                return True
+        except Exception:
+            pass
+    if shutil.which("xdotool"):
+        try:
+            ids = subprocess.run(["xdotool", "search", "--name", title], capture_output=True, text=True,
+                                 timeout=2).stdout.split()
+            if ids:
+                _wm_run(["xdotool", "windowactivate", ids[-1]])
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def _keep_input_focused(title):
+    """Right after her window opens it tends to steal focus (new windows usually do); pull it back to the
+    input window a few times over the next couple seconds so you can start typing without clicking first."""
+    for _ in range(6):
+        time.sleep(0.35)
+        if WIN is None:
+            return
+        _focus(title)
+
+
 def _shape_before_opening():
     """Title and resize THIS window (to an exact 10-row height, by its own font) before her window opens, and
     work out where both windows should sit. Needs wmctrl or xdotool (X11). Returns why it didn't happen, or
@@ -310,6 +340,7 @@ def open_her_window():
             print(f"   {DIM}(her window won't be shaped into a square: {shape_skip}){RESET}")
         else:
             _place_after_opening()
+        threading.Thread(target=_keep_input_focused, args=(INPUT_TITLE,), daemon=True).start()
     with OUT():
         print(f"{DIM}  ({time.strftime('%H:%M')} · chat opened){RESET}")
     print(f"   {DIM}her words appear in the Veyra-output window; type to her here{RESET}")
