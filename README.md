@@ -259,3 +259,9 @@ and uploads the full-length reading video instead, so this is parked until there
 - **13) Chat with Veyra**: she asks you questions, remembers what you tell her (`user_facts` in `memory.json`), and may
   search the web when you ask about the world or the stars. `python3 tarot.py chat`
 - The 40 item sprites live in `items.py`.
+
+## Veyra's hands (`veyra chat`, Linux)
+She can ask to run shell commands with a `RUN:` line. You see the exact command and answer **y / n / e(dit)**;
+risky ones (sudo, rm -r, dd, pacman, reboot...) need the full word **yes**. Approved commands run in her
+**output window** (opened automatically, or `veyra out` in another terminal), where you can type into
+programs that ask for input; the output goes back to her. Refusing is always the default.
