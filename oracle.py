@@ -200,7 +200,7 @@ def run(b, spread=1, question="", ready=None):
         bidding.show_face(uni)
         doing("she studies the cards and what you noticed" if turn == 0 else "she thinks over what you said")
         try:
-            text, pr, stopped = bidding._pass(b, msgs, uni)
+            text, pr, stopped = bidding._pass(b, msgs, uni, show_think=False)  # keep the reading video-clean
         except Exception as e:
             doing("something snagged; she works out what went wrong")
             print(bidding.RESET + f"\n{LILAC}{bidding.diagnose(b, e, 'reading the oracle')}{RESET}\n")
